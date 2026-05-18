@@ -20,7 +20,7 @@ export const DEFAULT_PRIMARY_MODEL   = "claude-sonnet-4-6";
 export const DEFAULT_SECONDARY_MODEL = "gpt-4o";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const openai    = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const getOpenAI = () => new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "placeholder" });
 
 export async function callAI(
   modelId: string,
@@ -41,7 +41,7 @@ export async function callAI(
     return (res.content[0] as { text: string }).text;
   }
 
-  const res = await openai.chat.completions.create({
+  const res = await getOpenAI().chat.completions.create({
     model: modelId,
     max_tokens: maxTokens,
     messages: [
