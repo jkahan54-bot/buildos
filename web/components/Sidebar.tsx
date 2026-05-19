@@ -29,6 +29,7 @@ const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }
     { href:"/ai-tools",       label:"AI Tools",        icon:Bot,        badge:"AI" },
     { href:"/messages",       label:"Messages",        icon:MessageSquare },
     { href:"/settings",       label:"Settings",        icon:Settings },
+    { href:"/system",         label:"System Health",   icon:Settings,   badge:"⚡" },
   ],
   office: [
     { href:"/dashboard",      label:"Dashboard",       icon:LayoutDashboard },
