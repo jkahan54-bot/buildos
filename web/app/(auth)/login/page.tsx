@@ -21,91 +21,86 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ background:"#0a0a0f" }}>
-      {/* Left panel — branding */}
-      <div className="hidden lg:flex lg:w-[45%] flex-col justify-between p-12 relative overflow-hidden"
-        style={{ background:"linear-gradient(135deg,#0f0f1a 0%,#0a0a0f 100%)" }}>
-        <div className="absolute inset-0 opacity-30"
-          style={{ background:"radial-gradient(ellipse at 30% 50%,#f97316 0%,transparent 60%)" }} />
-        <div className="relative">
-          <div className="flex items-center gap-3 mb-16">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-sm"
-              style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
-            <span className="font-bold text-white text-lg tracking-tight">BuildOS</span>
-          </div>
-          <h1 className="text-4xl font-bold text-white leading-tight mb-4">
-            Construction<br />management<br /><span className="text-orange-400">powered by AI</span>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Left — branding */}
+      <div className="hidden lg:flex lg:w-[45%] flex-col justify-between p-12 bg-white border-r border-gray-200">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-sm shadow-sm"
+            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
+          <span className="font-bold text-gray-900 text-lg">BuildOS</span>
+        </div>
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900 leading-tight mb-4">
+            Construction management<br />
+            <span className="text-orange-500">powered by AI</span>
           </h1>
-          <p className="text-gray-500 text-base leading-relaxed max-w-xs">
-            Manage projects, teams, budgets and safety — with Claude + GPT-4 reviewing everything automatically.
+          <p className="text-gray-500 text-base leading-relaxed max-w-sm">
+            Projects, teams, budgets and safety — all in one place. Claude + GPT-4 reviews everything automatically.
           </p>
+          <div className="mt-8 space-y-3">
+            {[
+              { icon:"📊", text:"Real-time project & budget tracking" },
+              { icon:"🤖", text:"Dual AI review on every document" },
+              { icon:"📱", text:"Mobile app for field workers" },
+              { icon:"🏥", text:"Medical facility division with checklists" },
+            ].map((f, i) => (
+              <div key={i} className="flex items-center gap-3 text-sm text-gray-600">
+                <span className="text-base">{f.icon}</span><span>{f.text}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="relative space-y-3">
-          {[
-            { icon:"🏗", text:"Real-time project tracking" },
-            { icon:"🤖", text:"Dual AI review on every document" },
-            { icon:"📱", text:"Mobile app for field workers" },
-            { icon:"🏥", text:"Medical facility checklists" },
-          ].map((f, i) => (
-            <div key={i} className="flex items-center gap-3 text-sm text-gray-500">
-              <span>{f.icon}</span><span>{f.text}</span>
-            </div>
-          ))}
-        </div>
+        <p className="text-xs text-gray-400">© 2025 BuildOS · Brookstone Developers</p>
       </div>
 
-      {/* Right panel — form */}
+      {/* Right — form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-sm">
-          {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-white text-sm"
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-white text-sm shadow-sm"
               style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
-            <span className="font-bold text-white tracking-tight">BuildOS</span>
+            <span className="font-bold text-gray-900">BuildOS</span>
           </div>
 
-          <h2 className="text-2xl font-bold text-white mb-1">Welcome back</h2>
-          <p className="text-gray-500 text-sm mb-8">Sign in to your account</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">Sign in</h2>
+          <p className="text-gray-500 text-sm mb-8">Welcome back to BuildOS</p>
 
           <form onSubmit={login} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
               <div className="relative">
-                <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" />
+                <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="you@brookstone.com"
-                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-9 pr-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-orange-500/60 focus:bg-white/[0.06] transition-all" />
+                  placeholder="you@company.com"
+                  className="w-full bg-white border border-gray-300 rounded-lg pl-10 pr-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all shadow-sm" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
               <div className="relative">
-                <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" />
+                <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg pl-9 pr-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-orange-500/60 focus:bg-white/[0.06] transition-all" />
+                  className="w-full bg-white border border-gray-300 rounded-lg pl-10 pr-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all shadow-sm" />
               </div>
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                <AlertCircle size={14} className="flex-shrink-0" />
-                {error}
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+                <AlertCircle size={14} className="flex-shrink-0" />{error}
               </div>
             )}
 
             <button type="submit" disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold text-white transition-all shadow-lg shadow-orange-500/20 disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50 mt-2"
               style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
               {loading ? "Signing in…" : <><span>Sign In</span><ArrowRight size={14} /></>}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-600 mt-6">
+          <p className="text-center text-sm text-gray-500 mt-6">
             Don't have an account?{" "}
-            <Link href="/register" className="text-orange-400 hover:text-orange-300 font-medium transition-colors">
-              Create one
-            </Link>
+            <Link href="/register" className="text-orange-500 hover:text-orange-600 font-semibold">Create one</Link>
           </p>
         </div>
       </div>
