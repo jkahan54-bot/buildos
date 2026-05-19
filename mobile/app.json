@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "BuildOS",
+    "slug": "buildos",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "buildos",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#08080A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.brookstonedevelopers.buildos"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F46519"
+      },
+      "package": "com.brookstonedevelopers.buildos",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      ["expo-camera", { "cameraPermission": "Allow BuildOS to access camera for site photos." }],
+      ["expo-location", { "locationAlwaysAndWhenInUsePermission": "Allow BuildOS to access location for geotagging photos." }]
+    ],
+    "experiments": { "typedRoutes": true }
+  }
+}
