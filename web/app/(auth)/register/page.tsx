@@ -37,13 +37,14 @@ export default function RegisterPage() {
       setLoading(false); return;
     }
 
-    // Create org + link profile via edge function / server action (simplified here)
-    const { error: orgError } = await supabase.from("organizations").insert({
-      name: orgName,
-      slug: orgName.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-"),
-    }).select().single();
-
-    if (orgError) { setError(orgError.message); setLoading(false); return; }
+    // Create org server-side (uses service role to bypass RLS)
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: data.user.id, orgName, role, fullName }),
+    });
+    const result = await res.json();
+    if (result.error) { setError(result.error); setLoading(false); return; }
     router.push("/dashboard");
   };
 
