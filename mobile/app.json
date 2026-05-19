@@ -4,13 +4,12 @@
     "slug": "buildos",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "scheme": "buildos",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
+    "icon": "https://placehold.co/1024x1024/f97316/ffffff?text=B",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#08080A"
+      "backgroundColor": "#f9fafb",
+      "resizeMode": "contain"
     },
     "ios": {
       "supportsTablet": true,
@@ -18,8 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F46519"
+        "backgroundColor": "#f97316"
       },
       "package": "com.brookstonedevelopers.buildos",
       "permissions": [
@@ -34,6 +32,10 @@
       ["expo-camera", { "cameraPermission": "Allow BuildOS to access camera for site photos." }],
       ["expo-location", { "locationAlwaysAndWhenInUsePermission": "Allow BuildOS to access location for geotagging photos." }]
     ],
-    "experiments": { "typedRoutes": true }
+    "experiments": { "typedRoutes": true },
+    "extra": {
+      "router": { "origin": false },
+      "eas": { "projectId": "302daed8-67b3-4ef5-9a34-36ecf6a8489f" }
+    }
   }
 }
