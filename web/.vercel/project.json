@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_MXA7mypGNqHTvUpTo4xrtJukw2P3",
+  "orgId": "team_XrTecyakkh1THm1U5Wzkm6SE",
+  "projectName": "buildos",
+  "settings": {
+    "createdAt": 1779134921831,
+    "framework": "nextjs",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": "web",
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}
