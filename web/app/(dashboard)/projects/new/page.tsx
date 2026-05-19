@@ -37,12 +37,6 @@ export default function NewProjectPage() {
     router.push("/projects");
   };
 
-  const Field = ({ label, children }: any) => (
-    <div>
-      <label className="block text-sm text-gray-400 mb-1.5">{label}</label>
-      {children}
-    </div>
-  );
   const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-brand";
 
   return (
@@ -53,12 +47,13 @@ export default function NewProjectPage() {
       </div>
 
       <form onSubmit={save} className="bg-surface rounded-xl border border-border p-6 space-y-5">
-        <Field label="Project name *">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1.5">Project name *</label>
           <input required value={form.name} onChange={e => set("name", e.target.value)} className={inp} placeholder="Riverside Tower" />
-        </Field>
+        </div>
 
-        {/* Project type */}
-        <Field label="Project type">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1.5">Project type</label>
           <div className="grid grid-cols-2 gap-3">
             {[
               { value:"standard",         label:"Standard",           icon:"🏗", desc:"General construction project" },
@@ -72,45 +67,53 @@ export default function NewProjectPage() {
               </button>
             ))}
           </div>
-        </Field>
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Phase">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1.5">Phase</label>
             <select value={form.phase} onChange={e => set("phase", e.target.value)} className={inp}>
               {PHASES.map(p => <option key={p}>{p}</option>)}
             </select>
-          </Field>
-          <Field label="Status">
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1.5">Status</label>
             <select value={form.status} onChange={e => set("status", e.target.value)} className={inp}>
               {["active","on_hold","completed","cancelled"].map(s => <option key={s} value={s}>{s}</option>)}
             </select>
-          </Field>
+          </div>
         </div>
 
-        <Field label="Address">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1.5">Address</label>
           <input value={form.address} onChange={e => set("address", e.target.value)} className={inp} placeholder="123 Main St, Miami FL" />
-        </Field>
+        </div>
 
         <div className="grid grid-cols-3 gap-4">
-          <Field label="Sq Footage">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1.5">Sq Footage</label>
             <input type="number" value={form.sq_footage} onChange={e => set("sq_footage", e.target.value)} className={inp} placeholder="50000" />
-          </Field>
-          <Field label="Crew Size">
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1.5">Crew Size</label>
             <input type="number" value={form.crew_size} onChange={e => set("crew_size", e.target.value)} className={inp} placeholder="24" />
-          </Field>
-          <Field label="Deadline">
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1.5">Deadline</label>
             <input type="date" value={form.deadline} onChange={e => set("deadline", e.target.value)} className={inp} />
-          </Field>
+          </div>
         </div>
 
-        <Field label="Total Budget ($)">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1.5">Total Budget ($)</label>
           <input type="number" value={form.budget} onChange={e => set("budget", e.target.value)} className={inp} placeholder="4200000" />
-        </Field>
+        </div>
 
-        <Field label="Description (optional)">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1.5">Description (optional)</label>
           <textarea value={form.description} onChange={e => set("description", e.target.value)} rows={3}
             className={inp + " resize-none"} placeholder="Project overview..." />
-        </Field>
+        </div>
 
         {error && <p className="text-red-400 text-sm">{error}</p>}
 
