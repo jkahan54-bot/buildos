@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { AVAILABLE_MODELS } from "@/lib/ai";
+import { AVAILABLE_MODELS } from "@/lib/models";
 
 export default function SettingsPage() {
   const [profile, setProfile]   = useState<any>(null);
