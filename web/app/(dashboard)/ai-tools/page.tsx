@@ -71,10 +71,10 @@ export default function AIToolsPage() {
     setLoading(false);
   };
 
-  const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-brand";
+  const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-brand";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-gray-900">
       <div>
         <h1 className="text-2xl font-black">AI Tools</h1>
         <p className="text-gray-500 text-sm mt-1">Powered by Claude + GPT-4 dual review</p>
@@ -84,7 +84,7 @@ export default function AIToolsPage() {
       <div className="flex gap-1 bg-surface rounded-xl border border-border p-1 w-fit">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${tab === t.id ? "bg-brand text-white" : "text-gray-500 hover:text-gray-200"}`}>
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${tab === t.id ? "bg-brand text-white" : "text-gray-500 hover:text-gray-900"}`}>
             {t.icon} {t.label}
           </button>
         ))}
@@ -114,7 +114,7 @@ export default function AIToolsPage() {
             <input value={input} onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendChat()}
               placeholder="Ask about budget, safety, scheduling, RFIs…" disabled={loading}
-              className="flex-1 bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-brand" />
+              className="flex-1 bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-brand" />
             <button onClick={sendChat} disabled={loading || !input.trim()}
               className="bg-brand hover:bg-brand-dark text-white font-bold px-5 rounded-lg transition-colors disabled:opacity-50">→</button>
           </div>

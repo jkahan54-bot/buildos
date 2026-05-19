@@ -50,11 +50,11 @@ export default function BudgetClient({ projects, items, invoices }: any) {
     router.refresh();
   };
 
-  const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-brand";
+  const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-brand";
   const statusColors: Record<string, string> = { pending:"#F59E0B", approved:"#22C55E", paid:"#6B7280", overdue:"#EF4444" };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-gray-900">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black">Budget Management</h1>
@@ -166,7 +166,7 @@ export default function BudgetClient({ projects, items, invoices }: any) {
       <div className="flex gap-1 bg-surface rounded-xl border border-border p-1 w-fit">
         {(["overview","items","invoices"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-lg text-sm font-bold capitalize transition-colors ${tab===t ? "bg-brand text-white" : "text-gray-500 hover:text-gray-200"}`}>
+            className={`px-4 py-2 rounded-lg text-sm font-bold capitalize transition-colors ${tab===t ? "bg-brand text-white" : "text-gray-500 hover:text-gray-900"}`}>
             {t}{t === "items" ? ` (${items.length})` : t === "invoices" ? ` (${invoices.length})` : ""}
           </button>
         ))}
@@ -181,7 +181,7 @@ export default function BudgetClient({ projects, items, invoices }: any) {
               <BarChart data={projects.map((p: any) => ({ name: p.name.split(" ")[0], budget: Math.round((p.budget??0)/1000), spent: Math.round((p.spent??0)/1000) }))} barGap={4}>
                 <XAxis dataKey="name" tick={{ fill:"#6B7280", fontSize:11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill:"#6B7280", fontSize:11 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background:"#16161A", border:"1px solid #222226", borderRadius:6, color:"#F5F5F5", fontSize:12 }} formatter={(v: any) => `$${v}K`} />
+                <Tooltip contentStyle={{ background:"#f9fafb", border:"1px solid #222226", borderRadius:6, color:"#111827", fontSize:12 }} formatter={(v: any) => `$${v}K`} />
                 <Bar dataKey="budget" fill="#3B82F6" radius={[4,4,0,0]} name="Budget ($K)" />
                 <Bar dataKey="spent" fill="#F46519" radius={[4,4,0,0]} name="Spent ($K)" />
               </BarChart>
@@ -274,7 +274,7 @@ export default function BudgetClient({ projects, items, invoices }: any) {
                   </td>
                   <td className="px-4 py-3">
                     <select value={inv.status} onChange={e => updateInvoiceStatus(inv.id, e.target.value)}
-                      className="bg-surface-panel border border-border rounded px-2 py-1 text-xs text-white outline-none">
+                      className="bg-surface-panel border border-border rounded px-2 py-1 text-xs text-gray-900 outline-none">
                       {["pending","approved","paid","overdue"].map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </td>

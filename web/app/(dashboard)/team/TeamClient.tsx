@@ -19,7 +19,7 @@ export default function TeamClient({ members, projects, timeLogs }: any) {
   const onSite = members.filter((m: any) => m.role === "field").length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-gray-900">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black">Team</h1>
@@ -46,11 +46,11 @@ export default function TeamClient({ members, projects, timeLogs }: any) {
       {/* Filters */}
       <div className="flex gap-3">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or email..."
-          className="flex-1 bg-surface border border-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-brand" />
+          className="flex-1 bg-surface border border-border rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-brand" />
         <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
           {["all","owner","admin","office","field"].map(r => (
             <button key={r} onClick={() => setRoleFilter(r)}
-              className={`px-3 py-1.5 rounded text-xs font-bold capitalize transition-colors ${roleFilter===r ? "bg-brand text-white" : "text-gray-500 hover:text-gray-200"}`}>
+              className={`px-3 py-1.5 rounded text-xs font-bold capitalize transition-colors ${roleFilter===r ? "bg-brand text-white" : "text-gray-500 hover:text-gray-900"}`}>
               {r === "admin" ? "Admin" : r === "office" ? "Office" : r}
             </button>
           ))}
@@ -88,7 +88,7 @@ export default function TeamClient({ members, projects, timeLogs }: any) {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-400">{m.email}</td>
-                  <td className="px-4 py-3 font-mono font-bold text-sm" style={{ color: hrs > 45 ? "#F59E0B" : "#F5F5F5" }}>
+                  <td className="px-4 py-3 font-mono font-bold text-sm" style={{ color: hrs > 45 ? "#F59E0B" : "#111827" }}>
                     {hrs > 0 ? `${hrs.toFixed(1)}h` : "—"}
                   </td>
                   <td className="px-4 py-3">

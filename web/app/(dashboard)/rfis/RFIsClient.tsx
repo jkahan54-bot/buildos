@@ -31,14 +31,14 @@ export default function RFIsClient({ rfis, projects }: any) {
     setSelected(null); setResponse(""); router.refresh();
   };
 
-  const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-brand";
+  const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-brand";
 
   const open   = rfis.filter((r: any) => r.status === "Open").length;
   const review = rfis.filter((r: any) => r.status === "Review").length;
   const closed = rfis.filter((r: any) => r.status === "Closed").length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-gray-900">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black">RFIs</h1>
@@ -104,7 +104,7 @@ export default function RFIsClient({ rfis, projects }: any) {
               <h2 className="font-bold text-lg">{selected.title}</h2>
               <p className="text-gray-500 text-sm mt-1">{selected.projects?.name} · {selected.profiles?.full_name} · {new Date(selected.created_at).toLocaleDateString()}</p>
             </div>
-            <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-gray-200">✕</button>
+            <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-gray-900">✕</button>
           </div>
           {selected.description && <p className="text-gray-300 text-sm mb-4 bg-surface-card rounded-lg p-3">{selected.description}</p>}
           {selected.response && (

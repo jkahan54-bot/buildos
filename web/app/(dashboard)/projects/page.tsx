@@ -9,7 +9,7 @@ export default async function ProjectsPage() {
     ({ active:"#22C55E", completed:"#3B82F6", on_hold:"#F59E0B", cancelled:"#EF4444" }[s] ?? "#6B7280");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-gray-900">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black">Projects</h1>

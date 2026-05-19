@@ -4,11 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: "#F46519", dark: "#C2500E" },
-        surface: { DEFAULT: "#0E0E10", card: "#16161A", panel: "#08080A" },
-        border: { DEFAULT: "#222226", subtle: "#2D2D32" },
+        brand: { DEFAULT: "#f97316", dark: "#ea580c" },
+        // Light theme — surface = white/light gray
+        surface: {
+          DEFAULT: "#ffffff",
+          card:    "#f9fafb",
+          panel:   "#f3f4f6",
+        },
+        border: {
+          DEFAULT: "#e5e7eb",
+          subtle:  "#f3f4f6",
+        },
       },
-      fontFamily: { sans: ["'Trebuchet MS'", "system-ui", "sans-serif"] },
     },
   },
   plugins: [],

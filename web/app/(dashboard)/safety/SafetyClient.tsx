@@ -28,14 +28,14 @@ export default function SafetyClient({ incidents, projects }: any) {
     router.refresh();
   };
 
-  const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-brand";
+  const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-brand";
 
   const open   = incidents.filter((i: any) => i.status === "Open").length;
   const high   = incidents.filter((i: any) => i.severity === "High" || i.severity === "Critical").length;
   const closed = incidents.filter((i: any) => i.status === "Closed").length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-gray-900">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black">Safety & Incidents</h1>

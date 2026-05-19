@@ -71,12 +71,12 @@ export default function MilestonesClient({ milestones, projects }: any) {
     }
   };
 
-  const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-brand";
+  const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-brand";
   const upcoming = milestones.filter((m: any) => !m.completed);
   const completed = milestones.filter((m: any) => m.completed);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-gray-900">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black">Milestones & Progress Tracking</h1>
@@ -186,7 +186,7 @@ export default function MilestonesClient({ milestones, projects }: any) {
               const isWaiting = m.title.startsWith("Waiting:");
               return (
                 <div key={m.id} className="bg-surface rounded-xl border border-border p-4 flex items-center gap-4"
-                  style={{ borderLeft: `4px solid ${m.critical ? "#EF4444" : isWaiting ? "#3B82F6" : "#222226"}` }}>
+                  style={{ borderLeft: `4px solid ${m.critical ? "#EF4444" : isWaiting ? "#3B82F6" : "#e5e7eb"}` }}>
                   <button onClick={() => toggle(m.id, true)}
                     className="w-7 h-7 rounded-full border-2 border-gray-600 hover:border-green-500 flex items-center justify-center transition-colors flex-shrink-0">
                     <div className="w-2 h-2 rounded-full bg-transparent" />

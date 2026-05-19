@@ -30,7 +30,7 @@ export default function DashboardClient({ profile, projects, totalBudget, totalS
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-gray-900">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

@@ -83,7 +83,7 @@ export default function TimeLogClient({ logs, projects, currentEntry }: any) {
             <h2 className="font-bold mb-4">Clock In</h2>
             <div className="flex gap-3">
               <select value={selectedProject} onChange={e => setSelectedProject(e.target.value)}
-                className="flex-1 bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-brand">
+                className="flex-1 bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-brand">
                 <option value="">Select project...</option>
                 {projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
@@ -115,7 +115,7 @@ export default function TimeLogClient({ logs, projects, currentEntry }: any) {
                 <td className="px-4 py-3 text-sm text-gray-400">{l.projects?.name ?? "—"}</td>
                 <td className="px-4 py-3 text-sm font-mono">{new Date(l.clock_in).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" })}</td>
                 <td className="px-4 py-3 text-sm font-mono">{l.clock_out ? new Date(l.clock_out).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) : <span className="text-green-400 font-bold">Active</span>}</td>
-                <td className="px-4 py-3 font-mono font-bold" style={{ color: l.hours > 9 ? "#F59E0B" : "#F5F5F5" }}>
+                <td className="px-4 py-3 font-mono font-bold" style={{ color: l.hours > 9 ? "#F59E0B" : "#111827" }}>
                   {l.hours ? l.hours.toFixed(2) : "—"}
                 </td>
               </tr>

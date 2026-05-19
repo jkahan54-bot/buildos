@@ -37,7 +37,7 @@ export default function NewProjectPage() {
     router.push("/projects");
   };
 
-  const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-brand";
+  const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-brand";
 
   return (
     <div className="max-w-2xl">
