@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Lock, ArrowRight, CheckCircle } from "lucide-react";
 
-export default function AcceptInvitePage() {
+function AcceptInviteInner() {
   const router       = useRouter();
   const params       = useSearchParams();
   const inviteId     = params.get("invite_id");
@@ -106,4 +106,8 @@ export default function AcceptInvitePage() {
       </div>
     </div>
   );
+}
+
+export default function AcceptInvitePage() {
+  return <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="text-gray-500">Loading…</div></div>}><AcceptInviteInner /></Suspense>;
 }
