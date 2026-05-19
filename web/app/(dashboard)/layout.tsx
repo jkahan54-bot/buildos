@@ -13,10 +13,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
-      <Sidebar profile={profile} />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Sidebar — hidden on mobile, shown on desktop */}
+      <div className="hidden lg:flex">
+        <Sidebar profile={profile} />
+      </div>
+      <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         <TopBar profile={profile} />
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {children}
         </main>
       </div>

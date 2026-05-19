@@ -1,14 +1,14 @@
 "use client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import Link from "next/link";
-import { TrendingUp, AlertTriangle, FolderOpen, DollarSign, Users, Plus, ArrowUpRight } from "lucide-react";
+import { TrendingUp, AlertTriangle, FolderOpen, DollarSign, Plus, ArrowUpRight, ShieldAlert, HelpCircle, FileText } from "lucide-react";
 
 const fmtMoney = (n: number) => n >= 1000000
   ? `$${(n/1000000).toFixed(1)}M`
   : n >= 1000 ? `$${(n/1000).toFixed(0)}K`
   : `$${n.toLocaleString()}`;
 
-const statusStyle = (s: string): { color: string; bg: string; text: string; label: string } =>
+const statusStyle = (s: string): { color:string; bg:string; text:string; label:string } =>
   (({
     active:    { color:"#16a34a", bg:"#dcfce7", text:"#15803d", label:"Active"    },
     completed: { color:"#2563eb", bg:"#dbeafe", text:"#1d4ed8", label:"Completed" },
@@ -22,91 +22,69 @@ export default function DashboardClient({ profile, projects, totalBudget, totalS
   const spentPct  = totalBudget > 0 ? Math.round(totalSpent / totalBudget * 100) : 0;
   const name      = profile?.full_name?.split(" ")[0] ?? "there";
 
-  const chartData = projects.slice(0,6).map((p: any) => ({
+  const chartData = projects.slice(0,5).map((p: any) => ({
     name:    p.name.split(" ")[0],
-    Budget:  Math.round((p.budget  ?? 0) / 1000),
-    Spent:   Math.round((p.spent   ?? 0) / 1000),
-    Progress: p.progress ?? 0,
+    Budget:  Math.round((p.budget ?? 0) / 1000),
+    Spent:   Math.round((p.spent  ?? 0) / 1000),
   }));
 
   return (
-    <div className="space-y-6 text-gray-900">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl lg:text-2xl font-bold text-gray-900">
             Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, {name} 👋
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            {new Date().toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric" })}
-            <span className="mx-2 text-gray-300">·</span>
-            {projects.length} active project{projects.length !== 1 ? "s" : ""}
-          </p>
+          <p className="text-gray-500 text-sm mt-0.5">{projects.length} active project{projects.length !== 1 ? "s" : ""}</p>
         </div>
         <Link href="/projects/new"
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white shadow-sm flex-shrink-0"
           style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
-          <Plus size={15} />New Project
+          <Plus size={15} />
+          <span className="hidden sm:inline">New Project</span>
+          <span className="sm:hidden">New</span>
         </Link>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats — 2 cols mobile, 4 desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label:"Total Budget",    value:fmtMoney(totalBudget), sub:"across all projects",  icon:DollarSign, color:"#2563eb", light:"#dbeafe" },
-          { label:"Total Spent",     value:fmtMoney(totalSpent),  sub:`${spentPct}% utilized`, icon:TrendingUp, color:"#f97316", light:"#fff7ed" },
-          { label:"Remaining",       value:fmtMoney(remaining),   sub:"available",             icon:DollarSign, color:"#16a34a", light:"#dcfce7" },
-          { label:"Open Incidents",  value:openIncidents,          sub:`${openRFIs} open RFIs`, icon:AlertTriangle,
-            color: openIncidents > 0 ? "#dc2626" : "#16a34a",
-            light: openIncidents > 0 ? "#fee2e2" : "#dcfce7" },
+          { label:"Total Budget",   value:fmtMoney(totalBudget), sub:`${spentPct}% used`,      icon:DollarSign,  color:"#2563eb", light:"#dbeafe" },
+          { label:"Remaining",      value:fmtMoney(remaining),   sub:"available",              icon:TrendingUp,  color:"#16a34a", light:"#dcfce7" },
+          { label:"Incidents",      value:openIncidents,          sub:`${openRFIs} open RFIs`, icon:ShieldAlert, color: openIncidents > 0 ? "#dc2626" : "#16a34a", light: openIncidents > 0 ? "#fee2e2" : "#dcfce7" },
+          { label:"Projects",       value:projects.length,        sub:"total active",           icon:FolderOpen,  color:"#f97316", light:"#fff7ed" },
         ].map((s, i) => {
           const Icon = s.icon;
           return (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-              <div className="flex items-start justify-between mb-3">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{s.label}</span>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: s.light }}>
-                  <Icon size={15} style={{ color: s.color }} />
+            <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+              <div className="flex items-start justify-between mb-2">
+                <span className="text-xs font-medium text-gray-500 leading-tight">{s.label}</span>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: s.light }}>
+                  <Icon size={13} style={{ color: s.color }} />
                 </div>
               </div>
-              <div className="text-2xl font-bold text-gray-900">{s.value}</div>
-              <div className="text-xs text-gray-500 mt-1">{s.sub}</div>
+              <div className="text-xl lg:text-2xl font-bold text-gray-900">{s.value}</div>
+              <div className="text-xs text-gray-400 mt-0.5">{s.sub}</div>
             </div>
           );
         })}
       </div>
 
-      {/* Charts */}
+      {/* Chart — sm+ only */}
       {projects.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <div className="font-semibold text-sm text-gray-900 mb-4">Budget vs Spent ($K)</div>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={chartData} barGap={3} barCategoryGap="30%">
-                <XAxis dataKey="name" tick={{ fill:"#9ca3af", fontSize:11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill:"#9ca3af", fontSize:11 }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:8, fontSize:12, boxShadow:"0 4px 6px -1px rgba(0,0,0,0.1)" }}
-                  formatter={(v: any, name: string) => [`$${(v as number)}K`, name]} />
-                <Bar dataKey="Budget" fill="#bfdbfe" radius={[3,3,0,0]} />
-                <Bar dataKey="Spent"  fill="#f97316" radius={[3,3,0,0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <div className="font-semibold text-sm text-gray-900 mb-4">Completion (%)</div>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={chartData} barCategoryGap="30%">
-                <XAxis dataKey="name" tick={{ fill:"#9ca3af", fontSize:11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill:"#9ca3af", fontSize:11 }} axisLine={false} tickLine={false} domain={[0,100]} />
-                <Tooltip
-                  contentStyle={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:8, fontSize:12, boxShadow:"0 4px 6px -1px rgba(0,0,0,0.1)" }}
-                  formatter={(v: any) => [`${v}%`, "Progress"]} />
-                <Bar dataKey="Progress" fill="#16a34a" radius={[3,3,0,0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="hidden sm:block bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+          <div className="font-semibold text-sm text-gray-900 mb-4">Budget vs Spent ($K)</div>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={chartData} barGap={3} barCategoryGap="30%">
+              <XAxis dataKey="name" tick={{ fill:"#9ca3af", fontSize:11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill:"#9ca3af", fontSize:11 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:8, fontSize:12 }}
+                formatter={(v: any, name: string) => [`$${v}K`, name]} />
+              <Bar dataKey="Budget" fill="#bfdbfe" radius={[3,3,0,0]} />
+              <Bar dataKey="Spent"  fill="#f97316" radius={[3,3,0,0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       )}
 
@@ -118,14 +96,12 @@ export default function DashboardClient({ profile, projects, totalBudget, totalS
             View all <ArrowUpRight size={12} />
           </Link>
         </div>
-
         {projects.length === 0 ? (
-          <div className="bg-white rounded-xl border border-dashed border-gray-300 p-12 text-center">
-            <FolderOpen size={36} className="text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">No projects yet</p>
-            <p className="text-gray-400 text-sm mt-1">Create your first project to get started</p>
+          <div className="bg-white rounded-xl border border-dashed border-gray-300 p-10 text-center">
+            <FolderOpen size={32} className="text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 font-medium text-sm">No projects yet</p>
             <Link href="/projects/new"
-              className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm"
+              className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-lg text-sm font-semibold text-white"
               style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
               <Plus size={14} />Create Project
             </Link>
@@ -133,31 +109,23 @@ export default function DashboardClient({ profile, projects, totalBudget, totalS
         ) : (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             {projects.slice(0,6).map((p: any, idx: number) => {
-              const st  = statusStyle(p.status);
-              const pct = p.budget > 0 ? Math.round((p.spent ?? 0) / p.budget * 100) : 0;
+              const st = statusStyle(p.status);
               return (
                 <Link key={p.id} href={`/projects/${p.id}`}
-                  className={`flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-all ${idx < projects.slice(0,6).length - 1 ? "border-b border-gray-100" : ""}`}>
+                  className={`flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 active:bg-gray-100 transition-all ${idx < Math.min(projects.length,6) - 1 ? "border-b border-gray-100" : ""}`}>
                   <div className="w-1.5 h-8 rounded-full flex-shrink-0" style={{ background: st.color }} />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm text-gray-900 truncate">{p.name}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">{p.phase ?? "—"} · {p.crew_size ?? 0} crew · Due {p.deadline ?? "TBD"}</div>
+                    <div className="text-xs text-gray-400 mt-0.5 truncate">{p.phase ?? "—"} · {p.crew_size ?? 0} crew</div>
                   </div>
-                  <div className="flex items-center gap-5 flex-shrink-0">
-                    <div className="hidden sm:block text-right">
-                      <div className="text-xs text-gray-400">Budget used</div>
-                      <div className="text-xs font-semibold" style={{ color: pct > 90 ? "#dc2626" : "#374151" }}>{pct}%</div>
-                    </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="text-right">
-                      <div className="text-xs text-gray-400">Progress</div>
                       <div className="text-sm font-bold" style={{ color: st.color }}>{p.progress ?? 0}%</div>
-                    </div>
-                    <div className="w-20">
-                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full transition-all" style={{ width:`${p.progress ?? 0}%`, background: st.color }} />
+                      <div className="w-12 h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1">
+                        <div className="h-full rounded-full" style={{ width:`${p.progress ?? 0}%`, background: st.color }} />
                       </div>
                     </div>
-                    <span className="text-[11px] font-semibold px-2 py-1 rounded-full hidden md:block"
+                    <span className="text-[10px] font-semibold px-2 py-1 rounded-full hidden sm:block"
                       style={{ background: st.bg, color: st.text }}>{st.label}</span>
                   </div>
                 </Link>
@@ -165,6 +133,27 @@ export default function DashboardClient({ profile, projects, totalBudget, totalS
             })}
           </div>
         )}
+      </div>
+
+      {/* Mobile quick actions */}
+      <div className="lg:hidden grid grid-cols-2 gap-3">
+        {[
+          { href:"/safety",    icon:ShieldAlert, label:"Report Incident", color:"#dc2626", bg:"#fee2e2" },
+          { href:"/rfis",      icon:HelpCircle,  label:"Submit RFI",      color:"#2563eb", bg:"#dbeafe" },
+          { href:"/budget",    icon:DollarSign,  label:"Budget",          color:"#16a34a", bg:"#dcfce7" },
+          { href:"/documents", icon:FileText,    label:"Documents",       color:"#f97316", bg:"#fff7ed" },
+        ].map(a => {
+          const Icon = a.icon;
+          return (
+            <Link key={a.href} href={a.href}
+              className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 shadow-sm active:bg-gray-50 transition-all">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: a.bg }}>
+                <Icon size={16} style={{ color: a.color }} />
+              </div>
+              <span className="text-sm font-medium text-gray-700">{a.label}</span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
