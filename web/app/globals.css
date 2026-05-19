@@ -4,15 +4,25 @@
 
 :root { color-scheme: dark; }
 
+* { box-sizing: border-box; }
+
 body {
-  @apply bg-surface-panel text-gray-100 antialiased;
-  font-family: 'Trebuchet MS', 'Lucida Grande', system-ui, sans-serif;
+  @apply bg-[#0a0a0f] text-gray-100 antialiased;
+  font-family: 'Inter', 'Trebuchet MS', system-ui, sans-serif;
+  font-feature-settings: 'cv02','cv03','cv04','cv11';
 }
 
 /* Scrollbar */
-::-webkit-scrollbar       { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { @apply bg-surface; }
-::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+::-webkit-scrollbar       { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { @apply bg-white/10 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-white/20; }
 
-/* Focus ring */
-*:focus-visible { @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-surface-panel; }
+/* Focus */
+*:focus-visible { @apply outline-none ring-2 ring-orange-500/60 ring-offset-1 ring-offset-[#0a0a0f]; }
+
+/* Smooth transitions */
+button, a, input, select, textarea {
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-duration: 150ms;
+}
