@@ -74,6 +74,7 @@ const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }
     { href:"/photos",     label:"Photos",        icon:Camera },
     { href:"/ai-camera",  label:"AI Camera",     icon:Bot,           badge:"AI" },
     { href:"/rfis",       label:"RFIs",          icon:HelpCircle },
+    { href:"/punch-list", label:"Punch List",    icon:ClipboardList },
     { href:"/checklist",  label:"Checklist",     icon:CheckSquare },
     { href:"/messages",   label:"Messages",      icon:MessageSquare },
   ],

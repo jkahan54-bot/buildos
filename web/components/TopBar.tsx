@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Settings, Sparkles, Menu, X, LayoutDashboard, FolderKanban, DollarSign, Users, ShieldAlert, FileText, HelpCircle, Bot, MessageSquare, Milestone, LogOut, Clock, ChevronDown, Eye, Receipt, GitPullRequest, Calculator, BarChart2, FileSignature, Building2, Calendar, Users2, Globe } from "lucide-react";
+import { Settings, Sparkles, Menu, X, LayoutDashboard, FolderKanban, DollarSign, Users, ShieldAlert, FileText, HelpCircle, Bot, MessageSquare, Milestone, LogOut, Clock, ChevronDown, Eye, Receipt, GitPullRequest, Calculator, BarChart2, FileSignature, Building2, Calendar, Users2, Globe, ClipboardList, CalendarCheck, Camera, CheckSquare } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -48,8 +48,12 @@ const MOBILE_NAV: Record<string, { href: string; label: string; icon: any }[]> =
   field: [
     { href:"/dashboard",  label:"Dashboard",  icon:LayoutDashboard },
     { href:"/timelog",    label:"Time Log",   icon:Clock },
+    { href:"/daily-log",  label:"Daily Log",  icon:CalendarCheck },
     { href:"/safety",     label:"Safety",     icon:ShieldAlert },
+    { href:"/punch-list", label:"Punch List", icon:ClipboardList },
     { href:"/rfis",       label:"RFIs",       icon:HelpCircle },
+    { href:"/photos",     label:"Photos",     icon:Camera },
+    { href:"/checklist",  label:"Checklist",  icon:CheckSquare },
     { href:"/messages",   label:"Messages",   icon:MessageSquare },
   ],
 };
