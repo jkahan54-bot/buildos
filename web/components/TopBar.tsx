@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Settings, Sparkles, Menu, X, LayoutDashboard, FolderKanban, DollarSign, Users, ShieldAlert, FileText, HelpCircle, Bot, MessageSquare, Milestone, LogOut, Clock, ChevronDown, Eye } from "lucide-react";
+import { Settings, Sparkles, Menu, X, LayoutDashboard, FolderKanban, DollarSign, Users, ShieldAlert, FileText, HelpCircle, Bot, MessageSquare, Milestone, LogOut, Clock, ChevronDown, Eye, Receipt, GitPullRequest, Calculator, BarChart2, FileSignature, Building2, Calendar, Users2, Globe } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -26,10 +26,24 @@ const MOBILE_NAV: Record<string, { href: string; label: string; icon: any }[]> =
     { href:"/messages",   label:"Messages",   icon:MessageSquare },
   ],
   office: [
-    { href:"/dashboard",  label:"Dashboard",  icon:LayoutDashboard },
-    { href:"/budget",     label:"Budget",     icon:DollarSign },
-    { href:"/documents",  label:"Documents",  icon:FileText },
-    { href:"/messages",   label:"Messages",   icon:MessageSquare },
+    { href:"/dashboard",      label:"Dashboard",     icon:LayoutDashboard },
+    { href:"/projects",       label:"Projects",      icon:FolderKanban },
+    { href:"/budget",         label:"Budget",        icon:DollarSign },
+    { href:"/invoices",       label:"Invoices",      icon:Receipt },
+    { href:"/change-orders",  label:"Change Orders", icon:GitPullRequest },
+    { href:"/quotes",         label:"Quotes",        icon:Calculator },
+    { href:"/reports",        label:"Reports",       icon:BarChart2 },
+    { href:"/documents",      label:"Documents",     icon:FileText },
+    { href:"/submittals",     label:"Submittals",    icon:FileSignature },
+    { href:"/subcontractors", label:"Subcontractors",icon:Building2 },
+    { href:"/team",           label:"Team",          icon:Users },
+    { href:"/milestones",     label:"Milestones",    icon:Milestone },
+    { href:"/schedule",       label:"Schedule",      icon:Calendar },
+    { href:"/meetings",       label:"Meetings",      icon:Users2 },
+    { href:"/portal",         label:"Client Portal", icon:Globe },
+    { href:"/ai-tools",       label:"AI Tools",      icon:Bot },
+    { href:"/messages",       label:"Messages",      icon:MessageSquare },
+    { href:"/settings",       label:"Settings",      icon:Settings },
   ],
   field: [
     { href:"/dashboard",  label:"Dashboard",  icon:LayoutDashboard },
