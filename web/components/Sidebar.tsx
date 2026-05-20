@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -62,9 +63,22 @@ const ROLE_META: Record<string,{ label:string; color:string; bg:string }> = {
 export default function Sidebar({ profile }: { profile: any }) {
   const pathname = usePathname();
   const router   = useRouter();
-  const role     = profile?.role ?? "field";
-  const nav      = NAV[role] ?? NAV.field;
-  const meta     = ROLE_META[role];
+  const actualRole = profile?.role ?? "field";
+  const [previewRole, setPreviewRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Load preview role from localStorage
+    const stored = localStorage.getItem("buildos_preview_role");
+    if (stored && stored !== actualRole) setPreviewRole(stored);
+    // Listen for role changes from TopBar
+    const handler = (e: CustomEvent) => setPreviewRole(e.detail);
+    window.addEventListener("buildos_role_change", handler as EventListener);
+    return () => window.removeEventListener("buildos_role_change", handler as EventListener);
+  }, [actualRole]);
+
+  const role = previewRole ?? actualRole;
+  const nav  = NAV[role] ?? NAV.field;
+  const meta = ROLE_META[role];
 
   const logout = async () => {
     await createClient().auth.signOut();
