@@ -21,6 +21,7 @@ const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }
   ],
   admin: [
     { href:"/dashboard",      label:"Dashboard",       icon:LayoutDashboard },
+    { href:"/pipeline",       label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
     { href:"/projects",       label:"Projects",        icon:FolderKanban },
     { href:"/milestones",     label:"Milestones",      icon:Milestone },
     { href:"/budget",         label:"Budget",          icon:DollarSign },
@@ -47,6 +48,7 @@ const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }
   ],
   office: [
     { href:"/dashboard",      label:"Dashboard",       icon:LayoutDashboard },
+    { href:"/pipeline",       label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
     { href:"/projects",       label:"Projects",        icon:FolderKanban },
     { href:"/budget",         label:"Budget",          icon:DollarSign },
     { href:"/invoices",       label:"Invoices",        icon:Receipt },
