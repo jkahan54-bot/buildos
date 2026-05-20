@@ -5,9 +5,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   LayoutDashboard, FolderKanban, DollarSign, Users, ShieldAlert,
-  FileText, HelpCircle, Mail, Bot, Settings, Clock, CalendarCheck,
+  FileText, HelpCircle, Bot, Settings, Clock, CalendarCheck,
   Camera, MessageSquare, CheckSquare, LogOut, Building2, Milestone,
-  Receipt, ChevronRight
+  Receipt, ChevronRight, GitPullRequest, ClipboardList, Package,
+  Calendar, BarChart2, Calculator, FileSignature, Globe, Wrench,
+  Users2
 } from "lucide-react";
 
 const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }[]> = {
@@ -27,8 +29,18 @@ const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }
     { href:"/rfis",           label:"RFIs",            icon:HelpCircle },
     { href:"/documents",      label:"Documents",       icon:FileText },
     { href:"/subcontractors", label:"Subcontractors",  icon:Building2 },
+    { href:"/change-orders",  label:"Change Orders",   icon:GitPullRequest },
+    { href:"/submittals",     label:"Submittals",      icon:FileSignature },
+    { href:"/punch-list",     label:"Punch List",      icon:ClipboardList },
+    { href:"/schedule",       label:"Schedule",        icon:Calendar },
+    { href:"/equipment",      label:"Equipment",       icon:Package },
+    { href:"/meetings",       label:"Meetings",        icon:Users2 },
+    { href:"/reports",        label:"Reports",         icon:BarChart2 },
     { href:"/ai-tools",       label:"AI Tools",        icon:Bot,        badge:"AI" },
     { href:"/ai-camera",      label:"AI Camera",       icon:Camera,     badge:"AI" },
+    { href:"/ai-takeoff",     label:"AI Takeoff",      icon:Calculator, badge:"AI" },
+    { href:"/quotes",         label:"Quote Builder",   icon:Receipt },
+    { href:"/portal",         label:"Client Portal",   icon:Globe },
     { href:"/messages",       label:"Messages",        icon:MessageSquare },
     { href:"/settings",       label:"Settings",        icon:Settings },
     { href:"/system",         label:"System Health",   icon:Settings,   badge:"⚡" },
