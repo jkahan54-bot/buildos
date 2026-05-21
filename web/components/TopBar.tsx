@@ -60,14 +60,17 @@ const MOBILE_NAV: Record<string, { href: string; label: string; icon: any }[]> =
     { href:"/settings",       label:"Settings",      icon:Settings },
   ],
   field: [
-    { href:"/dashboard",  label:"Dashboard",  icon:LayoutDashboard },
+    { href:"/dashboard",  label:"My Day",     icon:LayoutDashboard },
     { href:"/timelog",    label:"Time Log",   icon:Clock },
     { href:"/daily-log",  label:"Daily Log",  icon:CalendarCheck },
     { href:"/safety",     label:"Safety",     icon:ShieldAlert },
     { href:"/punch-list", label:"Punch List", icon:ClipboardList },
     { href:"/rfis",       label:"RFIs",       icon:HelpCircle },
     { href:"/photos",     label:"Photos",     icon:Camera },
+    { href:"/ai-camera",  label:"AI Camera",  icon:Bot },
+    { href:"/ai-tools",   label:"AI Tools",   icon:Bot },
     { href:"/checklist",  label:"Checklist",  icon:CheckSquare },
+    { href:"/documents",  label:"Documents",  icon:FileText },
     { href:"/messages",   label:"Messages",   icon:MessageSquare },
   ],
 };
