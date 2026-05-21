@@ -1,23 +1,37 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Settings, Sparkles, Menu, X, LayoutDashboard, FolderKanban, DollarSign, Users, ShieldAlert, FileText, HelpCircle, Bot, MessageSquare, Milestone, LogOut, Clock, ChevronDown, Eye, Receipt, GitPullRequest, Calculator, BarChart2, FileSignature, Building2, Calendar, Users2, Globe, ClipboardList, CalendarCheck, Camera, CheckSquare } from "lucide-react";
+import { Settings, Sparkles, Menu, X, LayoutDashboard, FolderKanban, DollarSign, Users, ShieldAlert, FileText, HelpCircle, Bot, MessageSquare, Milestone, LogOut, Clock, ChevronDown, Eye, Receipt, GitPullRequest, Calculator, BarChart2, FileSignature, Building2, Calendar, Users2, Globe, ClipboardList, CalendarCheck, Camera, CheckSquare, Package } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 
 const MOBILE_NAV: Record<string, { href: string; label: string; icon: any }[]> = {
   admin: [
-    { href:"/dashboard",  label:"Dashboard",  icon:LayoutDashboard },
-    { href:"/projects",   label:"Projects",   icon:FolderKanban },
-    { href:"/budget",     label:"Budget",     icon:DollarSign },
-    { href:"/team",       label:"Team",       icon:Users },
-    { href:"/safety",     label:"Safety",     icon:ShieldAlert },
-    { href:"/rfis",       label:"RFIs",       icon:HelpCircle },
-    { href:"/documents",  label:"Documents",  icon:FileText },
-    { href:"/milestones", label:"Milestones", icon:Milestone },
-    { href:"/ai-tools",   label:"AI Tools",   icon:Bot },
-    { href:"/messages",   label:"Messages",   icon:MessageSquare },
-    { href:"/settings",   label:"Settings",   icon:Settings },
+    { href:"/dashboard",      label:"Dashboard",     icon:LayoutDashboard },
+    { href:"/pipeline",       label:"Pipeline",      icon:GitPullRequest },
+    { href:"/projects",       label:"Projects",      icon:FolderKanban },
+    { href:"/budget",         label:"Budget",        icon:DollarSign },
+    { href:"/change-orders",  label:"Change Orders", icon:GitPullRequest },
+    { href:"/invoices",       label:"Invoices",      icon:Receipt },
+    { href:"/quotes",         label:"Quote Builder", icon:Calculator },
+    { href:"/reports",        label:"Reports",       icon:BarChart2 },
+    { href:"/team",           label:"Team",          icon:Users },
+    { href:"/safety",         label:"Safety",        icon:ShieldAlert },
+    { href:"/rfis",           label:"RFIs",          icon:HelpCircle },
+    { href:"/submittals",     label:"Submittals",    icon:FileSignature },
+    { href:"/punch-list",     label:"Punch List",    icon:ClipboardList },
+    { href:"/documents",      label:"Documents",     icon:FileText },
+    { href:"/schedule",       label:"Schedule",      icon:Calendar },
+    { href:"/milestones",     label:"Milestones",    icon:Milestone },
+    { href:"/subcontractors", label:"Subcontractors",icon:Building2 },
+    { href:"/equipment",      label:"Equipment",     icon:Package },
+    { href:"/meetings",       label:"Meetings",      icon:Users2 },
+    { href:"/ai-tools",       label:"AI Tools",      icon:Bot },
+    { href:"/ai-camera",      label:"AI Camera",     icon:Camera },
+    { href:"/ai-takeoff",     label:"AI Takeoff",    icon:Calculator },
+    { href:"/portal",         label:"Client Portal", icon:Globe },
+    { href:"/messages",       label:"Messages",      icon:MessageSquare },
+    { href:"/settings",       label:"Settings",      icon:Settings },
   ],
   owner: [
     { href:"/dashboard",  label:"Dashboard",  icon:LayoutDashboard },
