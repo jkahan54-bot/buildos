@@ -121,6 +121,7 @@ export default function TimeLogClient({ logs, projects, currentEntry }: any) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

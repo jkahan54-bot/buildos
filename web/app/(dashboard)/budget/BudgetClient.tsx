@@ -245,6 +245,7 @@ export default function BudgetClient({ projects, items, invoices }: any) {
               </tr></tfoot>
             )}
           </table>
+          </div>
         </div>
       )}
 
@@ -280,6 +281,7 @@ export default function BudgetClient({ projects, items, invoices }: any) {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>
