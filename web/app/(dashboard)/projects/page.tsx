@@ -21,7 +21,7 @@ export default async function ProjectsPage() {
       </div>
 
       {!projects?.length ? (
-        <div className="bg-surface rounded-xl border border-dashed border-border p-16 text-center">
+        <div className="bg-white rounded-xl border border-dashed border-gray-300 p-16 text-center">
           <div className="text-5xl mb-4">🏗</div>
           <p className="text-gray-400 font-semibold text-lg">No projects yet</p>
           <p className="text-gray-600 text-sm mt-1">Create your first project to get started</p>
@@ -35,7 +35,7 @@ export default async function ProjectsPage() {
             const col = statusColor(p.status);
             const pct = p.budget > 0 ? Math.round((p.spent ?? 0) / p.budget * 100) : 0;
             return (
-              <div key={p.id} className="bg-surface rounded-xl border border-border p-5">
+              <div key={p.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <div className="flex items-center gap-2">
@@ -73,7 +73,7 @@ export default async function ProjectsPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-border text-gray-400">{p.phase ?? "No phase set"}</span>
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">{p.phase ?? "No phase set"}</span>
                   <div className="flex gap-2">
                     <Link href={`/projects/${p.id}`} className="text-sm font-bold px-3 py-1.5 rounded-lg border border-border text-gray-300 hover:border-gray-400 transition-colors">View</Link>
                     <Link href={`/projects/${p.id}/edit`} className="text-sm font-bold px-3 py-1.5 rounded-lg bg-surface-card border border-border text-gray-300 hover:border-gray-400 transition-colors">Edit</Link>

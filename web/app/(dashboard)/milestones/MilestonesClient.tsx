@@ -176,7 +176,7 @@ export default function MilestonesClient({ milestones, projects }: any) {
       <div>
         <h2 className="font-bold text-lg mb-3">Pending ({upcoming.length})</h2>
         {!upcoming.length ? (
-          <div className="bg-surface rounded-xl border border-dashed border-border p-8 text-center text-gray-500">
+          <div className="bg-white rounded-xl border border-dashed border-gray-300 p-8 text-center text-gray-500">
             <div className="text-3xl mb-2">✓</div>No pending milestones
           </div>
         ) : (

@@ -129,7 +129,7 @@ export default function RFIsClient({ rfis, projects }: any) {
       {/* RFI list */}
       <div className="space-y-3">
         {!rfis.length ? (
-          <div className="bg-surface rounded-xl border border-dashed border-border p-12 text-center">
+          <div className="bg-white rounded-xl border border-dashed border-gray-300 p-12 text-center">
             <div className="text-4xl mb-3">?</div>
             <p className="text-gray-400 font-semibold">No RFIs yet</p>
           </div>

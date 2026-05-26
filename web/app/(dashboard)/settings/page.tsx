@@ -3,6 +3,21 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { AVAILABLE_MODELS } from "@/lib/models";
 
+// Defined OUTSIDE component to prevent focus jumping
+function ModelCard({ model, selected, onSelect }: any) {
+  return (
+    <button onClick={() => onSelect(model.id)}
+      className={`p-4 rounded-xl border text-left transition-all w-full ${selected ? "border-orange-500 bg-orange-50" : "border-gray-200 hover:border-gray-300 bg-white"}`}>
+      <div className="flex items-center gap-2 mb-1">
+        <div className={`w-2 h-2 rounded-full ${model.provider === "anthropic" ? "bg-orange-500" : "bg-green-500"}`} />
+        <span className="font-semibold text-sm text-gray-900">{model.name}</span>
+        {selected && <span className="ml-auto text-xs text-orange-600 font-bold">✓ Selected</span>}
+      </div>
+      <p className="text-xs text-gray-500">{model.description}</p>
+    </button>
+  );
+}
+
 export default function SettingsPage() {
   const [profile, setProfile]   = useState<any>(null);
   const [primary, setPrimary]   = useState("claude-sonnet-4-6");
@@ -33,18 +48,6 @@ export default function SettingsPage() {
   const anthropicModels = AVAILABLE_MODELS.filter(m => m.provider === "anthropic");
   const openaiModels    = AVAILABLE_MODELS.filter(m => m.provider === "openai");
 
-  const ModelCard = ({ model, selected, onSelect }: any) => (
-    <button onClick={() => onSelect(model.id)}
-      className={`p-4 rounded-xl border text-left transition-colors w-full ${selected ? "border-brand bg-brand/10" : "border-border hover:border-gray-500"}`}>
-      <div className="flex items-center gap-2 mb-1">
-        <div className={`w-2 h-2 rounded-full ${model.provider === "anthropic" ? "bg-orange-400" : "bg-green-400"}`} />
-        <span className="font-bold text-sm">{model.name}</span>
-        {selected && <span className="ml-auto text-xs text-brand font-bold">Selected</span>}
-      </div>
-      <p className="text-xs text-gray-500">{model.description}</p>
-    </button>
-  );
-
   return (
     <div className="max-w-2xl space-y-6">
       <div>
@@ -55,7 +58,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Primary model */}
-      <div className="bg-surface rounded-xl border border-border p-6">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="font-bold mb-1">Primary AI Model <span className="text-brand">◆</span></div>
         <p className="text-sm text-gray-500 mb-4">Used for BuildBot chat, safety analysis, takeoff, and all main AI features.</p>
         <div className="mb-3 text-xs text-orange-400 font-bold uppercase tracking-wider">Claude (Anthropic)</div>
@@ -69,7 +72,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Secondary model */}
-      <div className="bg-surface rounded-xl border border-border p-6">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="font-bold mb-1">Cross-Check AI Model <span className="text-green-400">▲</span></div>
         <p className="text-sm text-gray-500 mb-4">Used to independently verify the primary AI's output in Dual Review.</p>
         <div className="grid grid-cols-1 gap-2">
@@ -87,7 +90,7 @@ export default function SettingsPage() {
         {saved && <span className="text-green-400 text-sm font-semibold">✓ Saved!</span>}
       </div>
 
-      <div className="bg-surface rounded-xl border border-border p-6">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="font-bold mb-3">Account</div>
         <div className="space-y-1 text-sm text-gray-400">
           <div><span className="text-gray-600">Name: </span>{profile?.full_name}</div>

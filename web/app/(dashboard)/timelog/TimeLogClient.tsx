@@ -57,7 +57,7 @@ export default function TimeLogClient({ logs, projects, currentEntry }: any) {
           { label:"Entries",      value: logs.length,                   color:"#3B82F6" },
           { label:"Status",       value: isClockedIn ? "On Site" : "Off Site", color: isClockedIn ? "#22C55E" : "#6B7280" },
         ].map(s => (
-          <div key={s.label} className="bg-surface rounded-xl border border-border p-5">
+          <div key={s.label} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
             <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">{s.label}</div>
             <div className="text-2xl font-black font-mono" style={{ color: s.color }}>{s.value}</div>
           </div>
@@ -65,11 +65,11 @@ export default function TimeLogClient({ logs, projects, currentEntry }: any) {
       </div>
 
       {/* Clock in/out */}
-      <div className="bg-surface rounded-xl border border-border p-6">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         {isClockedIn ? (
           <div className="text-center">
-            <div className="text-green-400 font-bold text-sm uppercase tracking-wider mb-2">⏱ Clocked In</div>
-            <div className="text-4xl font-black font-mono text-white mb-2">{elapsed || "0h 00m 00s"}</div>
+            <div className="text-green-600 font-bold text-sm uppercase tracking-wider mb-2">⏱ Clocked In</div>
+            <div className="text-4xl font-black font-mono text-gray-900 mb-2">{elapsed || "0h 00m 00s"}</div>
             <div className="text-gray-500 text-sm mb-6">
               Started at {new Date(currentEntry.clock_in).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" })}
             </div>
@@ -97,8 +97,7 @@ export default function TimeLogClient({ logs, projects, currentEntry }: any) {
       </div>
 
       {/* Log table */}
-      <div className="bg-surface rounded-xl border border-border overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"><div className="overflow-x-auto"><table className="w-full">
           <thead>
             <tr className="border-b border-border">
               {["Date","Project","In","Out","Hours"].map(h => (
@@ -114,7 +113,7 @@ export default function TimeLogClient({ logs, projects, currentEntry }: any) {
                 <td className="px-4 py-3 text-sm font-semibold">{new Date(l.clock_in).toLocaleDateString()}</td>
                 <td className="px-4 py-3 text-sm text-gray-400">{l.projects?.name ?? "—"}</td>
                 <td className="px-4 py-3 text-sm font-mono">{new Date(l.clock_in).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" })}</td>
-                <td className="px-4 py-3 text-sm font-mono">{l.clock_out ? new Date(l.clock_out).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) : <span className="text-green-400 font-bold">Active</span>}</td>
+                <td className="px-4 py-3 text-sm font-mono">{l.clock_out ? new Date(l.clock_out).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) : <span className="text-green-600 font-bold" style={{ color:"#16a34a" }}>Active</span>}</td>
                 <td className="px-4 py-3 font-mono font-bold" style={{ color: l.hours > 9 ? "#F59E0B" : "#111827" }}>
                   {l.hours ? l.hours.toFixed(2) : "—"}
                 </td>

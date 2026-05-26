@@ -74,7 +74,7 @@ export default function BudgetClient({ projects, items, invoices }: any) {
           { label:"Remaining",       value: fmt(totalBudget - totalSpent), color: totalBudget - totalSpent < 0 ? "#EF4444" : "#22C55E" },
           { label:"Outstanding Inv", value: fmt(totalInvoiced), color: overdue > 0 ? "#EF4444" : "#F59E0B" },
         ].map(s => (
-          <div key={s.label} className="bg-surface rounded-xl border border-border p-5">
+          <div key={s.label} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
             <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">{s.label}</div>
             <div className="text-2xl font-black font-mono" style={{ color: s.color }}>{s.value}</div>
           </div>
@@ -175,7 +175,7 @@ export default function BudgetClient({ projects, items, invoices }: any) {
       {/* Overview */}
       {tab === "overview" && (
         <div className="space-y-4">
-          <div className="bg-surface rounded-xl border border-border p-5">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
             <div className="font-bold text-sm mb-4">Budget vs Spent by Project</div>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={projects.map((p: any) => ({ name: p.name.split(" ")[0], budget: Math.round((p.budget??0)/1000), spent: Math.round((p.spent??0)/1000) }))} barGap={4}>
@@ -191,7 +191,7 @@ export default function BudgetClient({ projects, items, invoices }: any) {
             const pct = p.budget > 0 ? Math.round((p.spent??0)/p.budget*100) : 0;
             const col = pct > 90 ? "#EF4444" : pct > 75 ? "#F59E0B" : "#22C55E";
             return (
-              <div key={p.id} className="bg-surface rounded-xl border border-border p-5">
+              <div key={p.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
                 <div className="flex justify-between items-center mb-3">
                   <div className="font-bold">{p.name}</div>
                   <div className="flex gap-4 text-sm font-mono">
@@ -214,8 +214,7 @@ export default function BudgetClient({ projects, items, invoices }: any) {
 
       {/* Line items */}
       {tab === "items" && (
-        <div className="bg-surface rounded-xl border border-border overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"><div className="overflow-x-auto"><table className="w-full">
             <thead><tr className="border-b border-border">
               {["Project","Category","Description","Qty","Unit","Material","Labor","Total"].map(h => (
                 <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wider font-semibold">{h}</th>
@@ -227,7 +226,7 @@ export default function BudgetClient({ projects, items, invoices }: any) {
               ) : items.map((item: any) => (
                 <tr key={item.id} className="border-b border-border/50 hover:bg-surface-card transition-colors">
                   <td className="px-4 py-3 text-sm text-gray-400 truncate max-w-[120px]">{item.projects?.name?.split(" ")[0]}</td>
-                  <td className="px-4 py-3"><span className="text-xs font-bold px-2 py-1 rounded bg-border text-gray-300">{item.category}</span></td>
+                  <td className="px-4 py-3"><span className="text-xs font-bold px-2 py-1 rounded bg-gray-100 text-gray-600">{item.category}</span></td>
                   <td className="px-4 py-3 text-sm font-semibold">{item.description}</td>
                   <td className="px-4 py-3 text-sm font-mono text-brand">{item.quantity}</td>
                   <td className="px-4 py-3 text-xs text-gray-500">{item.unit}</td>
@@ -251,8 +250,7 @@ export default function BudgetClient({ projects, items, invoices }: any) {
 
       {/* Invoices */}
       {tab === "invoices" && (
-        <div className="bg-surface rounded-xl border border-border overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"><div className="overflow-x-auto"><table className="w-full">
             <thead><tr className="border-b border-border">
               {["Project","Vendor","Amount","Due Date","Status","Action"].map(h => (
                 <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wider font-semibold">{h}</th>

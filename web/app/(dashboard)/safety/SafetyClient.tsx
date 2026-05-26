@@ -53,7 +53,7 @@ export default function SafetyClient({ incidents, projects }: any) {
           { label:"High Severity",  value: high,   color:"#F46519" },
           { label:"Closed (All)",   value: closed, color:"#22C55E" },
         ].map(s => (
-          <div key={s.label} className="bg-surface rounded-xl border border-border p-5">
+          <div key={s.label} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
             <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">{s.label}</div>
             <div className="text-3xl font-black font-mono" style={{ color: s.color }}>{s.value}</div>
           </div>
@@ -110,12 +110,12 @@ export default function SafetyClient({ incidents, projects }: any) {
       {/* Incidents list */}
       <div className="space-y-3">
         {!incidents.length ? (
-          <div className="bg-surface rounded-xl border border-dashed border-border p-12 text-center">
+          <div className="bg-white rounded-xl border border-dashed border-gray-300 p-12 text-center">
             <div className="text-4xl mb-3">✅</div>
             <p className="text-gray-400 font-semibold">No incidents reported</p>
           </div>
         ) : incidents.map((inc: any) => (
-          <div key={inc.id} className="bg-surface rounded-xl border border-border p-5"
+          <div key={inc.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5"
             style={{ borderLeft: `4px solid ${SEV_COLOR[inc.severity] ?? "#6B7280"}` }}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -123,7 +123,7 @@ export default function SafetyClient({ incidents, projects }: any) {
                   <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: SEV_COLOR[inc.severity]+"22", color: SEV_COLOR[inc.severity] }}>
                     {inc.severity} Severity
                   </span>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-border text-gray-300">{inc.type}</span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">{inc.type}</span>
                   <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: STATUS_COLOR[inc.status]+"22", color: STATUS_COLOR[inc.status] }}>
                     {inc.status}
                   </span>
