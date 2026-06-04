@@ -97,6 +97,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
         {[
           { icon:"⚠",  label:"Safety",    sub:`${incidents?.filter(i=>i.status==="Open").length ?? 0} open`,    href:`/safety` },
           { icon:"?",  label:"RFIs",      sub:`${rfis?.filter(r=>r.status==="Open").length ?? 0} open`,          href:`/rfis` },
+          { icon:"✓",  label:"Punch List", sub:"Tap to view",                                                     href:`/projects/${params.id}/punch-list` },
           { icon:"$",  label:"Budget",    sub:"Line items",                                                        href:`/budget` },
           { icon:"▣",  label:"Documents", sub:"Files",                                                             href:`/documents` },
         ].map(q => (

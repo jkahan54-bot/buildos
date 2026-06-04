@@ -22,6 +22,7 @@ const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }
   admin: [
     { href:"/dashboard",      label:"Dashboard",       icon:LayoutDashboard },
     { href:"/pipeline",       label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
+    { href:"/walkthroughs",   label:"Walkthroughs",    icon:Camera,         badge:"🏥" },
     { href:"/projects",       label:"Projects",        icon:FolderKanban },
     { href:"/milestones",     label:"Milestones",      icon:Milestone },
     { href:"/budget",         label:"Budget",          icon:DollarSign },
