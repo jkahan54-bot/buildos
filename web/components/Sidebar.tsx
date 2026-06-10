@@ -9,18 +9,54 @@ import {
   Camera, MessageSquare, CheckSquare, LogOut, Building2, Milestone,
   Receipt, ChevronRight, GitPullRequest, ClipboardList, Package,
   Calendar, BarChart2, Calculator, FileSignature, Globe, Wrench,
-  Users2
+  Users2, Shield
 } from "lucide-react";
 
 const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }[]> = {
+  // Master Owner — everything
   owner: [
+    { href:"/dashboard",       label:"Dashboard",       icon:LayoutDashboard },
+    { href:"/daily-summary",   label:"Daily Review",    icon:ClipboardList,  badge:"📋" },
+    { href:"/pipeline",        label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
+    { href:"/walkthroughs",    label:"Walkthroughs",    icon:Camera,         badge:"🏥" },
+    { href:"/projects",        label:"Projects",        icon:FolderKanban },
+    { href:"/milestones",      label:"Milestones",      icon:Milestone },
+    { href:"/budget",          label:"Budget",          icon:DollarSign },
+    { href:"/team",            label:"Team",            icon:Users },
+    { href:"/safety",          label:"Safety",          icon:ShieldAlert },
+    { href:"/rfis",            label:"RFIs",            icon:HelpCircle },
+    { href:"/documents",       label:"Documents",       icon:FileText },
+    { href:"/subcontractors",  label:"Subcontractors",  icon:Building2 },
+    { href:"/change-orders",   label:"Change Orders",   icon:GitPullRequest },
+    { href:"/submittals",      label:"Submittals",      icon:FileSignature },
+    { href:"/punch-list",      label:"Punch List",      icon:ClipboardList },
+    { href:"/schedule",        label:"Schedule",        icon:Calendar },
+    { href:"/equipment",       label:"Equipment",       icon:Package },
+    { href:"/meetings",        label:"Meetings",        icon:Users2 },
+    { href:"/invoices",        label:"Invoices",        icon:Receipt },
+    { href:"/reports",         label:"Reports",         icon:BarChart2 },
+    { href:"/ai-tools",        label:"AI Tools",        icon:Bot,        badge:"AI" },
+    { href:"/ai-camera",       label:"AI Camera",       icon:Camera,     badge:"AI" },
+    { href:"/ai-takeoff",      label:"AI Takeoff",      icon:Calculator, badge:"AI" },
+    { href:"/quotes",          label:"Quote Builder",   icon:Receipt },
+    { href:"/portal",          label:"Client Portal",   icon:Globe },
+    { href:"/messages",        label:"Messages",        icon:MessageSquare },
+    { href:"/settings",        label:"Settings",        icon:Settings },
+    { href:"/security",        label:"Security Log",    icon:Shield,     badge:"🔒" },
+    { href:"/system",          label:"System Health",   icon:Settings,   badge:"⚡" },
+  ],
+  // Jobsite Owner — high-level project visibility only
+  jobsite_owner: [
     { href:"/dashboard",  label:"Dashboard",   icon:LayoutDashboard },
     { href:"/milestones", label:"Milestones",   icon:Milestone },
     { href:"/projects",   label:"Projects",     icon:FolderKanban },
+    { href:"/schedule",   label:"Schedule",     icon:Calendar },
+    { href:"/documents",  label:"Documents",    icon:FileText },
     { href:"/messages",   label:"Messages",     icon:MessageSquare },
   ],
   admin: [
     { href:"/dashboard",      label:"Dashboard",       icon:LayoutDashboard },
+    { href:"/daily-summary",  label:"Daily Review",    icon:ClipboardList,  badge:"📋" },
     { href:"/pipeline",       label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
     { href:"/walkthroughs",   label:"Walkthroughs",    icon:Camera,         badge:"🏥" },
     { href:"/projects",       label:"Projects",        icon:FolderKanban },
@@ -45,6 +81,7 @@ const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }
     { href:"/portal",         label:"Client Portal",   icon:Globe },
     { href:"/messages",       label:"Messages",        icon:MessageSquare },
     { href:"/settings",       label:"Settings",        icon:Settings },
+    { href:"/security",       label:"Security Log",    icon:Shield,     badge:"🔒" },
     { href:"/system",         label:"System Health",   icon:Settings,   badge:"⚡" },
   ],
   office: [
@@ -70,26 +107,32 @@ const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }
     { href:"/settings",       label:"Settings",        icon:Settings },
   ],
   field: [
-    { href:"/my-day",     label:"My Day",        icon:LayoutDashboard },
-    { href:"/timelog",    label:"Time Log",      icon:Clock },
-    { href:"/daily-log",  label:"Daily Log",     icon:CalendarCheck },
-    { href:"/safety",     label:"Safety",        icon:ShieldAlert },
-    { href:"/photos",     label:"Photos",        icon:Camera },
-    { href:"/ai-camera",  label:"AI Camera",     icon:Bot,           badge:"AI" },
-    { href:"/ai-tools",   label:"AI Tools",      icon:Bot,           badge:"AI" },
-    { href:"/rfis",       label:"RFIs",          icon:HelpCircle },
-    { href:"/punch-list", label:"Punch List",    icon:ClipboardList },
-    { href:"/checklist",  label:"Checklist",     icon:CheckSquare },
-    { href:"/documents",  label:"Documents",     icon:FileText },
-    { href:"/messages",   label:"Messages",      icon:MessageSquare },
+    { href:"/my-day",         label:"My Day",        icon:LayoutDashboard },
+    { href:"/timelog",        label:"Time Log",      icon:Clock },
+    { href:"/daily-log",      label:"Daily Log",     icon:CalendarCheck },
+    { href:"/walkthroughs",   label:"Walkthroughs",  icon:Camera,        badge:"🏥" },
+    { href:"/projects",       label:"Projects",      icon:FolderKanban },
+    { href:"/schedule",       label:"Schedule",      icon:Calendar },
+    { href:"/milestones",     label:"Milestones",    icon:Milestone },
+    { href:"/safety",         label:"Safety",        icon:ShieldAlert },
+    { href:"/photos",         label:"Photos",        icon:Camera },
+    { href:"/ai-camera",      label:"AI Camera",     icon:Bot,           badge:"AI" },
+    { href:"/ai-tools",       label:"AI Tools",      icon:Bot,           badge:"AI" },
+    { href:"/rfis",           label:"RFIs",          icon:HelpCircle },
+    { href:"/punch-list",     label:"Punch List",    icon:ClipboardList },
+    { href:"/checklist",      label:"Checklist",     icon:CheckSquare },
+    { href:"/subcontractors", label:"Subcontractors",icon:Building2 },
+    { href:"/documents",      label:"Documents",     icon:FileText },
+    { href:"/messages",       label:"Messages",      icon:MessageSquare },
   ],
 };
 
-const ROLE_META: Record<string,{ label:string; color:string; bg:string }> = {
-  owner:  { label:"Owner",          color:"#7c3aed", bg:"#ede9fe" },
-  admin:  { label:"Administrator",  color:"#ea580c", bg:"#fff7ed" },
-  office: { label:"Office Manager", color:"#2563eb", bg:"#eff6ff" },
-  field:  { label:"Field Worker",   color:"#16a34a", bg:"#f0fdf4" },
+const ROLE_META: Record<string,{ label:string; color:string; bg:string; icon?:string }> = {
+  owner:         { label:"Master Owner",   color:"#92400e", bg:"#fef3c7", icon:"👑" },
+  jobsite_owner: { label:"Jobsite Owner",  color:"#7c3aed", bg:"#ede9fe", icon:"🏗️" },
+  admin:         { label:"Administrator",  color:"#ea580c", bg:"#fff7ed" },
+  office:        { label:"Office Manager", color:"#2563eb", bg:"#eff6ff" },
+  field:         { label:"Field Worker",   color:"#16a34a", bg:"#f0fdf4" },
 };
 
 export default function Sidebar({ profile }: { profile: any }) {
@@ -130,9 +173,9 @@ export default function Sidebar({ profile }: { profile: any }) {
             style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
           <div>
             <div className="font-bold text-sm text-gray-900">BuildOS</div>
-            <div className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-0.5 inline-block"
+            <div className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-0.5 inline-flex items-center gap-0.5"
               style={{ color: meta.color, background: meta.bg }}>
-              {meta.label}
+              {meta.icon && <span>{meta.icon}</span>}{meta.label}
             </div>
           </div>
         </div>
