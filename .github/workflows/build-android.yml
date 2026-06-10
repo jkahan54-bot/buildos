@@ -1,10 +1,13 @@
 name: Build Android APK
 
 on:
-  workflow_dispatch:   # manual trigger from GitHub UI
-  push:
-    branches: [main]
-    paths: ['mobile/**']
+  workflow_dispatch:   # manual trigger only — runs when you start it from the GitHub UI
+  # Automatic build-on-push is disabled for now (the Android/Expo build was failing
+  # and emailing failures on every push). The website is built separately by Vercel
+  # and is unaffected. To re-enable automatic Android builds later, uncomment below:
+  # push:
+  #   branches: [main]
+  #   paths: ['mobile/**']
 
 jobs:
   build:
