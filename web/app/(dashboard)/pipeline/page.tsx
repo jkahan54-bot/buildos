@@ -55,8 +55,25 @@ export default function PipelinePage() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const { data: prof } = await supabase.from("profiles").select("org_id").eq("id", user!.id).single();
-    const payload = { ...form, org_id: prof?.org_id, created_by: user!.id, estimated_value: form.estimated_value ? parseFloat(form.estimated_value) : null };
-    await supabase.from("leads").insert(payload);
+    // `notes` is a UI-only field — the leads table has no such column, so strip it out
+    const { notes: firstNote, next_followup, ...leadFields } = form;
+    const payload = {
+      ...leadFields,
+      org_id: prof?.org_id,
+      created_by: user!.id,
+      estimated_value: form.estimated_value ? parseFloat(form.estimated_value) : null,
+      next_followup: next_followup || null,
+    };
+    const { data: newLead, error } = await supabase.from("leads").insert(payload).select().single();
+    if (error) {
+      setLoading(false);
+      alert("Could not save lead: " + error.message);
+      return;
+    }
+    // If the user typed an opening note, save it to the conversation log
+    if (firstNote.trim() && newLead) {
+      await supabase.from("lead_notes").insert({ lead_id: newLead.id, note: firstNote.trim(), created_by: user!.id });
+    }
     setLoading(false); setShowForm(false);
     setForm({ contact_name:"", company:"", phone:"", email:"", address:"", project_description:"", project_type:"standard", estimated_value:"", status:"new", source:"", next_followup:"", notes:"" });
     await load();
