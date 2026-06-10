@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 export { AVAILABLE_MODELS, DEFAULT_PRIMARY_MODEL, DEFAULT_SECONDARY_MODEL } from "./models";
 export type { AIModel } from "./models";
-import { AVAILABLE_MODELS, DEFAULT_PRIMARY_MODEL } from "./models";
+import { AVAILABLE_MODELS, DEFAULT_PRIMARY_MODEL, DEFAULT_SECONDARY_MODEL } from "./models";
 
 const anthropic  = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const getOpenAI  = () => new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "placeholder" });
