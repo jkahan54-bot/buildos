@@ -9,10 +9,10 @@ import {
   Camera, MessageSquare, CheckSquare, LogOut, Building2, Milestone,
   Receipt, ChevronRight, GitPullRequest, ClipboardList, Package,
   Calendar, BarChart2, Calculator, FileSignature, Globe, Wrench,
-  Users2, Shield
+  Users2, Shield, Lock
 } from "lucide-react";
 
-const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }[]> = {
+export const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }[]> = {
   // Master Owner — everything
   owner: [
     { href:"/dashboard",       label:"Dashboard",       icon:LayoutDashboard },
@@ -41,6 +41,7 @@ const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }
     { href:"/quotes",          label:"Quote Builder",   icon:Receipt },
     { href:"/portal",          label:"Client Portal",   icon:Globe },
     { href:"/messages",        label:"Messages",        icon:MessageSquare },
+    { href:"/permissions",     label:"Role Access",     icon:Lock,       badge:"🔑" },
     { href:"/settings",        label:"Settings",        icon:Settings },
     { href:"/security",        label:"Security Log",    icon:Shield,     badge:"🔒" },
     { href:"/system",          label:"System Health",   icon:Settings,   badge:"⚡" },
@@ -80,6 +81,7 @@ const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }
     { href:"/quotes",         label:"Quote Builder",   icon:Receipt },
     { href:"/portal",         label:"Client Portal",   icon:Globe },
     { href:"/messages",       label:"Messages",        icon:MessageSquare },
+    { href:"/permissions",    label:"Role Access",     icon:Lock,       badge:"🔑" },
     { href:"/settings",       label:"Settings",        icon:Settings },
     { href:"/security",       label:"Security Log",    icon:Shield,     badge:"🔒" },
     { href:"/system",         label:"System Health",   icon:Settings,   badge:"⚡" },
@@ -127,7 +129,7 @@ const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }
   ],
 };
 
-const ROLE_META: Record<string,{ label:string; color:string; bg:string; icon?:string }> = {
+export const ROLE_META: Record<string,{ label:string; color:string; bg:string; icon?:string }> = {
   owner:         { label:"Master Owner",   color:"#92400e", bg:"#fef3c7", icon:"👑" },
   jobsite_owner: { label:"Jobsite Owner",  color:"#7c3aed", bg:"#ede9fe", icon:"🏗️" },
   admin:         { label:"Administrator",  color:"#ea580c", bg:"#fff7ed" },
@@ -135,7 +137,7 @@ const ROLE_META: Record<string,{ label:string; color:string; bg:string; icon?:st
   field:         { label:"Field Worker",   color:"#16a34a", bg:"#f0fdf4" },
 };
 
-export default function Sidebar({ profile }: { profile: any }) {
+export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPrefs?: Record<string, string[]> }) {
   const pathname = usePathname();
   const router   = useRouter();
   const actualRole = profile?.role ?? "field";
@@ -152,7 +154,10 @@ export default function Sidebar({ profile }: { profile: any }) {
   }, [actualRole]);
 
   const role = previewRole ?? actualRole;
-  const nav  = NAV[role] ?? NAV.field;
+  // Admin can hide menu items per role via the Role Access page; filter those out.
+  // The Role Access page itself is never hidden so an admin can't lock themselves out.
+  const hidden = menuPrefs?.[role] ?? [];
+  const nav  = (NAV[role] ?? NAV.field).filter(item => item.href === "/permissions" || !hidden.includes(item.href));
   const meta = ROLE_META[role];
 
   const logout = async () => {
