@@ -34,7 +34,7 @@ function AcceptInviteInner() {
     const { error: pwErr } = await supabase.auth.updateUser({ password, data: { full_name: fullName } });
     if (pwErr) { setError(pwErr.message); setLoading(false); return; }
 
-    // Link to org and set role via API
+    // Link to org and set role via API (approval_status = pending — admin must approve)
     const res = await fetch("/api/register", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -42,6 +42,7 @@ function AcceptInviteInner() {
         orgName: inviteData?.organizations?.name ?? "Brookstone Developers",
         role: inviteData?.role ?? "field",
         fullName,
+        approvalStatus: "pending",
       }),
     });
 
@@ -51,7 +52,7 @@ function AcceptInviteInner() {
     }
 
     setLoading(false);
-    router.push("/dashboard");
+    router.push("/dashboard"); // layout will show pending screen
   };
 
   return (

@@ -6,7 +6,7 @@ export default async function TeamPage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   const [{ data: members }, { data: timeLogs }, { data: profile }, { data: invitations }] = await Promise.all([
-    supabase.from("profiles").select("id, full_name, email, role"),
+    supabase.from("profiles").select("id, full_name, email, role, approval_status"),
     supabase.from("time_logs").select("profile_id, hours, clock_in").gte("clock_in", new Date(Date.now() - 7*86400000).toISOString()),
     supabase.from("profiles").select("role, org_id").eq("id", user!.id).single(),
     supabase.from("invitations").select("*").order("created_at", { ascending: false }),
@@ -18,6 +18,7 @@ export default async function TeamPage() {
       timeLogs={timeLogs ?? []}
       invitations={invitations ?? []}
       isAdmin={profile?.role === "admin" || profile?.role === "owner"}
+      isOwner={profile?.role === "owner"}
     />
   );
 }

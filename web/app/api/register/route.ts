@@ -9,7 +9,7 @@ const adminClient = createClient(
 );
 
 export async function POST(req: NextRequest) {
-  const { userId, orgName, role, fullName } = await req.json();
+  const { userId, orgName, role, fullName, approvalStatus } = await req.json();
 
   if (!userId || !orgName) {
     return NextResponse.json({ error: "Missing userId or orgName" }, { status: 400 });
@@ -34,22 +34,24 @@ export async function POST(req: NextRequest) {
           .single();
         if (orgErr2) return NextResponse.json({ error: orgErr2.message }, { status: 500 });
         // Update profile with new org
-        await adminClient.from("profiles").update({ org_id: org2.id, role, full_name: fullName }).eq("id", userId);
+        const status = approvalStatus ?? "approved";
+        await adminClient.from("profiles").update({ org_id: org2.id, role, full_name: fullName, approval_status: status }).eq("id", userId);
         return NextResponse.json({ orgId: org2.id });
       }
       return NextResponse.json({ error: orgErr.message }, { status: 500 });
     }
 
     // 2. Link user profile to org and set role + name
+    const status = approvalStatus ?? "approved";
     const { error: profileErr } = await adminClient
       .from("profiles")
-      .update({ org_id: org.id, role, full_name: fullName })
+      .update({ org_id: org.id, role, full_name: fullName, approval_status: status })
       .eq("id", userId);
 
     if (profileErr) {
       // Profile might not exist yet (trigger delay) — upsert it
       await adminClient.from("profiles").upsert({
-        id: userId, org_id: org.id, role, full_name: fullName,
+        id: userId, org_id: org.id, role, full_name: fullName, approval_status: status,
       });
     }
 

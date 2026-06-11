@@ -1,8 +1,8 @@
 /**
- * WhatsApp Log API — receives ALL messages from InOut bot
- * Works for both direct messages and group messages
- * POST /api/whatsapp-log?project=PROJECT_ID (for group applets)
- * POST /api/whatsapp-log (for direct messages)
+ * WhatsApp → BuildOS
+ * Receives messages from InOut WhatsApp bot via IFTTT webhook.
+ * When you message the InOut bot number from your phone, this fires.
+ * Creates pending_review punch list items automatically.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -13,162 +13,186 @@ const admin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
-const IFTTT_KEY = process.env.IFTTT_WEBHOOK_KEY ?? "";
+const ORG_ID = "f18352de-979e-44d8-a874-c70aa8b05347";
 
-export async function sendWhatsApp(message: string, urgent = false) {
-  if (!IFTTT_KEY) return;
-  const event = urgent ? "buildos_alert" : "buildos_alert";
-  await fetch(`https://maker.ifttt.com/trigger/${event}/with/key/${IFTTT_KEY}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ value1: message }),
+// Hardcoded project map — matches keywords to project UUIDs
+const PROJECT_MAP: { keywords: string[]; id: string; name: string }[] = [
+  { keywords: ["ditmas","125","123"],     id: "8d3354b0-1028-4b5c-9147-79f04f3e9a5c", name: "123-125 Ditmas" },
+  { keywords: ["klein","1852","60th"],    id: "6e6be30d-1374-4a3f-989e-8f265b29a308", name: "Klein 1852 60th" },
+  { keywords: ["910","onderdonk"],        id: "84ac6d50-0a40-44db-acbe-5975c6a5c877", name: "910 Onderdonk" },
+  { keywords: ["rambam"],                 id: "4e67b531-3402-49d3-ae88-cf65f450d649", name: "Rambam Clinic" },
+  { keywords: ["chc"],                    id: "1231a2e5-f98c-4601-98ca-1e9eef4f995f", name: "CHC Construction" },
+];
+
+const ACTION_WORDS = /\b(fix|check|need|needs|waiting|broken|damaged|issue|problem|repair|replace|finish|missing|wrong|cracked|leaking|not working|install|remove|stuck|blocked|investigate|inspect|call|contact|follow up|urgent|asap)\b/i;
+const DONE_WORDS   = /\b(done|finished|completed|all set|ready|fixed|resolved|good to go|complete|wrapped)\b/i;
+
+function matchProject(text: string): { id: string; name: string } | null {
+  const lower = text.toLowerCase();
+  for (const p of PROJECT_MAP) {
+    if (p.keywords.some(k => lower.includes(k))) return p;
+  }
+  return null;
+}
+
+function priorityFromText(text: string): "high" | "medium" | "low" {
+  if (/\b(urgent|asap|emergency|critical|violation|fire|immediately)\b/i.test(text)) return "high";
+  if (/\b(soon|this week|important|need to|must)\b/i.test(text)) return "medium";
+  return "medium";
+}
+
+async function sendCallMeBot(message: string): Promise<void> {
+  const phone  = "18456626789";
+  const apiKey = "8598005";
+  const encoded = encodeURIComponent(message);
+  await fetch(`https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encoded}&apikey=${apiKey}`, {
+    signal: AbortSignal.timeout(8000),
   }).catch(() => {});
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const projectIdParam = searchParams.get("project");
-    const { type, message, from, timestamp } = await req.json();
+    // IFTTT sends the body in various formats — handle both
+    let body: any = {};
+    const contentType = req.headers.get("content-type") ?? "";
 
-    const msg = (message ?? "").toLowerCase().trim();
-    const today = new Date().toISOString().split("T")[0];
-
-    // ── If project-specific (group message) → store for daily report ─────
-    if (projectIdParam) {
-      await admin.from("whatsapp_messages").insert({
-        project_id: projectIdParam,
-        message_date: today,
-        sender: from,
-        content: message,
-      });
-
-      // Check for keywords that need immediate action
-      if (/\b(accident|injury|injured|hurt|fall|emergency|fire|danger)\b/.test(msg)) {
-        const { data: proj } = await admin.from("projects").select("name, org_id").eq("id", projectIdParam).single();
-        await admin.from("safety_incidents").insert({
-          type: "WhatsApp Group Report",
-          severity: "High",
-          description: `[Group: ${from}]: ${message}`,
-          status: "Open",
-          org_id: proj?.org_id,
-          project_id: projectIdParam,
-          incident_date: new Date().toISOString(),
-        });
-        await sendWhatsApp(`🚨 Safety incident logged! Supervisors notified. Call 911 if emergency.`, true);
+    if (contentType.includes("application/json")) {
+      body = await req.json();
+    } else if (contentType.includes("application/x-www-form-urlencoded")) {
+      const text = await req.text();
+      for (const pair of text.split("&")) {
+        const [k, v] = pair.split("=");
+        body[decodeURIComponent(k)] = decodeURIComponent(v.replace(/\+/g, " "));
       }
-
-      // "report" or "done" → trigger immediate report generation
-      if (/\b(report|done|complete|finished|eod|end of day)\b/.test(msg)) {
-        await generateDailyReport(projectIdParam, today);
-        return NextResponse.json({ ok: true, action: "report_generated" });
-      }
-
-      await admin.from("system_events").insert({
-        type: "whatsapp_group_message",
-        status: "logged",
-        details: { project_id: projectIdParam, sender: from, message: message.slice(0, 200) },
-      });
-
-      return NextResponse.json({ ok: true, action: "logged" });
+    } else {
+      // Try JSON anyway
+      try { body = await req.json(); } catch { body = {}; }
     }
 
-    // ── Direct message (no project) ───────────────────────────────────────
-    await admin.from("system_events").insert({
-      type: "whatsapp_message",
-      status: "received",
-      details: { from, message, type, timestamp },
-    });
+    // IFTTT InOut sends: value1=message, value2=sender, value3=timestamp
+    // Direct POST sends: { message, from, type, timestamp }
+    const rawMessage: string = (body.value1 ?? body.message ?? "").trim();
+    const sender: string     = (body.value2 ?? body.from ?? "WhatsApp").trim();
 
-    if (/\b(done|complete|finished|wrapped|site done|all done)\b/.test(msg)) {
-      const now = new Date().toISOString();
-      const { data: todayLogs } = await admin.from("time_logs").select("project_id, profiles(full_name)").gte("clock_in", today + "T00:00:00Z").is("clock_out", null);
+    if (!rawMessage) {
+      return NextResponse.json({ ok: false, reason: "empty message" });
+    }
 
-      if (todayLogs?.length) {
-        await admin.from("time_logs").update({ clock_out: now }).gte("clock_in", today + "T00:00:00Z").is("clock_out", null);
-        const projectIds = [...new Set(todayLogs.map((l: any) => l.project_id))];
-        for (const pid of projectIds) {
-          const crew = todayLogs.filter((l: any) => l.project_id === pid).length;
-          const { data: proj } = await admin.from("projects").select("name, org_id").eq("id", pid as string).single();
-          if (proj) {
-            await admin.from("daily_logs").insert({ project_id: pid, org_id: proj.org_id, work_done: `[WhatsApp] ${message}`, crew_count: crew, log_date: today });
+    const lower = rawMessage.toLowerCase();
+    const project = matchProject(rawMessage);
+    const today   = new Date().toISOString().split("T")[0];
+
+    // ── 1. COMPLETION DETECTION ────────────────────────────────────────────
+    if (DONE_WORDS.test(lower) && !ACTION_WORDS.test(lower)) {
+      // Try to find a matching open punch item
+      if (project) {
+        const { data: openItems } = await admin
+          .from("punch_list_items")
+          .select("id, title")
+          .eq("project_id", project.id)
+          .eq("status", "open");
+
+        let matched = 0;
+        for (const item of (openItems ?? [])) {
+          // Simple fuzzy match — do any significant words overlap?
+          const msgWords  = lower.split(/\s+/).filter(w => w.length > 3);
+          const itemWords = item.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+          const overlap   = msgWords.filter(w => itemWords.some(iw => iw.includes(w) || w.includes(iw)));
+          if (overlap.length >= 2) {
+            await admin.from("punch_list_items").update({
+              status: "completed",
+              description: `Auto-completed from WhatsApp message: "${rawMessage}"`,
+            }).eq("id", item.id);
+            matched++;
           }
         }
-        await sendWhatsApp(`✅ Day logged for ${projectIds.length} project${projectIds.length > 1 ? "s" : ""}. ${todayLogs.length} workers clocked out.`);
-      } else {
-        await sendWhatsApp(`✅ Received. No active clock-ins found for today.`);
+
+        if (matched > 0) {
+          await sendCallMeBot(`✅ BuildOS: ${matched} item${matched>1?"s":""} marked complete on ${project.name} from your WhatsApp message.`);
+          return NextResponse.json({ ok: true, action: "completed", count: matched });
+        }
       }
-    } else if (/\b(accident|injury|fire|emergency|danger)\b/.test(msg)) {
-      await sendWhatsApp(`🚨 Safety incident logged in BuildOS. Call 911 if emergency.`, true);
-    } else {
-      await sendWhatsApp(`📩 Received: "${message.slice(0, 60)}${message.length > 60 ? "…" : ""}". Logged in BuildOS.`);
+      // No match found — log it anyway
+      await sendCallMeBot(`✅ BuildOS received: "${rawMessage.slice(0,80)}" — logged, but no matching open item found to complete.`);
+      return NextResponse.json({ ok: true, action: "done_logged" });
     }
 
-    return NextResponse.json({ ok: true, processed: true });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
-  }
-}
+    // ── 2. ACTION ITEM DETECTION ───────────────────────────────────────────
+    if (ACTION_WORDS.test(rawMessage) || rawMessage.length > 10) {
+      const priority = priorityFromText(rawMessage);
 
-// ── Generate AI daily report from group messages ──────────────────────────
-async function generateDailyReport(projectId: string, date: string) {
-  const { data: project } = await admin.from("projects").select("name").eq("id", projectId).single();
-  const { data: messages } = await admin.from("whatsapp_messages").select("sender, content, created_at").eq("project_id", projectId).eq("message_date", date).order("created_at");
+      // If message has multiple lines or multiple issues, split and create separate items
+      const lines = rawMessage.split(/[,\n;]/).map(l => l.trim()).filter(l => l.length > 5);
 
-  if (!messages?.length) {
-    await sendWhatsApp(`📋 No messages found for ${project?.name} today. Add progress updates to the group and try again.`);
-    return;
-  }
+      let createdCount = 0;
+      for (const line of lines.slice(0, 10)) { // max 10 items per message
+        const lineProject = matchProject(line) ?? project;
+        if (!lineProject) continue; // skip if can't match to a project
 
-  const messageLog = messages.map(m => `[${new Date(m.created_at).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}] ${m.sender}: ${m.content}`).join("\n");
+        await admin.from("punch_list_items").insert({
+          project_id:     lineProject.id,
+          org_id:         ORG_ID,
+          title:          line.slice(0, 200),
+          description:    `From WhatsApp: "${rawMessage.slice(0, 300)}"`,
+          source:         "whatsapp",
+          source_message: rawMessage.slice(0, 500),
+          status:         "pending_review",
+          priority,
+          assigned_to:    sender !== "WhatsApp" ? sender : null,
+        });
+        createdCount++;
+      }
 
-  // Use Claude to generate the report
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": process.env.ANTHROPIC_API_KEY!,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 800,
-        system: `You are a construction daily log assistant. Extract structured information from WhatsApp group messages and create a professional daily log report. Return ONLY valid JSON.`,
-        messages: [{
-          role: "user",
-          content: `Project: ${project?.name}\nDate: ${date}\n\nWhatsApp messages from today:\n${messageLog}\n\nExtract and return this JSON:\n{\n  "work_done": "description of all work performed today",\n  "crew_count": number or null,\n  "weather": "weather if mentioned or null",\n  "materials": "materials received if mentioned or null",\n  "equipment": "equipment used if mentioned or null",\n  "issues": "any issues, delays or concerns or null",\n  "summary": "one sentence summary for WhatsApp reply"\n}`
-        }]
-      }),
-    });
+      if (createdCount === 0 && project) {
+        // Whole message is one item
+        await admin.from("punch_list_items").insert({
+          project_id:     project.id,
+          org_id:         ORG_ID,
+          title:          rawMessage.slice(0, 200),
+          description:    `From WhatsApp message`,
+          source:         "whatsapp",
+          source_message: rawMessage.slice(0, 500),
+          status:         "pending_review",
+          priority,
+          assigned_to:    sender !== "WhatsApp" ? sender : null,
+        });
+        createdCount = 1;
+      }
 
-    const data = await res.json();
-    const text = data.content?.[0]?.text ?? "{}";
-    const draft = JSON.parse(text.replace(/```json|```/g, "").trim());
+      if (createdCount > 0) {
+        const projName = project?.name ?? "BuildOS";
+        await sendCallMeBot(`📋 BuildOS: ${createdCount} item${createdCount>1?"s":""} added to review queue for ${projName}.\nReview: buildos-six.vercel.app/daily-summary`);
+        return NextResponse.json({ ok: true, action: "items_created", count: createdCount });
+      }
+    }
 
-    // Save draft to database
-    const { data: savedDraft } = await admin.from("daily_log_drafts").insert({
-      project_id: projectId,
-      log_date: date,
-      draft_content: draft,
-      status: "pending",
-    }).select().single();
+    // ── 3. SAFETY EMERGENCY ────────────────────────────────────────────────
+    if (/\b(accident|injury|injured|hurt|fall|emergency|fire|danger|911)\b/i.test(rawMessage)) {
+      await admin.from("safety_incidents").insert({
+        type: "WhatsApp Emergency Report",
+        severity: "Critical",
+        description: `[WhatsApp] ${sender}: ${rawMessage}`,
+        status: "Open",
+        org_id: ORG_ID,
+        project_id: project?.id ?? null,
+        incident_date: new Date().toISOString(),
+      });
+      await sendCallMeBot(`🚨 SAFETY ALERT logged in BuildOS: "${rawMessage.slice(0,100)}". Check BuildOS immediately.`);
+      return NextResponse.json({ ok: true, action: "safety_incident" });
+    }
 
-    // Send WhatsApp notification to PM
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://buildos-six.vercel.app";
-    await sendWhatsApp(
-      `📋 *${project?.name} — Daily Report Draft*\n\n${draft.summary}\n\n` +
-      `Crew: ${draft.crew_count ?? "?"} · ${draft.weather ?? ""}\n` +
-      `Review & confirm at:\n${appUrl}/daily-report/${savedDraft?.id}\n\n` +
-      `Reply CONFIRM to approve as-is.`
-    );
-
+    // ── 4. Fallback — just log it ──────────────────────────────────────────
     await admin.from("system_events").insert({
-      type: "daily_report_generated",
-      status: "pending_review",
-      details: { project_id: projectId, date, draft_id: savedDraft?.id, message_count: messages.length },
+      org_id: ORG_ID,
+      type: "whatsapp_message",
+      status: "received",
+      details: { sender, message: rawMessage, matched_project: project?.name ?? null, date: today },
     });
+    await sendCallMeBot(`📩 BuildOS received: "${rawMessage.slice(0,80)}${rawMessage.length>80?"…":""}"`);
+    return NextResponse.json({ ok: true, action: "logged" });
+
   } catch (e: any) {
-    await sendWhatsApp(`⚠️ Report generation failed: ${e.message}. Check BuildOS.`);
+    console.error("[whatsapp-log]", e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

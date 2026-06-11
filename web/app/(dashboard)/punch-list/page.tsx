@@ -104,6 +104,7 @@ export default function PunchListPage() {
                     <span className={`font-medium text-sm ${item.status==="completed"?"line-through text-gray-400":"text-gray-900"}`}>{item.title}</span>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background:PRIORITY_COLOR[item.priority]+"20", color:PRIORITY_COLOR[item.priority] }}>{item.priority}</span>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background:sc.b, color:sc.c }}>{item.status.replace("_"," ")}</span>
+                    {item.blocked_by && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700">⏳ {item.blocked_by}</span>}
                   </div>
                   <div className="text-xs text-gray-500 mt-0.5">{item.projects?.name}{item.location?` · ${item.location}`:""}{item.assigned_to?` · ${item.assigned_to}`:""}{item.due_date?` · Due ${item.due_date}`:""}</div>
                 </div>
