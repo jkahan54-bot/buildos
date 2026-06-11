@@ -17,10 +17,13 @@ export async function POST(req: NextRequest) {
   const { milestones } = await req.json();
   if (!milestones?.length) return NextResponse.json({ updates: [] });
 
-  // This endpoint tries to use the Microsoft Graph MCP connection if available
-  // For now, returns AI-powered suggestions based on the milestone titles
-  // In production, this would call Graph API to fetch recent emails
+  // NOTE: Real email ingestion runs through the evening Outlook scan, which posts
+  // actionable emails into the Daily Review queue. This endpoint must NOT fabricate
+  // emails — returning [] so nothing is ever invented. (Previously it asked the AI to
+  // "simulate" emails, which could mark milestones complete based on made-up data.)
+  return NextResponse.json({ updates: [] });
 
+  // eslint-disable-next-line no-unreachable
   try {
     const prompt = `You are a construction project manager AI.
 

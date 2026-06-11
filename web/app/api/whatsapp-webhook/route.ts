@@ -109,6 +109,8 @@ export async function POST(req: NextRequest) {
       const messages = value?.messages ?? [];
       const metadata = value?.metadata ?? {};
       const senderPhone = metadata.display_phone_number || "WhatsApp";
+      // Source defaults to whatsapp; the email scanner passes value.source = "email"
+      const msgSource = value?.source === "email" ? "email" : "whatsapp";
 
       for (const msg of messages) {
         if (msg.type !== "text") continue; // ignore images, files, etc for now
@@ -177,7 +179,7 @@ export async function POST(req: NextRequest) {
               org_id:         ORG_ID,
               title:          line.slice(0, 200),
               description:    `From WhatsApp group: "${rawMessage.slice(0, 300)}"`,
-              source:         "whatsapp",
+              source:         msgSource,
               source_message: rawMessage.slice(0, 500),
               status:         "pending_review",
               priority,
@@ -193,7 +195,7 @@ export async function POST(req: NextRequest) {
               org_id:         ORG_ID,
               title:          rawMessage.slice(0, 200),
               description:    `From WhatsApp group`,
-              source:         "whatsapp",
+              source:         msgSource,
               source_message: rawMessage.slice(0, 500),
               status:         "pending_review",
               priority,
