@@ -57,7 +57,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </div>
 
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-        <TopBar profile={profile} />
+        <TopBar profile={profile} menuPrefs={menuPrefs} />
         {/* Extra padding at bottom on mobile so content doesn't hide behind bottom nav */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-24 lg:pb-6">
           {children}

@@ -1,88 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Settings, Sparkles, Menu, X, LayoutDashboard, FolderKanban, DollarSign, Users, ShieldAlert, FileText, HelpCircle, Bot, MessageSquare, Milestone, LogOut, Clock, ChevronDown, Eye, Receipt, GitPullRequest, Calculator, BarChart2, FileSignature, Building2, Calendar, Users2, Globe, ClipboardList, CalendarCheck, Camera, CheckSquare, Package } from "lucide-react";
+import { Settings, Sparkles, Menu, X, LogOut, ChevronDown, Eye } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
+import { NAV, ROLE_META } from "./Sidebar";
 
-const MOBILE_NAV: Record<string, { href: string; label: string; icon: any }[]> = {
-  admin: [
-    { href:"/dashboard",      label:"Dashboard",     icon:LayoutDashboard },
-    { href:"/pipeline",       label:"Pipeline",      icon:GitPullRequest },
-    { href:"/projects",       label:"Projects",      icon:FolderKanban },
-    { href:"/budget",         label:"Budget",        icon:DollarSign },
-    { href:"/change-orders",  label:"Change Orders", icon:GitPullRequest },
-    { href:"/invoices",       label:"Invoices",      icon:Receipt },
-    { href:"/quotes",         label:"Quote Builder", icon:Calculator },
-    { href:"/reports",        label:"Reports",       icon:BarChart2 },
-    { href:"/team",           label:"Team",          icon:Users },
-    { href:"/safety",         label:"Safety",        icon:ShieldAlert },
-    { href:"/rfis",           label:"RFIs",          icon:HelpCircle },
-    { href:"/submittals",     label:"Submittals",    icon:FileSignature },
-    { href:"/punch-list",     label:"Punch List",    icon:ClipboardList },
-    { href:"/documents",      label:"Documents",     icon:FileText },
-    { href:"/schedule",       label:"Schedule",      icon:Calendar },
-    { href:"/milestones",     label:"Milestones",    icon:Milestone },
-    { href:"/subcontractors", label:"Subcontractors",icon:Building2 },
-    { href:"/equipment",      label:"Equipment",     icon:Package },
-    { href:"/meetings",       label:"Meetings",      icon:Users2 },
-    { href:"/ai-tools",       label:"AI Tools",      icon:Bot },
-    { href:"/ai-camera",      label:"AI Camera",     icon:Camera },
-    { href:"/ai-takeoff",     label:"AI Takeoff",    icon:Calculator },
-    { href:"/portal",         label:"Client Portal", icon:Globe },
-    { href:"/messages",       label:"Messages",      icon:MessageSquare },
-    { href:"/settings",       label:"Settings",      icon:Settings },
-  ],
-  owner: [
-    { href:"/dashboard",  label:"Dashboard",  icon:LayoutDashboard },
-    { href:"/milestones", label:"Milestones", icon:Milestone },
-    { href:"/projects",   label:"Projects",   icon:FolderKanban },
-    { href:"/messages",   label:"Messages",   icon:MessageSquare },
-  ],
-  office: [
-    { href:"/dashboard",      label:"Dashboard",     icon:LayoutDashboard },
-    { href:"/projects",       label:"Projects",      icon:FolderKanban },
-    { href:"/budget",         label:"Budget",        icon:DollarSign },
-    { href:"/invoices",       label:"Invoices",      icon:Receipt },
-    { href:"/change-orders",  label:"Change Orders", icon:GitPullRequest },
-    { href:"/quotes",         label:"Quotes",        icon:Calculator },
-    { href:"/reports",        label:"Reports",       icon:BarChart2 },
-    { href:"/documents",      label:"Documents",     icon:FileText },
-    { href:"/submittals",     label:"Submittals",    icon:FileSignature },
-    { href:"/subcontractors", label:"Subcontractors",icon:Building2 },
-    { href:"/team",           label:"Team",          icon:Users },
-    { href:"/milestones",     label:"Milestones",    icon:Milestone },
-    { href:"/schedule",       label:"Schedule",      icon:Calendar },
-    { href:"/meetings",       label:"Meetings",      icon:Users2 },
-    { href:"/portal",         label:"Client Portal", icon:Globe },
-    { href:"/ai-tools",       label:"AI Tools",      icon:Bot },
-    { href:"/messages",       label:"Messages",      icon:MessageSquare },
-    { href:"/settings",       label:"Settings",      icon:Settings },
-  ],
-  field: [
-    { href:"/dashboard",  label:"My Day",     icon:LayoutDashboard },
-    { href:"/timelog",    label:"Time Log",   icon:Clock },
-    { href:"/daily-log",  label:"Daily Log",  icon:CalendarCheck },
-    { href:"/safety",     label:"Safety",     icon:ShieldAlert },
-    { href:"/punch-list", label:"Punch List", icon:ClipboardList },
-    { href:"/rfis",       label:"RFIs",       icon:HelpCircle },
-    { href:"/photos",     label:"Photos",     icon:Camera },
-    { href:"/ai-camera",  label:"AI Camera",  icon:Bot },
-    { href:"/ai-tools",   label:"AI Tools",   icon:Bot },
-    { href:"/checklist",  label:"Checklist",  icon:CheckSquare },
-    { href:"/documents",  label:"Documents",  icon:FileText },
-    { href:"/messages",   label:"Messages",   icon:MessageSquare },
-  ],
-};
-
-const ROLE_META: Record<string, { color: string; label: string; bg: string }> = {
-  owner:  { color:"#7c3aed", label:"Owner",          bg:"#ede9fe" },
-  admin:  { color:"#ea580c", label:"Administrator",  bg:"#fff7ed" },
-  office: { color:"#2563eb", label:"Office Manager", bg:"#eff6ff" },
-  field:  { color:"#16a34a", label:"Field Worker",   bg:"#f0fdf4" },
-};
-
-export default function TopBar({ profile }: { profile: any }) {
+export default function TopBar({ profile, menuPrefs }: { profile: any; menuPrefs?: Record<string, string[]> }) {
   const [menuOpen, setMenuOpen]     = useState(false);
   const [rolePickerOpen, setRolePicker] = useState(false);
   const [previewRole, setPreviewRole]   = useState<string | null>(null);
@@ -104,7 +28,8 @@ export default function TopBar({ profile }: { profile: any }) {
   const initials    = profile?.full_name
     ? profile.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0,2)
     : "?";
-  const nav = MOBILE_NAV[activeRole] ?? MOBILE_NAV.field;
+  const hidden = menuPrefs?.[activeRole] ?? [];
+  const nav = (NAV[activeRole] ?? NAV.field).filter(item => item.href === "/permissions" || !hidden.includes(item.href));
 
   const switchRole = (role: string) => {
     if (role === actualRole) {
