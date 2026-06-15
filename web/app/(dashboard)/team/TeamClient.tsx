@@ -13,7 +13,7 @@ const ROLE_META: Record<string,{ color:string; bg:string; label:string; icon?:st
 const ALL_ROLES   = ["owner","jobsite_owner","admin","office","field"] as const;
 const ADMIN_ROLES = ["jobsite_owner","admin","office","field"] as const; // admins can't assign master owner
 
-export default function TeamClient({ members, timeLogs, invitations, isAdmin, isOwner }: any) {
+export default function TeamClient({ members, timeLogs, invitations, projects, isAdmin, isOwner }: any) {
   const router = useRouter();
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -23,6 +23,7 @@ export default function TeamClient({ members, timeLogs, invitations, isAdmin, is
   const [error, setError]             = useState("");
   const [search, setSearch]           = useState("");
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
+  const [updatingSite, setUpdatingSite] = useState<string | null>(null);
   const [actioning, setActioning]     = useState<string | null>(null);
 
   const weekHours = (id: string) =>
@@ -52,6 +53,12 @@ export default function TeamClient({ members, timeLogs, invitations, isAdmin, is
     setUpdatingRole(userId);
     await fetch("/api/invite", { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ userId, role }) });
     setUpdatingRole(null); router.refresh();
+  };
+
+  const changeSite = async (userId: string, assignedProjectId: string) => {
+    setUpdatingSite(userId);
+    await fetch("/api/invite", { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ userId, assignedProjectId }) });
+    setUpdatingSite(null); router.refresh();
   };
 
   const revokeInvite = async (id: string) => {
@@ -262,6 +269,26 @@ export default function TeamClient({ members, timeLogs, invitations, isAdmin, is
                       <div className="text-xs font-semibold text-gray-700">{hrs.toFixed(1)}h</div>
                       <div className="text-[10px] text-gray-400">this week</div>
                     </div>
+                  )}
+                  {/* Site assignment — only matters for field workers (scopes their Daily Review) */}
+                  {m.role === "field" && (
+                    isAdmin ? (
+                      <div className="relative flex-shrink-0">
+                        <select value={m.assigned_project_id ?? ""} onChange={e => changeSite(m.id, e.target.value)}
+                          disabled={updatingSite === m.id}
+                          className="appearance-none text-xs font-medium pl-3 pr-7 py-1.5 rounded-full cursor-pointer outline-none disabled:opacity-50 border border-gray-200 hover:border-gray-300 transition-all bg-gray-50 text-gray-600 max-w-[140px]">
+                          <option value="">All sites</option>
+                          {(projects ?? []).map((p: any) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
+                        <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400 flex-shrink-0 max-w-[140px] truncate">
+                        {(projects ?? []).find((p: any) => p.id === m.assigned_project_id)?.name ?? "All sites"}
+                      </span>
+                    )
                   )}
                   {/* Owner badge — never editable by anyone except themselves */}
                   {m.role === "owner" ? (

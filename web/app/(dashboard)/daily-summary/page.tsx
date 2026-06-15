@@ -23,15 +23,32 @@ export default function DailySummaryPage() {
   const [editVal, setEditVal]     = useState("");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [busy, setBusy]           = useState<string | null>(null);
+  const [role, setRole]           = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile } = await supabase.from("profiles")
+      .select("role, assigned_project_id").eq("id", user!.id).single();
+    setRole(profile?.role ?? null);
+
+    let query = supabase.from("punch_list_items")
+      .select("*, projects(name)")
+      .eq("status", "pending_review")
+      .order("created_at", { ascending: false });
+
+    // Field workers only see job-site (WhatsApp) items for their assigned project.
+    // Office staff only see office (email) items. Admins/owners see everything.
+    if (profile?.role === "field") {
+      query = query.eq("source", "whatsapp");
+      if (profile.assigned_project_id) query = query.eq("project_id", profile.assigned_project_id);
+    } else if (profile?.role === "office") {
+      query = query.eq("source", "email");
+    }
+
     const [{ data: pItems }, { data: pList }] = await Promise.all([
-      supabase.from("punch_list_items")
-        .select("*, projects(name)")
-        .eq("status", "pending_review")
-        .order("created_at", { ascending: false }),
+      query,
       supabase.from("projects").select("id, name").order("name"),
     ]);
     setItems(pItems ?? []);
@@ -88,7 +105,13 @@ export default function DailySummaryPage() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-900">📋 Daily Review Queue</h1>
-          <p className="text-gray-500 text-sm mt-0.5">{today} · Items from WhatsApp & email scans waiting for your approval</p>
+          <p className="text-gray-500 text-sm mt-0.5">
+            {today} · {
+              role === "field" ? "Job-site items from WhatsApp waiting for your approval" :
+              role === "office" ? "Office items from email waiting for your approval" :
+              "All items from WhatsApp & email scans waiting for your approval"
+            }
+          </p>
         </div>
         <button onClick={load} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all flex-shrink-0">
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />Refresh

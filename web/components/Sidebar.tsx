@@ -88,6 +88,7 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
   ],
   office: [
     { href:"/dashboard",      label:"Dashboard",       icon:LayoutDashboard },
+    { href:"/daily-summary",  label:"Daily Review",    icon:ClipboardList,  badge:"📋" },
     { href:"/pipeline",       label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
     { href:"/projects",       label:"Projects",        icon:FolderKanban },
     { href:"/budget",         label:"Budget",          icon:DollarSign },
@@ -110,6 +111,7 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
   ],
   field: [
     { href:"/my-day",         label:"My Day",        icon:LayoutDashboard },
+    { href:"/daily-summary",  label:"Daily Review",  icon:ClipboardList, badge:"📋" },
     { href:"/timelog",        label:"Time Log",      icon:Clock },
     { href:"/daily-log",      label:"Daily Log",     icon:CalendarCheck },
     { href:"/walkthroughs",   label:"Walkthroughs",  icon:Camera,        badge:"🏥" },

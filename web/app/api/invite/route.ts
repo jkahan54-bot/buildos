@@ -72,8 +72,10 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Only administrators can change roles" }, { status: 403 });
   }
 
-  const { userId, role } = await req.json();
-  if (!userId || !role) return NextResponse.json({ error: "userId and role required" }, { status: 400 });
+  const { userId, role, assignedProjectId } = await req.json();
+  if (!userId || (!role && assignedProjectId === undefined)) {
+    return NextResponse.json({ error: "userId and role or assignedProjectId required" }, { status: 400 });
+  }
 
   // Fetch the target user's current role
   const { data: target } = await admin.from("profiles").select("role").eq("id", userId).single();
@@ -83,16 +85,24 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Cannot change the Master Owner's role" }, { status: 403 });
   }
 
-  // Admins cannot promote someone to admin or owner
-  if ((role === "admin" || role === "owner") && !isOwner(myProfile?.role)) {
-    return NextResponse.json({ error: "Only the Master Owner can assign Admin or Owner roles" }, { status: 403 });
+  if (role) {
+    // Admins cannot promote someone to admin or owner
+    if ((role === "admin" || role === "owner") && !isOwner(myProfile?.role)) {
+      return NextResponse.json({ error: "Only the Master Owner can assign Admin or Owner roles" }, { status: 403 });
+    }
+
+    const { error } = await admin.from("profiles").update({ role }).eq("id", userId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    const meta2 = getRequestMeta(req);
+    await auditLog({ action:"user_role_changed", userId:user.id, resourceType:"profile", resourceId:userId, details:{ fromRole:target?.role, toRole:role }, ...meta2 });
   }
 
-  const { error } = await admin.from("profiles").update({ role }).eq("id", userId);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (assignedProjectId !== undefined) {
+    const { error } = await admin.from("profiles").update({ assigned_project_id: assignedProjectId || null }).eq("id", userId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
-  const meta2 = getRequestMeta(req);
-  await auditLog({ action:"user_role_changed", userId:user.id, resourceType:"profile", resourceId:userId, details:{ fromRole:target?.role, toRole:role }, ...meta2 });
   return NextResponse.json({ success: true });
 }
 
