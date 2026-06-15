@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Plus, Camera, Upload, RefreshCw, CheckCircle, ChevronRight, AlertTriangle, X, Building2 } from "lucide-react";
+import { Plus, Camera, Upload, RefreshCw, CheckCircle, ChevronRight, AlertTriangle, X, Building2, Video } from "lucide-react";
+import { extractVideoFrames } from "@/lib/video-frames";
 
 const STATUS_META: Record<string,{color:string;bg:string;label:string}> = {
   scheduled:     { color:"#2563eb", bg:"#dbeafe", label:"Scheduled"     },
@@ -171,7 +172,9 @@ function AssessmentView({ walkthrough, onComplete }: { walkthrough:any; onComple
   const [analyzing, setAnalyzing]     = useState(false);
   const [saving, setSaving]           = useState(false);
   const [newRoomName, setNewRoomName] = useState("");
+  const [videoStatus, setVideoStatus] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
 
   const addRoom = () => {
@@ -200,6 +203,39 @@ function AssessmentView({ walkthrough, onComplete }: { walkthrough:any; onComple
     setAnalyzing(false);
   };
 
+  const analyzeVideo = async (file: File) => {
+    setVideoStatus("Extracting frames from video…");
+    try {
+      const frames = await extractVideoFrames(file, 8);
+      setVideoStatus("Analyzing walkthrough video with AI…");
+      const form = new FormData();
+      frames.forEach(f => form.append("frames", f));
+      form.append("facility_name", walkthrough.facility_name || "");
+      form.append("occupancy_type", walkthrough.occupancy_type || "");
+      const res  = await fetch("/api/ai/walkthrough-video", { method:"POST", body: form });
+      const data = await res.json();
+      if (data.error) { setVideoStatus(`Error: ${data.error}`); return; }
+      const r = data.result;
+      const newAreas = (r.areas || []).map((a: any) => ({
+        name: a.name, condition: a.condition, condition_notes: a.condition_notes,
+        icra_risk: a.icra_risk, icra_notes: a.icra_notes,
+        issues: a.issues || [], scope_items: a.scope_items || [],
+        hazard_flags: a.hazard_flags || {}, photos: [], notes: "",
+        analyzed: true, source: "video",
+      }));
+      const summary = {
+        name: "📹 Video Walkthrough Summary", condition: r.overall_condition, condition_notes: r.overall_summary,
+        icra_risk: r.overall_icra_risk, icra_notes: "", issues: [], scope_items: [],
+        hazard_flags: {}, photos: [], notes: r.overall_summary,
+        analyzed: true, source: "video-summary",
+      };
+      setRooms(rs => [...rs, summary, ...newAreas]);
+      setVideoStatus("");
+    } catch (e: any) {
+      setVideoStatus(`Error: ${e.message}`);
+    }
+  };
+
   const saveAndComplete = async () => {
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
@@ -222,6 +258,22 @@ function AssessmentView({ walkthrough, onComplete }: { walkthrough:any; onComple
         <div className="font-semibold text-blue-800">{walkthrough.facility_name}</div>
         <div className="text-xs text-blue-600 mt-1">{walkthrough.address} · {walkthrough.occupancy_type}</div>
         <div className="text-xs text-blue-500 mt-1">📸 Take photos in each room → AI analyzes condition and scope automatically</div>
+      </div>
+
+      {/* Video walkthrough upload */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="font-semibold text-sm text-gray-900">Upload a walkthrough video</div>
+          <div className="text-xs text-gray-400 mt-0.5">AI samples frames from the video and adds an overall summary + per-area breakdown below</div>
+          {videoStatus && <div className="text-xs text-blue-600 mt-1 flex items-center gap-1.5"><RefreshCw size={11} className="animate-spin" />{videoStatus}</div>}
+        </div>
+        <button onClick={()=>videoRef.current?.click()} disabled={!!videoStatus && !videoStatus.startsWith("Error")}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50 flex-shrink-0"
+          style={{ background:"linear-gradient(135deg,#2563eb,#1d4ed8)" }}>
+          <Video size={13} />Upload Video
+        </button>
+        <input ref={videoRef} type="file" accept="video/*"
+          onChange={e=>{ const f=e.target.files?.[0]; if (f) analyzeVideo(f); e.target.value=""; }} className="hidden" />
       </div>
 
       {/* Room list */}
