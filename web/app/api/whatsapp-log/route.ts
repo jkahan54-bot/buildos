@@ -95,9 +95,9 @@ export async function POST(req: NextRequest) {
         let matched = 0;
         for (const item of (openItems ?? [])) {
           // Simple fuzzy match — do any significant words overlap?
-          const msgWords  = lower.split(/\s+/).filter(w => w.length > 3);
-          const itemWords = item.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-          const overlap   = msgWords.filter(w => itemWords.some(iw => iw.includes(w) || w.includes(iw)));
+          const msgWords  = lower.split(/\s+/).filter((w: string) => w.length > 3);
+          const itemWords: string[] = item.title.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3);
+          const overlap   = msgWords.filter((w: string) => itemWords.some((iw: string) => iw.includes(w) || w.includes(iw)));
           if (overlap.length >= 2) {
             await admin.from("punch_list_items").update({
               status: "completed",

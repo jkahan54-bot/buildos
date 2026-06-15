@@ -329,7 +329,7 @@ export default function SystemPage() {
                 <span>Date & Time</span><span>Trigger</span><span>Rows Saved</span><span>Status</span>
               </div>
               {backups.map((b: any, i: number) => {
-                const totalRows = b.row_counts ? Object.values(b.row_counts).reduce((a: any, c: any) => a + c, 0) : 0;
+                const totalRows: number = b.row_counts ? (Object.values(b.row_counts) as number[]).reduce((a, c) => a + c, 0) : 0;
                 return (
                   <div key={b.id} className={`px-5 py-3.5 grid grid-cols-4 gap-2 items-center ${i < backups.length-1 ? "border-b border-gray-100" : ""}`}>
                     <span className="text-sm text-gray-700">{new Date(b.created_at).toLocaleString()}</span>

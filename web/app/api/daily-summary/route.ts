@@ -16,11 +16,11 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: profile } = await supabase.from("profiles").select("role, org_id, assigned_project_id").eq("id", user.id).single();
-  const canApprove = ["owner","admin","office","field"].includes(profile?.role ?? "");
-  if (!canApprove) return NextResponse.json({ error: "Only PM/Admin/Office/Field can approve items" }, { status: 403 });
+  const canApprove = !!profile && ["owner","admin","office","field"].includes(profile.role ?? "");
+  if (!profile || !canApprove) return NextResponse.json({ error: "Only PM/Admin/Office/Field can approve items" }, { status: 403 });
 
   // Field workers only act on WhatsApp items for their assigned site; office only on email items.
-  const source = profile?.role === "field" ? "whatsapp" : profile?.role === "office" ? "email" : null;
+  const source = profile.role === "field" ? "whatsapp" : profile.role === "office" ? "email" : null;
 
   const { action, itemId, projectId, newTitle } = await req.json();
 

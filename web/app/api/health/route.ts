@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
   // ── DATABASE ──────────────────────────────────────────────────────────────
   out.database = {};
   const dbResults = await Promise.allSettled(
-    TABLES.map(t => check(() => admin.from(t).select("id").limit(1).then(({ error }) => { if (error) throw new Error(error.message); return true; })))
+    TABLES.map(t => check(() => Promise.resolve(admin.from(t).select("id").limit(1)).then(({ error }) => { if (error) throw new Error(error.message); return true; })))
   );
   TABLES.forEach((t, i) => {
     const r = dbResults[i];
@@ -61,8 +61,9 @@ export async function GET(req: NextRequest) {
 
   // ── AUTH ──────────────────────────────────────────────────────────────────
   out.auth = await check(async () => {
-    const { data: { session } } = await admin.auth.admin.listUsers({ perPage: 1 });
-    return !!session !== undefined;
+    const { data, error } = await admin.auth.admin.listUsers({ perPage: 1 });
+    if (error) throw new Error(error.message);
+    return { users: data.users.length };
   });
 
   // ── STORAGE ───────────────────────────────────────────────────────────────

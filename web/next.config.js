@@ -25,8 +25,6 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
-  typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
   images: { domains: ["*"] },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];

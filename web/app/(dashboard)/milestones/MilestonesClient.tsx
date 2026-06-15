@@ -19,8 +19,6 @@ export default function MilestonesClient({ milestones, projects }: any) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [aiChecking, setAiChecking] = useState(false);
-  const [emailUpdates, setEmailUpdates] = useState<any[]>([]);
   const [form, setForm] = useState({ project_id:"", title:"", due_date:"", critical:false });
   const [customTitle, setCustomTitle] = useState("");
   const [selectedType, setSelectedType] = useState(WAITING_TYPES[0]);
@@ -43,34 +41,6 @@ export default function MilestonesClient({ milestones, projects }: any) {
     router.refresh();
   };
 
-  // Scan Outlook emails for milestone-related updates
-  const checkEmails = async () => {
-    setAiChecking(true); setEmailUpdates([]);
-    try {
-      const res = await fetch("/api/email-monitor", { method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ milestones: milestones.filter((m: any) => !m.completed).map((m: any) => m.title) }),
-      });
-      const data = await res.json();
-      setEmailUpdates(data.updates ?? []);
-    } catch {}
-    setAiChecking(false);
-  };
-
-  const applyUpdate = async (update: any) => {
-    const supabase = createClient();
-    // Find matching milestone
-    const match = milestones.find((m: any) =>
-      m.title.toLowerCase().includes(update.keyword?.toLowerCase()) ||
-      update.milestone?.toLowerCase().includes(m.title.toLowerCase().split(":")[1]?.trim()?.toLowerCase())
-    );
-    if (match) {
-      await supabase.from("milestones").update({ completed: true }).eq("id", match.id);
-      setEmailUpdates(prev => prev.filter(u => u !== update));
-      router.refresh();
-    }
-  };
-
   const inp = "w-full bg-surface-panel border border-border rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-brand";
   const upcoming = milestones.filter((m: any) => !m.completed);
   const completed = milestones.filter((m: any) => m.completed);
@@ -82,42 +52,10 @@ export default function MilestonesClient({ milestones, projects }: any) {
           <h1 className="text-2xl font-black">Milestones & Progress Tracking</h1>
           <p className="text-gray-500 text-sm mt-1">{upcoming.length} pending · {completed.length} completed</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={checkEmails} disabled={aiChecking}
-            className="border border-blue-500 text-blue-400 font-bold px-4 py-2 rounded-lg text-sm hover:bg-blue-500/10 transition-colors disabled:opacity-50">
-            {aiChecking ? "🔍 Scanning emails…" : "📧 Check Emails for Updates"}
-          </button>
-          <button onClick={() => setShowForm(!showForm)} className="bg-brand hover:bg-brand-dark text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors">
-            + Add Milestone
-          </button>
-        </div>
+        <button onClick={() => setShowForm(!showForm)} className="bg-brand hover:bg-brand-dark text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors">
+          + Add Milestone
+        </button>
       </div>
-
-      {/* Email-detected updates banner */}
-      {emailUpdates.length > 0 && (
-        <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-5 space-y-3">
-          <div className="font-bold text-blue-400 text-sm flex items-center gap-2">
-            📧 Email updates detected — AI found {emailUpdates.length} relevant email{emailUpdates.length > 1 ? "s" : ""}
-          </div>
-          {emailUpdates.map((u, i) => (
-            <div key={i} className="flex items-start justify-between gap-4 bg-surface-card rounded-lg p-4 border border-border">
-              <div>
-                <div className="font-semibold text-sm">{u.milestone}</div>
-                <div className="text-gray-400 text-xs mt-1">{u.summary}</div>
-                <div className="text-gray-600 text-xs mt-1">From: {u.from} · {u.date}</div>
-              </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <button onClick={() => applyUpdate(u)} className="bg-green-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-green-600 transition-colors">
-                  ✓ Mark Complete
-                </button>
-                <button onClick={() => setEmailUpdates(prev => prev.filter(x => x !== u))} className="border border-border text-gray-400 font-bold px-3 py-1.5 rounded-lg text-xs hover:border-gray-400 transition-colors">
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Form */}
       {showForm && (

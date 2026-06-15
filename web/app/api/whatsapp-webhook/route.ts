@@ -137,9 +137,9 @@ export async function POST(req: NextRequest) {
 
             let matched = 0;
             for (const item of (openItems ?? [])) {
-              const msgWords = lower.split(/\s+/).filter(w => w.length > 3);
-              const itemWords = item.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-              const overlap = msgWords.filter(w => itemWords.some(iw => iw.includes(w) || w.includes(iw)));
+              const msgWords = lower.split(/\s+/).filter((w: string) => w.length > 3);
+              const itemWords: string[] = item.title.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3);
+              const overlap = msgWords.filter((w: string) => itemWords.some((iw: string) => iw.includes(w) || w.includes(iw)));
               if (overlap.length >= 2) {
                 await admin.from("punch_list_items").update({
                   status: "completed",
@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
         // or a detected blocker) — plain chatter is ignored to keep the review queue clean.
         if (ACTION_WORDS.test(rawMessage) || extractBlocker(rawMessage)) {
           const priority = priorityFromText(rawMessage);
-          const lines = rawMessage.split(/[,\n;]/).map(l => l.trim()).filter(l => l.length > 5);
+          const lines = rawMessage.split(/[,\n;]/).map((l: string) => l.trim()).filter((l: string) => l.length > 5);
 
           let createdCount = 0;
           const blocker = extractBlocker(rawMessage);

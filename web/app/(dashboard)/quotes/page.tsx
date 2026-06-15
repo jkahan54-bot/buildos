@@ -32,7 +32,7 @@ export default function QuotesPage() {
   const removeLine = (i:number) => setCurrent((c:any)=>({...c, line_items:c.line_items.filter((_:any,j:number)=>j!==i)}));
   const setLine = (i:number,k:string,v:any) => setCurrent((c:any)=>({...c, line_items:c.line_items.map((l:any,j:number)=>j===i?{...l,[k]:v}:l)}));
 
-  const subtotal = (c:any) => (c?.line_items??[]).reduce((s:number,l:any)=>s+(+l.qty*(+l.unitCost+(+l.labor??0))),0);
+  const subtotal = (c:any) => (c?.line_items??[]).reduce((s:number,l:any)=>s+(+l.qty*(+l.unitCost+(+(l.labor??0)))),0);
   const total    = (c:any) => { const sub=subtotal(c); return sub*(1+(+c?.markup_pct||0)/100); };
   const fmt      = (n:number) => "$"+n.toLocaleString(undefined,{maximumFractionDigits:0});
 

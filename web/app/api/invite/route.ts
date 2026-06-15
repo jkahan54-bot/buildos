@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: profile } = await supabase.from("profiles").select("org_id, role").eq("id", user.id).single();
-  if (!isAdminOrAbove(profile?.role)) {
+  if (!profile || !isAdminOrAbove(profile.role)) {
     return NextResponse.json({ error: "Only administrators or above can invite members" }, { status: 403 });
   }
 
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   if (!isValidEmail(email)) return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
 
   // Only owner can invite/create another owner or admin
-  if ((role === "owner" || role === "admin") && !isOwner(profile?.role)) {
+  if ((role === "owner" || role === "admin") && !isOwner(profile.role)) {
     await auditLog({ action:"suspicious_activity", userId:user.id, orgId:profile.org_id, severity:"warning", details:{ reason:"tried to invite admin without owner role", targetEmail:email }, ...meta });
     return NextResponse.json({ error: "Only the Master Owner can invite Admins or Owners" }, { status: 403 });
   }

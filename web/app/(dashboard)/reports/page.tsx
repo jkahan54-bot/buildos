@@ -6,6 +6,8 @@ import { Download, TrendingUp, DollarSign, ShieldAlert, Clock } from "lucide-rea
 
 const COLORS = ["#f97316","#2563eb","#16a34a","#7c3aed","#dc2626","#d97706"];
 
+const INVOICE_STATUS_STYLES: Record<string,string> = {paid:"bg-green-50 text-green-600",approved:"bg-blue-50 text-blue-600",overdue:"bg-red-50 text-red-600",pending:"bg-yellow-50 text-yellow-600"};
+
 export default function ReportsPage() {
   const [tab, setTab]           = useState("budget");
   const [projects, setProjects] = useState<any[]>([]);
@@ -36,7 +38,7 @@ export default function ReportsPage() {
   const exportCSV = (data:any[], filename:string) => {
     if (!data.length) return;
     const keys = Object.keys(data[0]);
-    const csv  = [keys.join(","), ...data.map(r=>keys.map(k=>JSON.stringify(r[k]??"",-1)).join(","))].join("\n");
+    const csv  = [keys.join(","), ...data.map(r=>keys.map(k=>JSON.stringify(r[k]??"")).join(","))].join("\n");
     const a = document.createElement("a"); a.href = "data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
     a.download = filename+".csv"; a.click();
   };
@@ -187,7 +189,7 @@ export default function ReportsPage() {
                 <td className="px-4 py-2.5 text-gray-600">{inv.projects?.name??"-"}</td>
                 <td className="px-4 py-2.5 font-mono font-bold text-gray-900">${(inv.amount??0).toLocaleString()}</td>
                 <td className="px-4 py-2.5 text-gray-600">{inv.due_date??"-"}</td>
-                <td className="px-4 py-2.5"><span className={`text-xs font-bold px-2 py-0.5 rounded-full ${{paid:"bg-green-50 text-green-600",approved:"bg-blue-50 text-blue-600",overdue:"bg-red-50 text-red-600",pending:"bg-yellow-50 text-yellow-600"}[inv.status]||"bg-gray-100 text-gray-500"}`}>{inv.status}</span></td>
+                <td className="px-4 py-2.5"><span className={`text-xs font-bold px-2 py-0.5 rounded-full ${INVOICE_STATUS_STYLES[inv.status]||"bg-gray-100 text-gray-500"}`}>{inv.status}</span></td>
               </tr>
             ))}</tbody>
           </table>
