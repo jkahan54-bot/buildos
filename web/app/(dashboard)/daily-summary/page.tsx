@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { CheckCircle, X, Edit2, MessageSquare, Mail, ChevronDown, ChevronUp, RefreshCw, CheckCheck, Trash2 } from "lucide-react";
+import { WAITING_ON_META } from "@/lib/waitingOn";
 
 const SOURCE_META: Record<string, { icon: string; color: string; bg: string; label: string }> = {
   whatsapp: { icon: "📱", color: "#16a34a", bg: "#f0fdf4", label: "WhatsApp" },
@@ -203,6 +204,11 @@ export default function DailySummaryPage() {
                           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: src.bg, color: src.color }}>{src.label}</span>
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: pri.b, color: pri.c }}>{item.priority}</span>
+                            {item.waiting_on && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: WAITING_ON_META[item.waiting_on as keyof typeof WAITING_ON_META]?.bg, color: WAITING_ON_META[item.waiting_on as keyof typeof WAITING_ON_META]?.color }}>
+                                ⏳ {WAITING_ON_META[item.waiting_on as keyof typeof WAITING_ON_META]?.label ?? item.waiting_on}
+                              </span>
+                            )}
                             {item.assigned_to && <span className="text-[10px] text-gray-400">👤 {item.assigned_to}</span>}
                           </div>
 

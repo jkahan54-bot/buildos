@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { WAITING_ON_META, WAITING_ON_OPTIONS } from "@/lib/waitingOn";
 
 const PRIO_COLORS: Record<string,string> = { Low:"#22C55E", Medium:"#F59E0B", High:"#EF4444" };
 const STATUS_COLORS: Record<string,string> = { Open:"#F46519", Review:"#3B82F6", Closed:"#6B7280" };
@@ -11,7 +12,7 @@ export default function RFIsClient({ rfis, projects }: any) {
   const [showForm, setShowForm] = useState(false);
   const [selected, setSelected] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ project_id:"", title:"", description:"", priority:"Medium" });
+  const [form, setForm] = useState({ project_id:"", title:"", description:"", priority:"Medium", waiting_on:"Architect" });
   const [response, setResponse] = useState("");
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -20,14 +21,15 @@ export default function RFIsClient({ rfis, projects }: any) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const { data: prof } = await supabase.from("profiles").select("org_id").eq("id", user!.id).single();
-    await supabase.from("rfis").insert({ ...form, org_id: prof?.org_id, submitted_by: user!.id });
-    setLoading(false); setShowForm(false); setForm({ project_id:"", title:"", description:"", priority:"Medium" });
+    await supabase.from("rfis").insert({ ...form, status: "Open", org_id: prof?.org_id, submitted_by: user!.id });
+    setLoading(false); setShowForm(false); setForm({ project_id:"", title:"", description:"", priority:"Medium", waiting_on:"Architect" });
     router.refresh();
   };
 
   const updateStatus = async (id: string, status: string, resp?: string) => {
     const supabase = createClient();
-    await supabase.from("rfis").update({ status, ...(resp ? { response: resp } : {}) }).eq("id", id);
+    // Moving to Review/Closed means the directed-to party has responded — ball's back with us.
+    await supabase.from("rfis").update({ status, waiting_on: null, ...(resp ? { response: resp } : {}) }).eq("id", id);
     setSelected(null); setResponse(""); router.refresh();
   };
 
@@ -77,6 +79,11 @@ export default function RFIsClient({ rfis, projects }: any) {
                 </select>
               </div>
             </div>
+            <div><label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Directed To (who needs to respond)</label>
+              <select value={form.waiting_on} onChange={e => set("waiting_on", e.target.value)} className={inp}>
+                {WAITING_ON_OPTIONS.map(o => <option key={o} value={o}>{WAITING_ON_META[o].label}</option>)}
+              </select>
+            </div>
             <div><label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Title *</label>
               <input value={form.title} onChange={e => set("title", e.target.value)} required className={inp} placeholder="e.g. Beam connection detail at Grid C-4" />
             </div>
@@ -103,6 +110,11 @@ export default function RFIsClient({ rfis, projects }: any) {
               </div>
               <h2 className="font-bold text-lg">{selected.title}</h2>
               <p className="text-gray-500 text-sm mt-1">{selected.projects?.name} · {selected.profiles?.full_name} · {new Date(selected.created_at).toLocaleDateString()}</p>
+              {selected.waiting_on && (
+                <p className="text-xs font-bold mt-2 inline-block px-2 py-1 rounded-full" style={{ background: WAITING_ON_META[selected.waiting_on as keyof typeof WAITING_ON_META]?.bg, color: WAITING_ON_META[selected.waiting_on as keyof typeof WAITING_ON_META]?.color }}>
+                  ⏳ Waiting on: {WAITING_ON_META[selected.waiting_on as keyof typeof WAITING_ON_META]?.label ?? selected.waiting_on}
+                </p>
+              )}
             </div>
             <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-gray-900">✕</button>
           </div>
@@ -145,6 +157,11 @@ export default function RFIsClient({ rfis, projects }: any) {
                 </div>
                 <p className="font-bold">{r.title}</p>
                 <p className="text-sm text-gray-500 mt-1">{r.projects?.name} · {new Date(r.created_at).toLocaleDateString()}</p>
+                {r.waiting_on && (
+                  <span className="inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: WAITING_ON_META[r.waiting_on as keyof typeof WAITING_ON_META]?.bg, color: WAITING_ON_META[r.waiting_on as keyof typeof WAITING_ON_META]?.color }}>
+                    ⏳ Waiting on {WAITING_ON_META[r.waiting_on as keyof typeof WAITING_ON_META]?.label ?? r.waiting_on}
+                  </span>
+                )}
               </div>
               <span className="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0" style={{ background:STATUS_COLORS[r.status]+"22", color:STATUS_COLORS[r.status] }}>
                 {r.status}

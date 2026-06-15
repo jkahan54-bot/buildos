@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { categorizeWaitingOn } from "@/lib/waitingOn";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -173,6 +174,9 @@ export async function POST(req: NextRequest) {
             const lineProject = matchProject(line) ?? project;
             if (!lineProject) continue;
             const lineBlocker = extractBlocker(line) ?? blocker;
+            const lineWaitingOn = lineBlocker
+              ? (categorizeWaitingOn(lineBlocker) ?? categorizeWaitingOn(rawMessage) ?? "Other")
+              : null;
 
             await admin.from("punch_list_items").insert({
               project_id:     lineProject.id,
@@ -185,11 +189,15 @@ export async function POST(req: NextRequest) {
               priority,
               blocked_by:     lineBlocker,
               blocker_detected_at: lineBlocker ? new Date().toISOString() : null,
+              waiting_on:     lineWaitingOn,
             });
             createdCount++;
           }
 
           if (createdCount === 0 && project) {
+            const waitingOn = blocker
+              ? (categorizeWaitingOn(blocker) ?? categorizeWaitingOn(rawMessage) ?? "Other")
+              : null;
             await admin.from("punch_list_items").insert({
               project_id:     project.id,
               org_id:         ORG_ID,
@@ -201,6 +209,7 @@ export async function POST(req: NextRequest) {
               priority,
               blocked_by:     blocker,
               blocker_detected_at: blocker ? new Date().toISOString() : null,
+              waiting_on:     waitingOn,
             });
             createdCount = 1;
           }

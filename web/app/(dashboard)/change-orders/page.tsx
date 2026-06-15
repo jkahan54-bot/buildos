@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, DollarSign, CheckCircle, XCircle, Clock, X } from "lucide-react";
+import { WAITING_ON_META, WAITING_ON_OPTIONS } from "@/lib/waitingOn";
 
 const STATUS_META: Record<string,{color:string;bg:string;label:string}> = {
   draft:     { color:"#6b7280", bg:"#f3f4f6", label:"Draft"     },
@@ -20,7 +21,7 @@ export default function ChangeOrdersPage() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading]  = useState(false);
   const [filter, setFilter]    = useState("all");
-  const [form, setForm] = useState({ project_id:"", title:"", description:"", reason:"", amount:"0" });
+  const [form, setForm] = useState({ project_id:"", title:"", description:"", reason:"", amount:"0", waiting_on:"Owner" });
   const set = (k:string,v:string) => setForm(f => ({...f,[k]:v}));
 
   useEffect(() => { load(); createClient().from("projects").select("id,name").then(({data}) => setProjects(data??[])); }, []);
@@ -40,14 +41,14 @@ export default function ChangeOrdersPage() {
       ...form, org_id: prof?.org_id, requested_by: user!.id, amount: parseFloat(form.amount) || 0,
       number: `CO-${String(count).padStart(3,"0")}`, status: "submitted",
     });
-    setLoading(false); setShowForm(false); setForm({ project_id:"", title:"", description:"", reason:"", amount:"0" });
+    setLoading(false); setShowForm(false); setForm({ project_id:"", title:"", description:"", reason:"", amount:"0", waiting_on:"Owner" });
     await load();
   };
 
   const updateStatus = async (id:string, status:string) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from("change_orders").update({ status, ...(status==="approved"?{approved_by:user!.id, approved_at:new Date().toISOString()}:{}) }).eq("id", id);
+    await supabase.from("change_orders").update({ status, waiting_on: null, ...(status==="approved"?{approved_by:user!.id, approved_at:new Date().toISOString()}:{}) }).eq("id", id);
     await load();
   };
 
@@ -106,6 +107,10 @@ export default function ChangeOrdersPage() {
               <input required value={form.title} onChange={e=>set("title",e.target.value)} className={inp} placeholder="e.g. Add waterproofing to basement walls" /></div>
             <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Reason for change</label>
               <input value={form.reason} onChange={e=>set("reason",e.target.value)} className={inp} placeholder="e.g. Owner request, unforeseen condition…" /></div>
+            <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Waiting On (who needs to approve)</label>
+              <select value={form.waiting_on} onChange={e=>set("waiting_on",e.target.value)} className={inp}>
+                {WAITING_ON_OPTIONS.map(o => <option key={o} value={o}>{WAITING_ON_META[o].label}</option>)}
+              </select></div>
             <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
               <textarea value={form.description} onChange={e=>set("description",e.target.value)} rows={2} className={inp+" resize-none"} placeholder="Scope of work for this change…" /></div>
             <div className="flex gap-3">
@@ -143,6 +148,11 @@ export default function ChangeOrdersPage() {
                       <span className="font-mono text-xs text-gray-400">{co.number}</span>
                       <span className="font-semibold text-gray-900">{co.title}</span>
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background:s.bg, color:s.color }}>{s.label}</span>
+                      {co.waiting_on && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: WAITING_ON_META[co.waiting_on as keyof typeof WAITING_ON_META]?.bg, color: WAITING_ON_META[co.waiting_on as keyof typeof WAITING_ON_META]?.color }}>
+                          ⏳ {WAITING_ON_META[co.waiting_on as keyof typeof WAITING_ON_META]?.label ?? co.waiting_on}
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-gray-500">{co.projects?.name} · {co.profiles?.full_name} · {new Date(co.created_at).toLocaleDateString()}</div>
                     {co.reason && <div className="text-sm text-gray-600 mt-1">{co.reason}</div>}

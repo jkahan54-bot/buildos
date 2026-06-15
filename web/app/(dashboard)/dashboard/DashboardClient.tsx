@@ -1,7 +1,12 @@
 "use client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import Link from "next/link";
-import { TrendingUp, AlertTriangle, FolderOpen, DollarSign, Plus, ArrowUpRight, ShieldAlert, HelpCircle, FileText } from "lucide-react";
+import { TrendingUp, AlertTriangle, FolderOpen, DollarSign, Plus, ArrowUpRight, ShieldAlert, HelpCircle, FileText, Hourglass } from "lucide-react";
+import { WAITING_ON_META, WAITING_ON_OPTIONS } from "@/lib/waitingOn";
+
+const TYPE_HREF: Record<string,string> = { RFI:"/rfis", Submittal:"/submittals", "Change Order":"/change-orders", "Punch List":"/punch-list" };
+
+const daysAgo = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
 
 const fmtMoney = (n: number) => n >= 1000000
   ? `$${(n/1000000).toFixed(1)}M`
@@ -17,10 +22,19 @@ const statusStyle = (s: string): { color:string; bg:string; text:string; label:s
     cancelled: { color:"#9ca3af", bg:"#f3f4f6", text:"#6b7280", label:"Cancelled" },
   } as any)[s] ?? { color:"#9ca3af", bg:"#f3f4f6", text:"#6b7280", label:s });
 
-export default function DashboardClient({ profile, projects, totalBudget, totalSpent, openIncidents, openRFIs }: any) {
+export default function DashboardClient({ profile, projects, totalBudget, totalSpent, openIncidents, openRFIs, waitingOn = [] }: any) {
   const remaining = totalBudget - totalSpent;
   const spentPct  = totalBudget > 0 ? Math.round(totalSpent / totalBudget * 100) : 0;
   const name      = profile?.full_name?.split(" ")[0] ?? "there";
+
+  const waitingGroups = WAITING_ON_OPTIONS
+    .map(category => ({
+      category,
+      items: waitingOn
+        .filter((i: any) => i.waiting_on === category)
+        .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
+    }))
+    .filter(g => g.items.length > 0);
 
   const chartData = projects.slice(0,5).map((p: any) => ({
     name:    p.name.split(" ")[0],
@@ -69,6 +83,49 @@ export default function DashboardClient({ profile, projects, totalBudget, totalS
             </div>
           );
         })}
+      </div>
+
+      {/* Who We're Waiting On */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Hourglass size={15} className="text-gray-400" />
+            <h2 className="font-semibold text-sm text-gray-900">Who We're Waiting On</h2>
+          </div>
+          {waitingOn.length > 0 && <span className="text-xs text-gray-400">{waitingOn.length} open item{waitingOn.length !== 1 ? "s" : ""}</span>}
+        </div>
+        {waitingGroups.length === 0 ? (
+          <div className="text-center py-6 text-sm text-gray-400">Nothing pending — the ball's in our court 🎉</div>
+        ) : (
+          <div className="space-y-4">
+            {waitingGroups.map(({ category, items }) => {
+              const meta = WAITING_ON_META[category];
+              return (
+                <div key={category}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
+                    <span className="text-xs text-gray-400">{items.length} item{items.length !== 1 ? "s" : ""}</span>
+                  </div>
+                  <div className="space-y-1">
+                    {items.map((item: any) => (
+                      <Link key={`${item.type}-${item.id}`} href={TYPE_HREF[item.type] ?? "#"}
+                        className="flex items-center justify-between gap-2 text-sm px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-all">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 flex-shrink-0">{item.type}</span>
+                          <span className="text-gray-700 truncate">{item.title}</span>
+                          {item.projects?.name && <span className="text-gray-400 text-xs flex-shrink-0 hidden sm:inline">· {item.projects.name}</span>}
+                        </div>
+                        <span className={`text-xs flex-shrink-0 ${daysAgo(item.created_at) >= 5 ? "text-red-500 font-semibold" : "text-gray-400"}`}>
+                          {daysAgo(item.created_at)}d
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Chart — sm+ only */}

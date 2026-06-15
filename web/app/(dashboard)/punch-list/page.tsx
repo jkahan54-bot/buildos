@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X, CheckCircle } from "lucide-react";
+import { WAITING_ON_META, WAITING_ON_OPTIONS } from "@/lib/waitingOn";
 
 export default function PunchListPage() {
   const [items, setItems]     = useState<any[]>([]);
@@ -10,7 +11,7 @@ export default function PunchListPage() {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter]   = useState("open");
   const [selProj, setSelProj] = useState("all");
-  const [form, setForm] = useState({ project_id:"", title:"", description:"", location:"", trade:"", priority:"medium", assigned_to:"", due_date:"" });
+  const [form, setForm] = useState({ project_id:"", title:"", description:"", location:"", trade:"", priority:"medium", assigned_to:"", due_date:"", waiting_on:"" });
   const set = (k:string,v:string) => setForm(f=>({...f,[k]:v}));
   const inp = "w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-orange-500 shadow-sm";
 
@@ -23,8 +24,8 @@ export default function PunchListPage() {
     const supabase = createClient();
     const { data:{user} } = await supabase.auth.getUser();
     const { data:prof } = await supabase.from("profiles").select("org_id").eq("id",user!.id).single();
-    await supabase.from("punch_list_items").insert({ ...form, org_id:prof?.org_id, created_by:user!.id });
-    setLoading(false); setShowForm(false); setForm({ project_id:"", title:"", description:"", location:"", trade:"", priority:"medium", assigned_to:"", due_date:"" });
+    await supabase.from("punch_list_items").insert({ ...form, waiting_on: form.waiting_on || null, org_id:prof?.org_id, created_by:user!.id });
+    setLoading(false); setShowForm(false); setForm({ project_id:"", title:"", description:"", location:"", trade:"", priority:"medium", assigned_to:"", due_date:"", waiting_on:"" });
     await load();
   };
 
@@ -70,6 +71,11 @@ export default function PunchListPage() {
               <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Due Date</label>
                 <input type="date" value={form.due_date} onChange={e=>set("due_date",e.target.value)} className={inp} /></div>
             </div>
+            <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Waiting On (optional)</label>
+              <select value={form.waiting_on} onChange={e=>set("waiting_on",e.target.value)} className={inp}>
+                <option value="">— Not blocked —</option>
+                {WAITING_ON_OPTIONS.map(o => <option key={o} value={o}>{WAITING_ON_META[o].label}</option>)}
+              </select></div>
             <div className="flex gap-3">
               <button type="button" onClick={()=>setShowForm(false)} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-600 bg-gray-100">Cancel</button>
               <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>{loading?"Saving…":"Add"}</button>
@@ -104,7 +110,12 @@ export default function PunchListPage() {
                     <span className={`font-medium text-sm ${item.status==="completed"?"line-through text-gray-400":"text-gray-900"}`}>{item.title}</span>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background:PRIORITY_COLOR[item.priority]+"20", color:PRIORITY_COLOR[item.priority] }}>{item.priority}</span>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background:sc.b, color:sc.c }}>{item.status.replace("_"," ")}</span>
-                    {item.blocked_by && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700">⏳ {item.blocked_by}</span>}
+                    {item.waiting_on && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: WAITING_ON_META[item.waiting_on as keyof typeof WAITING_ON_META]?.bg, color: WAITING_ON_META[item.waiting_on as keyof typeof WAITING_ON_META]?.color }}>
+                        ⏳ {WAITING_ON_META[item.waiting_on as keyof typeof WAITING_ON_META]?.label ?? item.waiting_on}
+                      </span>
+                    )}
+                    {item.blocked_by && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700">"{item.blocked_by}"</span>}
                   </div>
                   <div className="text-xs text-gray-500 mt-0.5">{item.projects?.name}{item.location?` · ${item.location}`:""}{item.assigned_to?` · ${item.assigned_to}`:""}{item.due_date?` · Due ${item.due_date}`:""}</div>
                 </div>

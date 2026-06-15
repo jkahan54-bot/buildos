@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { WAITING_ON_META, WAITING_ON_OPTIONS } from "@/lib/waitingOn";
 
 const STATUS_META: Record<string,{color:string;bg:string;label:string}> = {
   pending:            { color:"#d97706", bg:"#fef3c7", label:"Pending"           },
@@ -19,7 +20,7 @@ export default function SubmittalsPage() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter]   = useState("all");
-  const [form, setForm] = useState({ project_id:"", title:"", spec_section:"", trade:"", submitted_by:"", required_date:"", status:"pending", notes:"" });
+  const [form, setForm] = useState({ project_id:"", title:"", spec_section:"", trade:"", submitted_by:"", required_date:"", status:"pending", notes:"", waiting_on:"Architect" });
   const set = (k:string,v:string) => setForm(f=>({...f,[k]:v}));
   const inp = "w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-orange-500 shadow-sm";
 
@@ -34,12 +35,13 @@ export default function SubmittalsPage() {
     const { data:prof } = await supabase.from("profiles").select("org_id").eq("id",user!.id).single();
     const count = items.filter(i=>i.project_id===form.project_id).length+1;
     await supabase.from("submittals").insert({ ...form, org_id:prof?.org_id, number:`SUB-${String(count).padStart(3,"0")}`, submitted_date:new Date().toISOString().split("T")[0] });
-    setLoading(false); setShowForm(false); setForm({ project_id:"", title:"", spec_section:"", trade:"", submitted_by:"", required_date:"", status:"pending", notes:"" });
+    setLoading(false); setShowForm(false); setForm({ project_id:"", title:"", spec_section:"", trade:"", submitted_by:"", required_date:"", status:"pending", notes:"", waiting_on:"Architect" });
     await load();
   };
 
   const updateStatus = async (id:string, status:string) => {
-    await createClient().from("submittals").update({ status, ...(["approved","approved_as_noted","rejected"].includes(status)?{returned_date:new Date().toISOString().split("T")[0]}:{}) }).eq("id",id);
+    const resolved = ["approved","approved_as_noted","rejected"].includes(status);
+    await createClient().from("submittals").update({ status, ...(resolved ? { returned_date:new Date().toISOString().split("T")[0], waiting_on:null } : {}) }).eq("id",id);
     await load();
   };
 
@@ -73,6 +75,10 @@ export default function SubmittalsPage() {
               <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Required By</label>
                 <input type="date" value={form.required_date} onChange={e=>set("required_date",e.target.value)} className={inp} /></div>
             </div>
+            <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Waiting On (who needs to review)</label>
+              <select value={form.waiting_on} onChange={e=>set("waiting_on",e.target.value)} className={inp}>
+                {WAITING_ON_OPTIONS.map(o => <option key={o} value={o}>{WAITING_ON_META[o].label}</option>)}
+              </select></div>
             <div className="flex gap-3">
               <button type="button" onClick={()=>setShowForm(false)} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-600 bg-gray-100">Cancel</button>
               <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>{loading?"Saving…":"Submit"}</button>
@@ -98,6 +104,11 @@ export default function SubmittalsPage() {
                     <span className="font-mono text-xs text-gray-400">{item.number}</span>
                     <span className="font-semibold text-gray-900">{item.title}</span>
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background:s.bg,color:s.color }}>{s.label}</span>
+                    {item.waiting_on && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: WAITING_ON_META[item.waiting_on as keyof typeof WAITING_ON_META]?.bg, color: WAITING_ON_META[item.waiting_on as keyof typeof WAITING_ON_META]?.color }}>
+                        ⏳ {WAITING_ON_META[item.waiting_on as keyof typeof WAITING_ON_META]?.label ?? item.waiting_on}
+                      </span>
+                    )}
                   </div>
                   <div className="text-xs text-gray-500">{item.projects?.name}{item.trade?` · ${item.trade}`:""}{item.submitted_by?` · ${item.submitted_by}`:""}{item.required_date?` · Due ${item.required_date}`:""}</div>
                 </div>
