@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { CheckCircle, X, Edit2, MessageSquare, Mail, ChevronDown, ChevronUp, RefreshCw, CheckCheck, Trash2 } from "lucide-react";
+import { CheckCircle, X, Edit2, MessageSquare, Mail, ChevronDown, ChevronUp, RefreshCw, CheckCheck, Trash2, FileText } from "lucide-react";
 import { WAITING_ON_META } from "@/lib/waitingOn";
 
 const SOURCE_META: Record<string, { icon: string; color: string; bg: string; label: string }> = {
@@ -16,15 +16,26 @@ const PRIORITY_COLOR: Record<string, { c: string; b: string }> = {
   fire_code: { c:"#dc2626", b:"#fee2e2" },
 };
 
+type DailyReportProject = { name: string; summary: string; task_count: number };
+type DailyReport = {
+  report_date: string;
+  overall_summary: string;
+  projects: DailyReportProject[];
+  emails_scanned: number;
+  tasks_created: number;
+};
+
 export default function DailySummaryPage() {
-  const [items, setItems]         = useState<any[]>([]);
-  const [projects, setProjects]   = useState<any[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [editing, setEditing]     = useState<string | null>(null);
-  const [editVal, setEditVal]     = useState("");
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [busy, setBusy]           = useState<string | null>(null);
-  const [role, setRole]           = useState<string | null>(null);
+  const [items, setItems]           = useState<any[]>([]);
+  const [projects, setProjects]     = useState<any[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [editing, setEditing]       = useState<string | null>(null);
+  const [editVal, setEditVal]       = useState("");
+  const [collapsed, setCollapsed]   = useState<Record<string, boolean>>({});
+  const [busy, setBusy]             = useState<string | null>(null);
+  const [role, setRole]             = useState<string | null>(null);
+  const [report, setReport]         = useState<DailyReport | null>(null);
+  const [reportOpen, setReportOpen] = useState(true);
 
   const load = async () => {
     setLoading(true);
@@ -48,12 +59,17 @@ export default function DailySummaryPage() {
       query = query.eq("source", "email");
     }
 
-    const [{ data: pItems }, { data: pList }] = await Promise.all([
+    const [{ data: pItems }, { data: pList }, reportRes] = await Promise.all([
       query,
       supabase.from("projects").select("id, name").order("name"),
+      fetch("/api/daily-report"),
     ]);
     setItems(pItems ?? []);
     setProjects(pList ?? []);
+    if (reportRes.ok) {
+      const { report: r } = await reportRes.json();
+      setReport(r ?? null);
+    }
     setLoading(false);
   };
 
@@ -102,6 +118,55 @@ export default function DailySummaryPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
+
+      {/* Daily Report Card */}
+      {report && (
+        <div className="bg-white rounded-xl border border-blue-200 shadow-sm overflow-hidden">
+          <button
+            onClick={() => setReportOpen(o => !o)}
+            className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-blue-50 transition-colors"
+          >
+            <FileText size={18} className="text-blue-500 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-gray-900 text-sm">Today's Jobsite Activity</div>
+              <div className="text-xs text-gray-500 mt-0.5 truncate">{report.overall_summary}</div>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                📧 {report.emails_scanned} emails
+              </span>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700">
+                ✅ {report.tasks_created} tasks
+              </span>
+              {reportOpen ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+            </div>
+          </button>
+
+          {reportOpen && (
+            <div className="border-t border-blue-100 px-5 py-4 space-y-3">
+              <p className="text-sm text-gray-700 leading-relaxed">{report.overall_summary}</p>
+              <div className="space-y-2">
+                {report.projects.map((p, i) => (
+                  <div key={i} className="flex gap-3 items-start">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-gray-800">{p.name}</span>
+                      <span className="text-xs text-gray-600"> — {p.summary}</span>
+                      {p.task_count > 0 && (
+                        <span className="ml-2 text-[10px] font-semibold text-green-700 bg-green-50 px-1.5 py-0.5 rounded-full">
+                          {p.task_count} task{p.task_count !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-gray-400 pt-1">Generated by nightly scan · {report.report_date}</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
