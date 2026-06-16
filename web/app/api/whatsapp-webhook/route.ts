@@ -126,6 +126,41 @@ export async function POST(req: NextRequest) {
         // repeat the project name still get filed to the right job.
         const project = matchProject(rawMessage) ?? matchProject(senderPhone);
 
+        // ── EMAIL ITEMS (AI-curated — skip heuristic gates) ──────────
+        // Email items arrive pre-filtered by the nightly AI scan, so we
+        // don't re-apply the ACTION_WORDS gate or multi-line split.
+        // Body format: "<project> — <task>\n---\n<email context summary>"
+        if (msgSource === "email") {
+          const [taskPart, contextPart] = rawMessage.split("\n---\n");
+          const taskTitle = taskPart.trim().slice(0, 200);
+          const emailCtx  = (contextPart ?? "").trim().slice(0, 500);
+          if (project) {
+            const blocker   = extractBlocker(rawMessage);
+            const waitingOn = blocker ? (categorizeWaitingOn(blocker) ?? categorizeWaitingOn(rawMessage) ?? "Other") : null;
+            await admin.from("punch_list_items").insert({
+              project_id:          project.id,
+              org_id:              ORG_ID,
+              title:               taskTitle,
+              description:         emailCtx || taskTitle,
+              source:              "email",
+              source_message:      emailCtx || rawMessage.slice(0, 500),
+              status:              "pending_review",
+              priority:            priorityFromText(rawMessage),
+              blocked_by:          blocker,
+              blocker_detected_at: blocker ? new Date().toISOString() : null,
+              waiting_on:          waitingOn,
+            });
+          } else {
+            await admin.from("system_events").insert({
+              org_id:  ORG_ID,
+              type:    "email_unmatched",
+              status:  "received",
+              details: { task: taskTitle, context: emailCtx.slice(0, 200) },
+            });
+          }
+          continue;
+        }
+
         // ── COMPLETION DETECTION ──────────────────────────────────────
         if (DONE_WORDS.test(lower) && !ACTION_WORDS.test(lower)) {
           if (project) {
