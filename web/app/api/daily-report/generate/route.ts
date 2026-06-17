@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
       .select("type, severity, description, project_id, projects(name)")
       .eq("org_id", ORG_ID)
       .gte("created_at", dayStart)
-      .lte("updated_at", dayEnd),
+      .lte("created_at", dayEnd),
 
     // Open high-priority blockers (not just today — ongoing)
     admin.from("punch_list_items")
@@ -128,51 +128,71 @@ ${email_context ? `EMAIL NOTES: ${email_context}` : ""}
 `.trim();
 
   // ── Ask Claude for a real narrative ────────────────────────────────────
-  const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key":         process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-      "content-type":      "application/json",
-    },
-    body: JSON.stringify({
-      model:      "claude-haiku-4-5-20251001",
-      max_tokens: 1200,
-      messages: [{
-        role: "user",
-        content: `You are summarizing a construction PM's day across multiple active jobsites. Write a concise, factual daily report based ONLY on the data below. No fluff, no fabrication.
+  let parsed: any = {};
+  try {
+    const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key":         process.env.ANTHROPIC_API_KEY!,
+        "anthropic-version": "2023-06-01",
+        "content-type":      "application/json",
+      },
+      body: JSON.stringify({
+        model:      "claude-haiku-4-5-20251001",
+        max_tokens: 1200,
+        messages: [{
+          role: "user",
+          content: `You are summarizing a construction PM's day across multiple active jobsites. Write a concise, factual daily report based ONLY on the data below. No fluff, no fabrication.
 
 ${dataBlock}
 
-Return ONLY valid JSON with this shape:
+Return ONLY valid JSON (no markdown, no explanation):
 {
   "overall_summary": "2-3 sentences covering the whole day: what projects were active, any urgent items, any completions or blockers worth flagging",
   "projects": [
     {
       "name": "exact project name from data",
-      "summary": "1-2 sentences: what happened on this site today — combine WhatsApp field reports and email items into a single plain-English update. Be specific about the actual issues/tasks.",
-      "whatsapp_count": <number>,
-      "email_count": <number>,
-      "task_count": <total new items>
+      "summary": "1-2 sentences: what happened on this site today — combine WhatsApp field reports and email items into one plain-English update. Be specific about the actual issues and tasks.",
+      "whatsapp_count": 0,
+      "email_count": 0,
+      "task_count": 0
     }
   ],
-  "completed_count": <number>,
-  "blocker_count": <number>,
-  "incident_count": <number>
+  "completed_count": 0,
+  "blocker_count": 0,
+  "incident_count": 0
 }
 
-Only include projects that had activity today. If a project had items completed but no new items, include it anyway with task_count 0 and note the completion in the summary.`
-      }]
-    }),
-  });
+Only include projects that had activity today.`
+        }]
+      }),
+      signal: AbortSignal.timeout(25000),
+    });
+    const aiData = await aiRes.json();
+    const text   = aiData.content?.[0]?.text ?? "";
+    if (text) parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+  } catch (e) {
+    console.error("[daily-report/generate] AI call failed:", e);
+  }
 
-  const aiData = await aiRes.json();
-  const text   = aiData.content?.[0]?.text ?? "{}";
-  let parsed: any = {};
-  try {
-    parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
-  } catch {
-    parsed = { overall_summary: text.slice(0, 300), projects: [] };
+  // ── Fallback: build summary from raw data if AI failed or returned empty ─
+  if (!parsed.overall_summary) {
+    const projectNames = Object.keys(byProject);
+    parsed.overall_summary = projectNames.length > 0
+      ? `${projectNames.length} site${projectNames.length > 1 ? "s" : ""} had activity: ${projectNames.join(", ")}. ` +
+        `${waCount} field message${waCount !== 1 ? "s" : ""} via WhatsApp and ${emailCount} email task${emailCount !== 1 ? "s" : ""} were logged. ` +
+        ((completedItems ?? []).length > 0 ? `${(completedItems ?? []).length} item${(completedItems ?? []).length > 1 ? "s" : ""} completed today.` : "")
+      : "No jobsite activity logged today.";
+    parsed.projects = Object.values(byProject).map(p => ({
+      name:           p.name,
+      summary:        [
+        p.whatsapp.length > 0 ? `${p.whatsapp.length} field item${p.whatsapp.length > 1 ? "s" : ""} from WhatsApp: ${p.whatsapp.map(i => i.title).join("; ")}.` : "",
+        p.email.length  > 0  ? `${p.email.length} email item${p.email.length > 1 ? "s" : ""}: ${p.email.map(i => i.title).join("; ")}.` : "",
+      ].filter(Boolean).join(" "),
+      whatsapp_count: p.whatsapp.length,
+      email_count:    p.email.length,
+      task_count:     p.whatsapp.length + p.email.length,
+    }));
   }
 
   const report = {
