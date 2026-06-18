@@ -59,13 +59,15 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const today = new Date().toISOString().split("T")[0];
+  // Return the most recent report from the last 36 hours so it's visible
+  // even if the scan ran yesterday evening and today's hasn't fired yet.
+  const since = new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString();
   const { data } = await admin
     .from("system_events")
     .select("details, created_at")
     .eq("type", "daily_report")
     .eq("org_id", ORG_ID)
-    .gte("created_at", `${today}T00:00:00.000Z`)
+    .gte("created_at", since)
     .order("created_at", { ascending: false })
     .limit(1);
 
