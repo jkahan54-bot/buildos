@@ -27,6 +27,22 @@ async function sendCallMeBot(message: string) {
   ).catch(() => {});
 }
 
+// Vercel cron hits GET at 7 PM ET — generates report with no email data
+export async function GET(req: NextRequest) {
+  const auth = req.headers.get("authorization");
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  // Call ourselves as a POST with an empty email context
+  const today = new Date().toISOString().split("T")[0];
+  const fakeReq = new Request(req.url, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({ token: REPORT_TOKEN, report_date: today, emails_scanned: 0, email_context: "Automated cron — emails processed in real-time via Power Automate." }),
+  });
+  return POST(new NextRequest(fakeReq));
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { token, report_date, emails_scanned = 0, email_context = "" } = body;

@@ -21,12 +21,13 @@ const STATUS_COLOR: Record<string, { c: string; b: string }> = {
 };
 
 export default function CommandPage() {
-  const [messages, setMessages]   = useState<Message[]>([]);
-  const [input, setInput]         = useState("");
-  const [sending, setSending]     = useState(false);
-  const [scanning, setScanning]   = useState(false);
-  const [lastScan, setLastScan]   = useState<ScanResult | null>(null);
-  const [stats, setStats]         = useState<Record<string, number> | null>(null);
+  const [messages, setMessages]       = useState<Message[]>([]);
+  const [input, setInput]             = useState("");
+  const [sending, setSending]         = useState(false);
+  const [scanning, setScanning]       = useState(false);
+  const [emailScanning, setEmailScanning] = useState(false);
+  const [lastScan, setLastScan]       = useState<ScanResult | null>(null);
+  const [stats, setStats]             = useState<Record<string, number> | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -65,6 +66,23 @@ export default function CommandPage() {
       setMessages(m => [...m, { role: "ai", text: "Connection error. Please try again.", ts: "" }]);
     }
     setSending(false);
+  };
+
+  const runEmailScan = async () => {
+    setEmailScanning(true);
+    setMessages(m => [...m, { role: "ai", text: "Running email scan — reading today's Outlook emails and creating tasks…", ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]);
+    try {
+      const res  = await fetch("/api/email-scan", { method: "POST" });
+      const data = await res.json();
+      if (data.ok) {
+        setMessages(m => [...m, { role: "ai", text: `✅ Email scan done — ${data.jkahan_fetched + data.info_fetched} emails read, ${data.tasks_created} task(s) created. Daily report triggered.`, ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]);
+      } else {
+        setMessages(m => [...m, { role: "ai", text: `⚠️ Email scan error: ${data.error ?? "unknown"}`, ts: "" }]);
+      }
+    } catch {
+      setMessages(m => [...m, { role: "ai", text: "Email scan failed. Please try again.", ts: "" }]);
+    }
+    setEmailScanning(false);
   };
 
   const runScan = async () => {
@@ -106,12 +124,20 @@ export default function CommandPage() {
           </h1>
           <p className="text-gray-500 text-sm mt-0.5">Ask anything about your sites, or run a full system scan</p>
         </div>
-        <button onClick={runScan} disabled={scanning}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm disabled:opacity-60 transition-all"
-          style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}>
-          <Zap size={15} className={scanning ? "animate-pulse" : ""} />
-          {scanning ? "Scanning…" : "Run Full Scan"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={runEmailScan} disabled={emailScanning || scanning}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm disabled:opacity-60 transition-all"
+            style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)" }}>
+            <RefreshCw size={15} className={emailScanning ? "animate-spin" : ""} />
+            {emailScanning ? "Scanning…" : "Email Scan"}
+          </button>
+          <button onClick={runScan} disabled={scanning || emailScanning}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm disabled:opacity-60 transition-all"
+            style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}>
+            <Zap size={15} className={scanning ? "animate-pulse" : ""} />
+            {scanning ? "Scanning…" : "Run Full Scan"}
+          </button>
+        </div>
       </div>
 
       {/* Stat cards */}
