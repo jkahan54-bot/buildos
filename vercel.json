@@ -1,3 +1,9 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/owner/scan",
+      "schedule": "0 1 * * 6"
+    }
+  ]
 }

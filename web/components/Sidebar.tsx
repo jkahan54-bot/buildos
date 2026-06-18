@@ -16,6 +16,7 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
   // Master Owner — everything
   owner: [
     { href:"/dashboard",       label:"Dashboard",       icon:LayoutDashboard },
+    { href:"/command",         label:"Command Center",  icon:Bot,            badge:"👑" },
     { href:"/daily-summary",   label:"Daily Review",    icon:ClipboardList,  badge:"📋" },
     { href:"/pipeline",        label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
     { href:"/walkthroughs",    label:"Walkthroughs",    icon:Camera,         badge:"🏥" },
