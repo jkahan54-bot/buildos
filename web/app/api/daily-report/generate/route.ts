@@ -120,29 +120,28 @@ export async function POST(req: NextRequest) {
   const emailCount = (newItems ?? []).filter(i => i.source === "email").length;
 
   // ── Build a structured data block for Claude ────────────────────────────
+  // Include full source messages so the AI can write a real narrative
   const dataBlock = `
 DATE: ${today}
 
-NEW ITEMS TODAY (${(newItems ?? []).length} total — ${waCount} WhatsApp, ${emailCount} email):
+ACTIVITY BY SITE:
 ${Object.values(byProject).map(p => `
-  Project: ${p.name}
-  WhatsApp items (${p.whatsapp.length}):
-${p.whatsapp.map(i => `    - [${i.priority}] ${i.title}${i.source_message ? ` | "${i.source_message.slice(0, 120)}"` : ""}`).join("\n") || "    (none)"}
-  Email items (${p.email.length}):
-${p.email.map(i => `    - [${i.priority}] ${i.title}${i.description ? ` | ${i.description.slice(0, 120)}` : ""}`).join("\n") || "    (none)"}
-`).join("") || "  (no new items today)"}
+═══ ${p.name} ═══
+WhatsApp field messages (${p.whatsapp.length}):
+${p.whatsapp.map(i => `  - ${i.title}${i.source_message ? `\n    Original message: "${i.source_message}"` : ""}${i.description ? `\n    Details: ${i.description}` : ""}`).join("\n") || "  (none)"}
 
-ITEMS APPROVED TODAY: ${(approvedItems ?? []).length}
-${(approvedItems ?? []).map(i => `  - ${(i as any).projects?.name}: ${i.title}`).join("\n") || "  (none)"}
+Email items (${p.email.length}):
+${p.email.map(i => `  - ${i.title}${i.description ? `\n    Details: ${i.description}` : ""}${i.source_message ? `\n    From email: "${i.source_message}"` : ""}`).join("\n") || "  (none)"}
+`).join("\n") || "  (no activity today)"}
 
 ITEMS COMPLETED TODAY: ${(completedItems ?? []).length}
 ${(completedItems ?? []).map(i => `  - ${(i as any).projects?.name}: ${i.title}`).join("\n") || "  (none)"}
 
 SAFETY INCIDENTS TODAY: ${(incidents ?? []).length}
-${(incidents ?? []).map(i => `  - [${i.severity}] ${i.type}: ${i.description?.slice(0, 100)}`).join("\n") || "  (none)"}
+${(incidents ?? []).map(i => `  - [${i.severity}] ${(i as any).projects?.name ?? "unlinked"}: ${i.type} — ${i.description ?? ""}`).join("\n") || "  (none)"}
 
 OPEN BLOCKERS ACROSS ALL SITES: ${(blockers ?? []).length}
-${(blockers ?? []).map(i => `  - ${(i as any).projects?.name}: waiting on "${i.blocked_by}" (${i.waiting_on ?? "other"})`).join("\n") || "  (none)"}
+${(blockers ?? []).map(i => `  - ${(i as any).projects?.name}: "${i.title}" — waiting on: ${i.blocked_by}`).join("\n") || "  (none)"}
 
 EMAIL SCAN: ${emails_scanned} emails scanned today.
 ${email_context ? `EMAIL NOTES: ${email_context}` : ""}
@@ -160,20 +159,23 @@ ${email_context ? `EMAIL NOTES: ${email_context}` : ""}
       },
       body: JSON.stringify({
         model:      "claude-haiku-4-5-20251001",
-        max_tokens: 1200,
+        max_tokens: 2000,
         messages: [{
           role: "user",
-          content: `You are summarizing a construction PM's day across multiple active jobsites. Write a concise, factual daily report based ONLY on the data below. No fluff, no fabrication.
+          content: `You are writing a daily site diary for a construction company owner who was NOT on site today. He needs to read this and know exactly what happened at each jobsite — like he was there. Read the raw WhatsApp messages and emails below carefully, then write a plain-English narrative for each site.
+
+DO: mention specific work being done (e.g. "shed removal in progress", "cameras being relocated to the fence"), who said what if relevant, materials/deliveries, any issues or blockers.
+DON'T: list task titles back, use generic language like "several items were logged", or fabricate anything not in the data.
 
 ${dataBlock}
 
 Return ONLY valid JSON (no markdown, no explanation):
 {
-  "overall_summary": "2-3 sentences covering the whole day: what projects were active, any urgent items, any completions or blockers worth flagging",
+  "overall_summary": "2-3 sentences: quick overview of the day across all sites. What's the big picture? Any urgent items, completions, or blockers worth knowing about right away.",
   "projects": [
     {
       "name": "exact project name from data",
-      "summary": "1-2 sentences: what happened on this site today — combine WhatsApp field reports and email items into one plain-English update. Be specific about the actual issues and tasks.",
+      "summary": "2-4 sentences: a plain-English narrative of what happened on this site today. Synthesize the WhatsApp field messages and emails into one coherent update. Be specific — mention actual work (demolition, inspections, deliveries, installations), coordination requests, and any issues. Write it like a foreman's end-of-day update.",
       "whatsapp_count": 0,
       "email_count": 0,
       "task_count": 0

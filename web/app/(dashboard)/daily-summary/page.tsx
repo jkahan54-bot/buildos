@@ -318,9 +318,11 @@ export default function DailySummaryPage() {
 
                 {isOpen && (
                   <div className="border-t border-gray-100 px-5 py-4 space-y-4">
-                    {/* AI narrative */}
+                    {/* AI narrative — the main thing */}
                     {site.aiSummary && (
-                      <p className="text-sm text-gray-700 leading-relaxed">{site.aiSummary}</p>
+                      <div className="bg-blue-50 rounded-lg px-4 py-3 border border-blue-100">
+                        <p className="text-sm text-gray-800 leading-relaxed">{site.aiSummary}</p>
+                      </div>
                     )}
 
                     {/* WhatsApp items */}
