@@ -51,9 +51,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const today = report_date ?? new Date().toISOString().split("T")[0];
-  const dayStart = `${today}T00:00:00.000Z`;
-  const dayEnd   = `${today}T23:59:59.999Z`;
+  // Use Eastern Time day boundaries so the "day" matches the real workday
+  const etDate = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  const today  = report_date ?? etDate;
+  // Midnight ET → UTC: EDT = UTC-4, EST = UTC-5. Use 5 AM UTC to cover both safely
+  // (captures from midnight EST = 5 AM UTC; a few EDT evening items from prev UTC day are included)
+  const dayStartUTC = new Date(`${today}T05:00:00.000Z`);
+  const dayStart    = dayStartUTC.toISOString();
+  const dayEnd      = new Date(dayStartUTC.getTime() + 24*60*60*1000 - 1).toISOString();
 
   // ── Pull all today's activity from the database ─────────────────────────
   const [
