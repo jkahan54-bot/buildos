@@ -6,6 +6,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { enrichTitle } from "@/lib/enrichMessage";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -129,11 +130,12 @@ export async function POST(req: NextRequest) {
         const lineProject = matchProject(line) ?? project;
         if (!lineProject) continue; // skip if can't match to a project
 
+        const title = await enrichTitle(line, sender, lineProject.name);
         await admin.from("punch_list_items").insert({
           project_id:     lineProject.id,
           org_id:         ORG_ID,
-          title:          line.slice(0, 200),
-          description:    `From WhatsApp: "${rawMessage.slice(0, 300)}"`,
+          title,
+          description:    `From ${sender} via WhatsApp: "${rawMessage.slice(0, 300)}"`,
           source:         "whatsapp",
           source_message: rawMessage.slice(0, 500),
           status:         "pending_review",
@@ -144,12 +146,12 @@ export async function POST(req: NextRequest) {
       }
 
       if (createdCount === 0 && project) {
-        // Whole message is one item
+        const title = await enrichTitle(rawMessage, sender, project.name);
         await admin.from("punch_list_items").insert({
           project_id:     project.id,
           org_id:         ORG_ID,
-          title:          rawMessage.slice(0, 200),
-          description:    `From WhatsApp message`,
+          title,
+          description:    `From ${sender} via WhatsApp: "${rawMessage.slice(0, 300)}"`,
           source:         "whatsapp",
           source_message: rawMessage.slice(0, 500),
           status:         "pending_review",
