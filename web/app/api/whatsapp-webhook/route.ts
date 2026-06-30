@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { categorizeWaitingOn } from "@/lib/waitingOn";
+import { lookupSenderName, enrichTitle } from "@/lib/enrichMessage";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -112,6 +113,8 @@ export async function POST(req: NextRequest) {
       const senderPhone = metadata.display_phone_number || "WhatsApp";
       // Source defaults to whatsapp; the email scanner passes value.source = "email"
       const msgSource = value?.source === "email" ? "email" : "whatsapp";
+      // Meta sends the sender's profile name in the contacts array
+      const metaContacts = value?.contacts ?? [];
 
       for (const msg of messages) {
         if (msg.type !== "text") continue; // ignore images, files, etc for now
@@ -119,6 +122,9 @@ export async function POST(req: NextRequest) {
         const rawMessage = msg.text?.body ?? "";
         const fromPhone = msg.from;
         if (!rawMessage) continue;
+
+        const metaProfile = metaContacts.find((c: any) => c.wa_id === fromPhone);
+        const senderName = lookupSenderName(fromPhone, metaProfile?.profile?.name);
 
         const lower = rawMessage.toLowerCase();
         // Match the project from the message text, falling back to the group name
@@ -200,7 +206,17 @@ export async function POST(req: NextRequest) {
         // or a detected blocker) — plain chatter is ignored to keep the review queue clean.
         if (ACTION_WORDS.test(rawMessage) || extractBlocker(rawMessage)) {
           const priority = priorityFromText(rawMessage);
-          const lines = rawMessage.split(/[,\n;]/).map((l: string) => l.trim()).filter((l: string) => l.length > 5);
+          // Only split into multiple items when individual lines are each independently
+          // actionable (their own action word or blocker) — otherwise a single message
+          // like "Delivery / Laborers / Sheetrock install / All is scheduled" gets
+          // shredded into meaningless one-word fragments instead of staying one update.
+          const candidateLines = rawMessage.split(/[,\n;]/).map((l: string) => l.trim()).filter((l: string) => l.length > 5);
+          const actionableLines = candidateLines.filter((l: string) => ACTION_WORDS.test(l) || extractBlocker(l));
+          // Need at least 2 independently-actionable lines to justify splitting;
+          // otherwise fall through to the single-item path below so context isn't lost.
+          const lines = candidateLines.length > 1
+            ? (actionableLines.length >= 2 ? actionableLines : [])
+            : candidateLines;
 
           let createdCount = 0;
           const blocker = extractBlocker(rawMessage);
@@ -213,11 +229,12 @@ export async function POST(req: NextRequest) {
               ? (categorizeWaitingOn(lineBlocker) ?? categorizeWaitingOn(rawMessage) ?? "Other")
               : null;
 
+            const title = await enrichTitle(line, senderName, lineProject.name);
             await admin.from("punch_list_items").insert({
               project_id:     lineProject.id,
               org_id:         ORG_ID,
-              title:          line.slice(0, 200),
-              description:    `From WhatsApp group: "${rawMessage.slice(0, 300)}"`,
+              title,
+              description:    `From ${senderName} via WhatsApp: "${rawMessage.slice(0, 300)}"`,
               source:         msgSource,
               source_message: rawMessage.slice(0, 500),
               status:         "pending_review",
@@ -233,11 +250,12 @@ export async function POST(req: NextRequest) {
             const waitingOn = blocker
               ? (categorizeWaitingOn(blocker) ?? categorizeWaitingOn(rawMessage) ?? "Other")
               : null;
+            const title = await enrichTitle(rawMessage, senderName, project.name);
             await admin.from("punch_list_items").insert({
               project_id:     project.id,
               org_id:         ORG_ID,
-              title:          rawMessage.slice(0, 200),
-              description:    `From WhatsApp group`,
+              title,
+              description:    `From ${senderName} via WhatsApp: "${rawMessage.slice(0, 300)}"`,
               source:         msgSource,
               source_message: rawMessage.slice(0, 500),
               status:         "pending_review",
@@ -264,7 +282,7 @@ export async function POST(req: NextRequest) {
           await admin.from("safety_incidents").insert({
             type: "WhatsApp Emergency",
             severity: "Critical",
-            description: `[${senderPhone}]: ${rawMessage}`,
+            description: `[${senderName}]: ${rawMessage}`,
             status: "Open",
             org_id: ORG_ID,
             project_id: project?.id ?? null,
@@ -280,7 +298,7 @@ export async function POST(req: NextRequest) {
           org_id: ORG_ID,
           type: "whatsapp_message",
           status: "received",
-          details: { from: senderPhone, message: rawMessage.slice(0, 200), project: project?.name ?? null },
+          details: { from: senderName, phone: fromPhone, message: rawMessage.slice(0, 200), project: project?.name ?? null },
         });
       }
     }
