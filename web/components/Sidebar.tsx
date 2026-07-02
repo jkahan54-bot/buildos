@@ -17,8 +17,10 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
   owner: [
     { href:"/dashboard",       label:"Dashboard",       icon:LayoutDashboard },
     { href:"/command",         label:"Command Center",  icon:Bot,            badge:"👑" },
+    { href:"/sites",           label:"Site Command",    icon:BarChart2,      badge:"🎯" },
     { href:"/daily-summary",   label:"Daily Review",    icon:ClipboardList,  badge:"📋" },
     { href:"/pipeline",        label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
+    { href:"/precon",          label:"Pre-Con",         icon:FileSignature,  badge:"📐" },
     { href:"/walkthroughs",    label:"Walkthroughs",    icon:Camera,         badge:"🏥" },
     { href:"/projects",        label:"Projects",        icon:FolderKanban },
     { href:"/milestones",      label:"Milestones",      icon:Milestone },
@@ -58,8 +60,10 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
   ],
   admin: [
     { href:"/dashboard",      label:"Dashboard",       icon:LayoutDashboard },
+    { href:"/sites",          label:"Site Command",    icon:BarChart2,      badge:"🎯" },
     { href:"/daily-summary",  label:"Daily Review",    icon:ClipboardList,  badge:"📋" },
     { href:"/pipeline",       label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
+    { href:"/precon",         label:"Pre-Con",         icon:FileSignature,  badge:"📐" },
     { href:"/walkthroughs",   label:"Walkthroughs",    icon:Camera,         badge:"🏥" },
     { href:"/projects",       label:"Projects",        icon:FolderKanban },
     { href:"/milestones",     label:"Milestones",      icon:Milestone },
@@ -89,8 +93,10 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
   ],
   office: [
     { href:"/dashboard",      label:"Dashboard",       icon:LayoutDashboard },
+    { href:"/sites",          label:"Site Command",    icon:BarChart2,      badge:"🎯" },
     { href:"/daily-summary",  label:"Daily Review",    icon:ClipboardList,  badge:"📋" },
     { href:"/pipeline",       label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
+    { href:"/precon",         label:"Pre-Con",         icon:FileSignature,  badge:"📐" },
     { href:"/projects",       label:"Projects",        icon:FolderKanban },
     { href:"/budget",         label:"Budget",          icon:DollarSign },
     { href:"/invoices",       label:"Invoices",        icon:Receipt },
