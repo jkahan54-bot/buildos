@@ -146,6 +146,31 @@ export const ROLE_META: Record<string,{ label:string; color:string; bg:string; i
   field:         { label:"Field Worker",   color:"#16a34a", bg:"#f0fdf4" },
 };
 
+// Menu sections — items are grouped under these headers in the sidebar.
+// Any href not listed falls into "General". Section order below.
+export const SECTION_ORDER = ["Overview", "Pre-Construction", "Project", "Field", "Financial", "People", "Tools", "Admin"] as const;
+export const SECTION_MAP: Record<string, string> = {
+  "/dashboard": "Overview", "/my-day": "Overview", "/sites": "Overview", "/command": "Overview", "/daily-summary": "Overview",
+  "/pipeline": "Pre-Construction", "/precon": "Pre-Construction", "/quotes": "Pre-Construction", "/ai-takeoff": "Pre-Construction",
+  "/projects": "Project", "/milestones": "Project", "/schedule": "Project", "/punch-list": "Project", "/rfis": "Project",
+  "/submittals": "Project", "/change-orders": "Project", "/walkthroughs": "Project", "/documents": "Project",
+  "/safety": "Field", "/photos": "Field", "/daily-log": "Field", "/timelog": "Field", "/checklist": "Field",
+  "/ai-camera": "Field", "/equipment": "Field",
+  "/budget": "Financial", "/invoices": "Financial", "/reports": "Financial",
+  "/team": "People", "/subcontractors": "People", "/meetings": "People", "/messages": "People", "/portal": "People",
+  "/ai-tools": "Tools",
+  "/permissions": "Admin", "/settings": "Admin", "/security": "Admin", "/system": "Admin",
+};
+
+export function groupNav(nav: { href:string; label:string; icon:any; badge?:string }[]) {
+  const groups: { section: string; items: typeof nav }[] = [];
+  for (const section of [...SECTION_ORDER, "General"]) {
+    const items = nav.filter(i => (SECTION_MAP[i.href] ?? "General") === section);
+    if (items.length) groups.push({ section, items });
+  }
+  return groups;
+}
+
 export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPrefs?: Record<string, string[]> }) {
   const pathname = usePathname();
   const router   = useRouter();
@@ -178,15 +203,17 @@ export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPref
     ? profile.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0,2)
     : "?";
 
+  const groups = groupNav(nav);
+
   return (
-    <aside className="w-[220px] flex flex-col flex-shrink-0 bg-white border-r border-gray-200">
+    <aside className="w-[230px] flex flex-col flex-shrink-0 bg-slate-900 border-r border-slate-800">
       {/* Logo */}
-      <div className="px-4 py-4 border-b border-gray-100">
+      <div className="px-4 py-4 border-b border-slate-800">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-black text-sm shadow-sm"
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-black text-sm shadow-md shadow-orange-900/40"
             style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
           <div>
-            <div className="font-bold text-sm text-gray-900">BuildOS</div>
+            <div className="font-bold text-sm text-white tracking-tight">BuildOS</div>
             <div className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-0.5 inline-flex items-center gap-0.5"
               style={{ color: meta.color, background: meta.bg }}>
               {meta.icon && <span>{meta.icon}</span>}{meta.label}
@@ -195,46 +222,53 @@ export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPref
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-2 py-3 overflow-y-auto space-y-0.5">
-        {nav.map(item => {
-          const Icon   = item.icon;
-          const active = pathname === item.href ||
-            (item.href !== "/dashboard" && item.href !== "/my-day" && pathname.startsWith(item.href + "/"));
-          return (
-            <Link key={item.href} href={item.href}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                active
-                  ? "text-white shadow-sm"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              }`}
-              style={active ? { background: meta.color } : {}}>
-              <Icon size={15} className="flex-shrink-0" strokeWidth={active ? 2.5 : 2} />
-              <span className="flex-1 truncate">{item.label}</span>
-              {item.badge && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-600">
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+      {/* Nav — grouped sections */}
+      <nav className="flex-1 px-2 py-3 overflow-y-auto">
+        {groups.map(({ section, items }) => (
+          <div key={section} className="mb-3">
+            <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 select-none">{section}</div>
+            <div className="space-y-px">
+              {items.map(item => {
+                const Icon   = item.icon;
+                const active = pathname === item.href ||
+                  (item.href !== "/dashboard" && item.href !== "/my-day" && pathname.startsWith(item.href + "/"));
+                return (
+                  <Link key={item.href} href={item.href}
+                    className={`flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-[13px] font-medium transition-all ${
+                      active
+                        ? "bg-orange-500/15 text-orange-300"
+                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                    }`}>
+                    <Icon size={15} className="flex-shrink-0" strokeWidth={active ? 2.4 : 1.8}
+                      style={active ? { color: "#fb923c" } : {}} />
+                    <span className="flex-1 truncate">{item.label}</span>
+                    {item.badge && (
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${active ? "bg-orange-500/25 text-orange-200" : "bg-slate-800 text-slate-400"}`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* User */}
-      <div className="px-2 py-3 border-t border-gray-100">
+      <div className="px-2 py-3 border-t border-slate-800">
         <div className="flex items-center gap-2.5 px-2.5 py-2 mb-1">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm"
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
             style={{ background: meta.bg, color: meta.color }}>
             {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-semibold text-gray-900 truncate">{profile?.full_name ?? "User"}</div>
-            <div className="text-[10px] text-gray-500 truncate">{profile?.email}</div>
+            <div className="text-xs font-semibold text-white truncate">{profile?.full_name ?? "User"}</div>
+            <div className="text-[10px] text-slate-500 truncate">{profile?.email}</div>
           </div>
         </div>
         <button onClick={logout}
-          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all">
+          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all">
           <LogOut size={13} />Sign Out
         </button>
       </div>

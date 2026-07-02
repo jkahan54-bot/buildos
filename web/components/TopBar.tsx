@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Settings, Sparkles, Menu, X, LogOut, ChevronDown, Eye } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
-import { NAV, ROLE_META } from "./Sidebar";
+import { NAV, ROLE_META, groupNav } from "./Sidebar";
 
 export default function TopBar({ profile, menuPrefs }: { profile: any; menuPrefs?: Record<string, string[]> }) {
   const [menuOpen, setMenuOpen]     = useState(false);
@@ -130,34 +130,34 @@ export default function TopBar({ profile, menuPrefs }: { profile: any; menuPrefs
       {menuOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMenuOpen(false)} />
-          <div className="relative w-[280px] bg-white h-full flex flex-col shadow-xl">
-            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+          <div className="relative w-[280px] bg-slate-900 h-full flex flex-col shadow-xl">
+            <div className="flex items-center justify-between px-4 py-4 border-b border-slate-800">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm"
                   style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
                 <div>
-                  <div className="font-bold text-sm text-gray-900">BuildOS</div>
+                  <div className="font-bold text-sm text-white">BuildOS</div>
                   <div className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full inline-block"
                     style={{ color: meta.color, background: meta.bg }}>{meta.label}</div>
                 </div>
               </div>
               <button onClick={() => setMenuOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100">
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-white/10">
                 <X size={18} />
               </button>
             </div>
 
             {/* Mobile role switcher */}
             {isAdmin && (
-              <div className="px-3 py-2 border-b border-gray-100">
-                <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-1.5 px-1">View as</div>
+              <div className="px-3 py-2 border-b border-slate-800">
+                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5 px-1">View as</div>
                 <div className="flex flex-wrap gap-1.5">
                   {Object.entries(ROLE_META).map(([r, m]) => (
                     <button key={r} onClick={() => { switchRole(r); setMenuOpen(false); }}
                       className="px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all"
                       style={ activeRole === r
                         ? { color: m.color, borderColor: m.color, background: m.bg }
-                        : { color:"#6b7280", borderColor:"#e5e7eb" }}>
+                        : { color:"#94a3b8", borderColor:"#334155" }}>
                       {m.label}
                     </button>
                   ))}
@@ -165,34 +165,42 @@ export default function TopBar({ profile, menuPrefs }: { profile: any; menuPrefs
               </div>
             )}
 
-            <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
-              {nav.map(item => {
-                const Icon   = item.icon;
-                const active = pathname === item.href;
-                return (
-                  <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all ${active ? "text-white" : "text-gray-600 hover:bg-gray-100"}`}
-                    style={active ? { background: meta.color } : {}}>
-                    <Icon size={17} strokeWidth={active ? 2.5 : 2} />
-                    {item.label}
-                  </Link>
-                );
-              })}
+            <nav className="flex-1 overflow-y-auto px-3 py-3">
+              {groupNav(nav).map(({ section, items }) => (
+                <div key={section} className="mb-3">
+                  <div className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 select-none">{section}</div>
+                  <div className="space-y-px">
+                    {items.map(item => {
+                      const Icon   = item.icon;
+                      const active = pathname === item.href;
+                      return (
+                        <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                            active ? "bg-orange-500/15 text-orange-300" : "text-slate-400 hover:text-white hover:bg-white/5"
+                          }`}>
+                          <Icon size={17} strokeWidth={active ? 2.4 : 1.8} style={active ? { color: "#fb923c" } : {}} />
+                          {item.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </nav>
 
-            <div className="px-3 py-4 border-t border-gray-100">
+            <div className="px-3 py-4 border-t border-slate-800">
               <div className="flex items-center gap-3 px-3 py-2 mb-2">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-                  style={{ background: meta.color + "15", color: meta.color }}>
+                  style={{ background: meta.bg, color: meta.color }}>
                   {initials}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-gray-900 truncate">{profile?.full_name}</div>
-                  <div className="text-xs text-gray-500 truncate">{profile?.email}</div>
+                  <div className="text-sm font-semibold text-white truncate">{profile?.full_name}</div>
+                  <div className="text-xs text-slate-500 truncate">{profile?.email}</div>
                 </div>
               </div>
               <button onClick={logout}
-                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all">
+                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all">
                 <LogOut size={15} />Sign Out
               </button>
             </div>
