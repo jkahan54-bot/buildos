@@ -206,14 +206,14 @@ export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPref
   const groups = groupNav(nav);
 
   return (
-    <aside className="w-[230px] flex flex-col flex-shrink-0 bg-slate-900 border-r border-slate-800">
+    <aside className="w-[230px] flex flex-col flex-shrink-0 bg-white border-r border-gray-200">
       {/* Logo */}
-      <div className="px-4 py-4 border-b border-slate-800">
+      <div className="px-4 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-black text-sm shadow-md shadow-orange-900/40"
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-black text-sm shadow-sm"
             style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
           <div>
-            <div className="font-bold text-sm text-white tracking-tight">BuildOS</div>
+            <div className="font-bold text-sm text-gray-900 tracking-tight">BuildOS</div>
             <div className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-0.5 inline-flex items-center gap-0.5"
               style={{ color: meta.color, background: meta.bg }}>
               {meta.icon && <span>{meta.icon}</span>}{meta.label}
@@ -226,7 +226,7 @@ export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPref
       <nav className="flex-1 px-2 py-3 overflow-y-auto">
         {groups.map(({ section, items }) => (
           <div key={section} className="mb-3">
-            <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 select-none">{section}</div>
+            <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 select-none">{section}</div>
             <div className="space-y-px">
               {items.map(item => {
                 const Icon   = item.icon;
@@ -236,14 +236,14 @@ export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPref
                   <Link key={item.href} href={item.href}
                     className={`flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-[13px] font-medium transition-all ${
                       active
-                        ? "bg-orange-500/15 text-orange-300"
-                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                        ? "bg-orange-50 text-orange-700"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                     }`}>
                     <Icon size={15} className="flex-shrink-0" strokeWidth={active ? 2.4 : 1.8}
-                      style={active ? { color: "#fb923c" } : {}} />
+                      style={active ? { color: "#ea580c" } : {}} />
                     <span className="flex-1 truncate">{item.label}</span>
                     {item.badge && (
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${active ? "bg-orange-500/25 text-orange-200" : "bg-slate-800 text-slate-400"}`}>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${active ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-500"}`}>
                         {item.badge}
                       </span>
                     )}
@@ -256,19 +256,19 @@ export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPref
       </nav>
 
       {/* User */}
-      <div className="px-2 py-3 border-t border-slate-800">
+      <div className="px-2 py-3 border-t border-gray-100">
         <div className="flex items-center gap-2.5 px-2.5 py-2 mb-1">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm"
             style={{ background: meta.bg, color: meta.color }}>
             {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-semibold text-white truncate">{profile?.full_name ?? "User"}</div>
-            <div className="text-[10px] text-slate-500 truncate">{profile?.email}</div>
+            <div className="text-xs font-semibold text-gray-900 truncate">{profile?.full_name ?? "User"}</div>
+            <div className="text-[10px] text-gray-500 truncate">{profile?.email}</div>
           </div>
         </div>
         <button onClick={logout}
-          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all">
+          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all">
           <LogOut size={13} />Sign Out
         </button>
       </div>
