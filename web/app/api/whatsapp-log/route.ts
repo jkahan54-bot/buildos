@@ -23,6 +23,7 @@ const PROJECT_MAP: { keywords: string[]; id: string; name: string }[] = [
   { keywords: ["910","onderdonk"],        id: "84ac6d50-0a40-44db-acbe-5975c6a5c877", name: "910 Onderdonk" },
   { keywords: ["rambam"],                 id: "4e67b531-3402-49d3-ae88-cf65f450d649", name: "Rambam Clinic" },
   { keywords: ["chc"],                    id: "1231a2e5-f98c-4601-98ca-1e9eef4f995f", name: "CHC Construction" },
+  { keywords: ["ocean","1187"],           id: "e974caa4-d1f8-46f8-b0f4-6e0fddcc7a5a", name: "1187 Ocean Avenue" },
 ];
 
 const ACTION_WORDS = /\b(fix|check|need|needs|waiting|broken|damaged|issue|problem|repair|replace|finish|missing|wrong|cracked|leaking|not working|install|remove|stuck|blocked|investigate|inspect|call|contact|follow up|urgent|asap)\b/i;
