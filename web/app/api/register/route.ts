@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 // Server-side admin client — bypasses RLS so new users can create their org
 const adminClient = createClient(
@@ -13,6 +14,20 @@ export async function POST(req: NextRequest) {
 
   if (!userId || !orgName) {
     return NextResponse.json({ error: "Missing userId or orgName" }, { status: 400 });
+  }
+
+  // Callers may only register THEMSELVES — otherwise anyone could rewrite
+  // another user's role/org/approval via their userId.
+  const supabase = await createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.id !== userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // A profile that already belongs to an org can't re-register (org hijack guard)
+  const { data: existing } = await adminClient.from("profiles").select("org_id").eq("id", userId).single();
+  if (existing?.org_id) {
+    return NextResponse.json({ error: "Account already registered to an organization" }, { status: 403 });
   }
 
   try {

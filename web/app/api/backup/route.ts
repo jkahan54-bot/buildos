@@ -4,6 +4,15 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createClient as createServerClient } from "@/lib/supabase/server";
+
+// Only signed-in org members (or a caller with the CRON secret) may trigger/list backups
+async function authorized(req: NextRequest): Promise<boolean> {
+  if (process.env.CRON_SECRET && req.headers.get("authorization") === `Bearer ${process.env.CRON_SECRET}`) return true;
+  const supabase = await createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return !!user;
+}
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,6 +28,7 @@ const TABLES = [
 ];
 
 export async function POST(req: NextRequest) {
+  if (!(await authorized(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { searchParams } = new URL(req.url);
   const trigger = searchParams.get("trigger") ?? "manual";
 
@@ -75,7 +85,8 @@ export async function POST(req: NextRequest) {
 }
 
 // GET — list recent backups
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!(await authorized(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { data } = await admin.from("system_backups")
     .select("id, created_at, trigger, row_counts, status")
     .order("created_at", { ascending: false })

@@ -196,7 +196,7 @@ SKIP: pure social replies ("thanks!", "sounds good"), spam, automated notificati
 async function postTask(task: EmailTask) {
   await fetch(WEBHOOK_URL, {
     method:  "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-buildos-key": process.env.BUILDOS_WEBHOOK_SECRET ?? "" },
     body: JSON.stringify({
       entry: [{
         changes: [{

@@ -101,6 +101,12 @@ export async function GET(req: NextRequest) {
 
 // ── MESSAGE HANDLER ─────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
+  // Shared-secret check: only our WhatsApp scanner and email scan may post here.
+  // Skipped if BUILDOS_WEBHOOK_SECRET is unset so a missing env var can't break intake.
+  const secret = process.env.BUILDOS_WEBHOOK_SECRET;
+  if (secret && req.headers.get("x-buildos-key") !== secret) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   try {
     const body = await req.json();
 

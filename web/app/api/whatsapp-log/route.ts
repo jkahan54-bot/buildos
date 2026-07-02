@@ -52,6 +52,12 @@ async function sendCallMeBot(message: string): Promise<void> {
 }
 
 export async function POST(req: NextRequest) {
+  // Shared-secret check (header or ?key= for IFTTT-style callers).
+  const secret = process.env.BUILDOS_WEBHOOK_SECRET;
+  if (secret) {
+    const supplied = req.headers.get("x-buildos-key") ?? new URL(req.url).searchParams.get("key");
+    if (supplied !== secret) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   try {
     // IFTTT sends the body in various formats — handle both
     let body: any = {};
