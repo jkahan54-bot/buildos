@@ -48,7 +48,10 @@ export default function PreconPage() {
     const { data: { user } } = await supabase.auth.getUser();
     const { data: prof } = await supabase.from("profiles").select("org_id").eq("id", user!.id).single();
     const { error } = await supabase.from("precon_stages").insert(
-      DEFAULT_STAGES.map((stage, i) => ({ org_id: prof?.org_id, project_id: projectId, stage, sort_order: i }))
+      // Explicit status on every row — PostgREST bulk inserts fill NULL (not the
+      // column default) for keys missing from some rows in a batch, so relying
+      // on the DB default here silently produced null-status rows before.
+      DEFAULT_STAGES.map((stage, i) => ({ org_id: prof?.org_id, project_id: projectId, stage, sort_order: i, status: "not_started" }))
     );
     if (error) alert("Could not start pre-con tracking: " + error.message);
     setSeeding(null);
@@ -109,11 +112,12 @@ export default function PreconPage() {
                   <span className="text-green-600 text-xs font-semibold">✅ Pre-con complete — ready to build</span>
                 </div>
               );
+              const curMeta = STATUS_META[cur.status] ?? STATUS_META.not_started;
               const meta = cur.waiting_on ? WAITING_ON_META[cur.waiting_on as keyof typeof WAITING_ON_META] : null;
               return (
                 <div key={p.id} className="flex items-center gap-2 text-sm px-2 py-1.5 rounded-lg hover:bg-gray-50 flex-wrap">
                   <span className="font-medium text-gray-900 w-40 truncate flex-shrink-0">{p.name}</span>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: STATUS_META[cur.status].bg, color: STATUS_META[cur.status].color }}>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: curMeta.bg, color: curMeta.color }}>
                     {cur.stage}
                   </span>
                   {cur.status === "waiting" && meta && (
@@ -153,7 +157,7 @@ export default function PreconPage() {
                   <div key={st.id} className="flex items-center gap-2 flex-wrap py-1.5 border-b border-gray-50 last:border-0">
                     <Icon size={15} style={{ color: sm.color }} className="flex-shrink-0" />
                     <span className="text-sm font-medium text-gray-800 w-48 truncate">{st.stage}</span>
-                    <select value={st.status} onChange={e => setStatus(st, e.target.value)} className={inp}>
+                    <select value={st.status ?? "not_started"} onChange={e => setStatus(st, e.target.value)} className={inp}>
                       {Object.entries(STATUS_META).map(([k, m]) => <option key={k} value={k}>{m.label}</option>)}
                     </select>
                     {st.status === "waiting" && (
