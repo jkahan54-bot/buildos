@@ -38,7 +38,16 @@ type SiteData = {
   completedToday: any[];
   blockers: any[];
   incidents: any[];
+  transcript: any[];
   aiSummary?: string;
+};
+
+const WA_ACTION_META: Record<string, { label: string; color: string; bg: string }> = {
+  task_created:         { label: "Task created",     color: "#16a34a", bg: "#dcfce7" },
+  completion:           { label: "Marked complete",   color: "#2563eb", bg: "#dbeafe" },
+  completion_no_match:  { label: "Logged",            color: "#6b7280", bg: "#f3f4f6" },
+  safety_incident:      { label: "Safety incident",   color: "#dc2626", bg: "#fee2e2" },
+  chatter:              { label: "Chatter",           color: "#9ca3af", bg: "#f9fafb" },
 };
 
 export default function DailySummaryPage() {
@@ -82,7 +91,7 @@ export default function DailySummaryPage() {
       query = query.eq("source", "email");
     }
 
-    const [{ data: pItems }, { data: pList }, reportRes, { data: todayItems }, { data: completedToday }, { data: blockers }, { data: incidents }] = await Promise.all([
+    const [{ data: pItems }, { data: pList }, reportRes, { data: todayItems }, { data: completedToday }, { data: blockers }, { data: incidents }, { data: transcript }] = await Promise.all([
       query,
       supabase.from("projects").select("id, name").order("name"),
       fetch("/api/daily-report"),
@@ -108,6 +117,12 @@ export default function DailySummaryPage() {
         .select("type, severity, description, project_id, projects(name)")
         .gte("created_at", dayStartUTC)
         .lte("created_at", dayEndUTC),
+      // Full WhatsApp transcript today — EVERY message, not just ones that became tasks
+      supabase.from("whatsapp_messages")
+        .select("content, sender, group_name, action, project_id, sent_at")
+        .gte("sent_at", dayStartUTC)
+        .lte("sent_at", dayEndUTC)
+        .order("sent_at", { ascending: true }),
     ]);
 
     setItems(pItems ?? []);
@@ -123,7 +138,7 @@ export default function DailySummaryPage() {
     // Build live site-by-site data
     const siteMap: Record<string, SiteData> = {};
     for (const p of (pList ?? [])) {
-      siteMap[p.id] = { name: p.name, projectId: p.id, whatsappItems: [], emailItems: [], completedToday: [], blockers: [], incidents: [] };
+      siteMap[p.id] = { name: p.name, projectId: p.id, whatsappItems: [], emailItems: [], completedToday: [], blockers: [], incidents: [], transcript: [] };
     }
     for (const item of (todayItems ?? [])) {
       const pid = item.project_id;
@@ -143,6 +158,20 @@ export default function DailySummaryPage() {
       const pid = (item as any).project_id;
       if (pid && siteMap[pid]) siteMap[pid].incidents.push(item);
     }
+    // Full transcript — messages whose project doesn't exist yet fall into a
+    // per-group bucket so nothing from a WhatsApp group is ever invisible.
+    for (const msg of (transcript ?? [])) {
+      const pid = (msg as any).project_id;
+      if (pid && siteMap[pid]) {
+        siteMap[pid].transcript.push(msg);
+      } else {
+        const key = `unmatched-${(msg as any).group_name ?? "unknown"}`;
+        if (!siteMap[key]) {
+          siteMap[key] = { name: `${(msg as any).group_name ?? "Unknown group"} (not linked to a site)`, projectId: key, whatsappItems: [], emailItems: [], completedToday: [], blockers: [], incidents: [], transcript: [] };
+        }
+        siteMap[key].transcript.push(msg);
+      }
+    }
 
     // Merge AI summaries from nightly report
     if (reportData?.projects) {
@@ -152,9 +181,9 @@ export default function DailySummaryPage() {
       }
     }
 
-    // Only include sites that have any activity
+    // Only include sites that have any activity (including plain chatter-only transcripts)
     const activeSites = Object.values(siteMap).filter(s =>
-      s.whatsappItems.length > 0 || s.emailItems.length > 0 || s.completedToday.length > 0 || s.blockers.length > 0 || s.incidents.length > 0
+      s.whatsappItems.length > 0 || s.emailItems.length > 0 || s.completedToday.length > 0 || s.blockers.length > 0 || s.incidents.length > 0 || s.transcript.length > 0
     );
     activeSites.sort((a, b) => {
       const aTotal = a.whatsappItems.length + a.emailItems.length + a.blockers.length + a.incidents.length;
@@ -312,6 +341,9 @@ export default function DailySummaryPage() {
                     {site.incidents.length > 0 && (
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700">🚨 {site.incidents.length}</span>
                     )}
+                    {site.transcript.length > 0 && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">💬 {site.transcript.length} msgs</span>
+                    )}
                     {isOpen ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
                   </div>
                 </button>
@@ -391,8 +423,11 @@ export default function DailySummaryPage() {
                       </div>
                     )}
 
+                    {/* Full transcript — every message, including plain chatter that never became a task */}
+                    {site.transcript.length > 0 && <TranscriptPanel messages={site.transcript} />}
+
                     {/* No detailed items — just counts from report */}
-                    {site.whatsappItems.length === 0 && site.emailItems.length === 0 && site.completedToday.length === 0 && site.blockers.length === 0 && site.incidents.length === 0 && (
+                    {site.whatsappItems.length === 0 && site.emailItems.length === 0 && site.completedToday.length === 0 && site.blockers.length === 0 && site.incidents.length === 0 && site.transcript.length === 0 && (
                       <p className="text-xs text-gray-400 italic">No detailed activity to show</p>
                     )}
                   </div>
@@ -578,6 +613,34 @@ function StatBox({ label, value, icon, color }: { label: string; value: number; 
       <div className="text-lg">{icon}</div>
       <div className={`text-xl font-bold ${text}`}>{value}</div>
       <div className="text-[10px] font-semibold text-gray-500 mt-0.5">{label}</div>
+    </div>
+  );
+}
+
+function TranscriptPanel({ messages }: { messages: any[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <button onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 text-xs font-bold text-purple-700 hover:text-purple-800 transition-colors">
+        💬 Full Group Transcript ({messages.length}) {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+      </button>
+      {open && (
+        <div className="mt-2 space-y-1 max-h-96 overflow-y-auto bg-gray-50 rounded-lg border border-gray-100 p-3">
+          {messages.map((m, i) => {
+            const meta = WA_ACTION_META[m.action ?? "chatter"] ?? WA_ACTION_META.chatter;
+            const time = m.sent_at ? new Date(m.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+            return (
+              <div key={i} className="flex items-start gap-2 text-xs py-1 border-b border-gray-100 last:border-0">
+                <span className="text-gray-400 flex-shrink-0 w-12">{time}</span>
+                <span className="font-semibold text-gray-700 flex-shrink-0 w-24 truncate">{m.sender ?? "Unknown"}</span>
+                <span className="flex-1 text-gray-700 min-w-0 break-words">{m.content}</span>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

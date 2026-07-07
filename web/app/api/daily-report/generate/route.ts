@@ -107,6 +107,15 @@ export async function POST(req: NextRequest) {
       .not("blocked_by", "is", null),
   ]);
 
+  // Full WhatsApp transcript today — every message, including plain chatter
+  // that never became a task, so the narrative reflects everything that was said.
+  const { data: transcript } = await admin.from("whatsapp_messages")
+    .select("content, sender, group_name, action, project_id, projects(name), sent_at")
+    .eq("org_id", ORG_ID)
+    .gte("sent_at", dayStart)
+    .lte("sent_at", dayEnd)
+    .order("sent_at", { ascending: true });
+
   // ── Group new items by project ──────────────────────────────────────────
   const byProject: Record<string, { name: string; whatsapp: any[]; email: any[] }> = {};
   for (const item of (newItems ?? [])) {
@@ -118,6 +127,14 @@ export async function POST(req: NextRequest) {
 
   const waCount    = (newItems ?? []).filter(i => i.source === "whatsapp").length;
   const emailCount = (newItems ?? []).filter(i => i.source === "email").length;
+
+  // ── Group full transcript by WhatsApp group name ────────────────────────
+  const byGroup: Record<string, any[]> = {};
+  for (const m of (transcript ?? [])) {
+    const g = (m as any).group_name ?? "Unknown group";
+    if (!byGroup[g]) byGroup[g] = [];
+    byGroup[g].push(m);
+  }
 
   // ── Build a structured data block for Claude ────────────────────────────
   // Include full source messages so the AI can write a real narrative
@@ -145,6 +162,11 @@ ${(blockers ?? []).map(i => `  - ${(i as any).projects?.name}: "${i.title}" — 
 
 EMAIL SCAN: ${emails_scanned} emails scanned today.
 ${email_context ? `EMAIL NOTES: ${email_context}` : ""}
+
+FULL WHATSAPP GROUP TRANSCRIPTS (every message sent today, including plain chatter that never became a task — use this for extra color/context, not just the curated task list above):
+${Object.entries(byGroup).map(([group, msgs]) => `
+--- Group: ${group} (${msgs.length} messages) ---
+${msgs.map((m: any) => `[${new Date(m.sent_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "America/New_York" })}] ${m.sender ?? "?"}: ${m.content}`).join("\n")}`).join("\n") || "(no WhatsApp messages logged today)"}
 `.trim();
 
   // ── Ask Claude for a real narrative ────────────────────────────────────
@@ -229,6 +251,7 @@ Only include projects that had activity today.`
     completed_count: parsed.completed_count ?? (completedItems ?? []).length,
     blocker_count:   parsed.blocker_count   ?? (blockers ?? []).length,
     incident_count:  parsed.incident_count  ?? (incidents ?? []).length,
+    messages_logged: (transcript ?? []).length,
   };
 
   // ── Store in system_events ──────────────────────────────────────────────

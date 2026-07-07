@@ -43,6 +43,20 @@ function matchProject(text: string): { id: string; name: string } | null {
   return null;
 }
 
+// Log EVERY WhatsApp message (not just ones that became tasks) so nightly
+// reports can show a full per-group transcript, not just the curated subset.
+async function logWaMessage(opts: { groupName: string; sender: string; body: string; projectId: string | null; action: string }) {
+  await admin.from("whatsapp_messages").insert({
+    org_id: ORG_ID,
+    project_id: opts.projectId,
+    group_name: opts.groupName,
+    sender: opts.sender,
+    content: opts.body.slice(0, 2000),
+    action: opts.action,
+    sent_at: new Date().toISOString(),
+  }).then(({ error }) => { if (error) console.error("[whatsapp-webhook] log failed:", error.message); });
+}
+
 function extractBlocker(text: string): string | null {
   const match = text.match(BLOCKER_PATTERN);
   if (match && match[1]) {
@@ -202,9 +216,11 @@ export async function POST(req: NextRequest) {
                 fromPhone,
                 `✅ ${matched} item${matched > 1 ? "s" : ""} marked complete on ${project.name}`
               );
+              await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project.id, action: "completion" });
               return NextResponse.json({ ok: true, action: "completed", count: matched });
             }
           }
+          await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "completion_no_match" });
           return NextResponse.json({ ok: true, action: "done_logged" });
         }
 
@@ -280,6 +296,7 @@ export async function POST(req: NextRequest) {
               fromPhone,
               `📋 ${createdCount} item${createdCount > 1 ? "s" : ""} added to review for ${projName}.\n\nReview: buildos-six.vercel.app/daily-summary`
             );
+            await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "task_created" });
             return NextResponse.json({ ok: true, action: "items_created", count: createdCount });
           }
         }
@@ -297,10 +314,12 @@ export async function POST(req: NextRequest) {
           });
           await sendWhatsAppMessage(fromPhone, `🚨 SAFETY ALERT logged. Check BuildOS immediately.`);
           await sendCallMeBot(`🚨 WhatsApp safety alert: "${rawMessage.slice(0, 100)}"`);
+          await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "safety_incident" });
           return NextResponse.json({ ok: true, action: "safety_incident" });
         }
 
-        // ── Fallback ──────────────────────────────────────────────────
+        // ── Fallback — chatter (still logged in full for reporting) ────
+        await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "chatter" });
         await admin.from("system_events").insert({
           org_id: ORG_ID,
           type: "whatsapp_message",
