@@ -158,8 +158,16 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(report);
 }
 
-// GET — fetch recent monitoring events
-export async function GET() {
+// GET — fetch recent monitoring events (requires cron secret or authenticated session)
+export async function GET(req: NextRequest) {
+  const auth = req.headers.get("authorization");
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    // Fall back to session auth for the dashboard UI
+    const { createClient: createServerClient } = await import("@/lib/supabase/server");
+    const supabase = await createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const [{ data: events }, { data: backups }] = await Promise.all([
     admin.from("system_events").select("*").order("created_at", { ascending:false }).limit(50),
     admin.from("system_backups").select("id, created_at, trigger, row_counts, status").order("created_at", { ascending:false }).limit(10),

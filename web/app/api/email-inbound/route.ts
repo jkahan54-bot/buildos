@@ -16,7 +16,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
-const INBOUND_TOKEN = process.env.EMAIL_INBOUND_TOKEN ?? "buildos_email_inbound_7x9k";
+const INBOUND_TOKEN = process.env.EMAIL_INBOUND_TOKEN;
 const WEBHOOK_URL   = "https://buildos-six.vercel.app/api/whatsapp-webhook";
 
 const SKIP_RE = [
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (body.token !== INBOUND_TOKEN) {
+  if (!INBOUND_TOKEN || body.token !== INBOUND_TOKEN) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

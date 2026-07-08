@@ -14,12 +14,10 @@ const admin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
-const PHONE_ID      = process.env.WHATSAPP_PHONE_ID || "";
-const ACCESS_TOKEN  = process.env.WHATSAPP_API_TOKEN || "";
-const VERIFY_TOKEN  = process.env.WHATSAPP_VERIFY_TOKEN || "buildos_webhook_verified";
-const ORG_ID        = "f18352de-979e-44d8-a874-c70aa8b05347";
-const CALLMEBOT_PHONE = "18456626789";
-const CALLMEBOT_KEY   = "8598005";
+const PHONE_ID     = process.env.WHATSAPP_PHONE_ID || "";
+const ACCESS_TOKEN = process.env.WHATSAPP_API_TOKEN || "";
+const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
+const ORG_ID       = "f18352de-979e-44d8-a874-c70aa8b05347";
 
 // Project mapping
 const PROJECT_MAP: { keywords: string[]; id: string; name: string }[] = [
@@ -93,8 +91,11 @@ async function sendWhatsAppMessage(toNumber: string, message: string): Promise<v
 }
 
 async function sendCallMeBot(message: string): Promise<void> {
+  const phone  = process.env.CALLMEBOT_PHONE!;
+  const apiKey = process.env.CALLMEBOT_KEY!;
+  if (!phone || !apiKey) return;
   const encoded = encodeURIComponent(message);
-  await fetch(`https://api.callmebot.com/whatsapp.php?phone=${CALLMEBOT_PHONE}&text=${encoded}&apikey=${CALLMEBOT_KEY}`, {
+  await fetch(`https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encoded}&apikey=${apiKey}`, {
     signal: AbortSignal.timeout(8000),
   }).catch(() => {});
 }
@@ -106,7 +107,7 @@ export async function GET(req: NextRequest) {
   const token     = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+  if (mode === "subscribe" && VERIFY_TOKEN && token === VERIFY_TOKEN) {
     console.log("✅ Webhook verified");
     return new NextResponse(challenge);
   }

@@ -44,8 +44,9 @@ function priorityFromText(text: string): "high" | "medium" | "low" {
 }
 
 async function sendCallMeBot(message: string): Promise<void> {
-  const phone  = "18456626789";
-  const apiKey = "8598005";
+  const phone  = process.env.CALLMEBOT_PHONE!;
+  const apiKey = process.env.CALLMEBOT_KEY!;
+  if (!phone || !apiKey) return;
   const encoded = encodeURIComponent(message);
   await fetch(`https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encoded}&apikey=${apiKey}`, {
     signal: AbortSignal.timeout(8000),
