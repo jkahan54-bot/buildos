@@ -20,7 +20,7 @@ const ORG_ID = "f18352de-979e-44d8-a874-c70aa8b05347";
 
 async function sendCallMeBot(message: string) {
   const phone  = process.env.CALLMEBOT_PHONE!;
-  const apiKey = process.env.CALLMEBOT_KEY!;
+  const apiKey = process.env.CALLMEBOT_API_KEY!;
   if (!phone || !apiKey) return;
   const encoded = encodeURIComponent(message);
   await fetch(

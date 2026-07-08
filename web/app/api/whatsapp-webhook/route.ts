@@ -92,7 +92,7 @@ async function sendWhatsAppMessage(toNumber: string, message: string): Promise<v
 
 async function sendCallMeBot(message: string): Promise<void> {
   const phone  = process.env.CALLMEBOT_PHONE!;
-  const apiKey = process.env.CALLMEBOT_KEY!;
+  const apiKey = process.env.CALLMEBOT_API_KEY!;
   if (!phone || !apiKey) return;
   const encoded = encodeURIComponent(message);
   await fetch(`https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encoded}&apikey=${apiKey}`, {

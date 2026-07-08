@@ -19,7 +19,7 @@ const REPORT_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 
 async function sendCallMeBot(message: string) {
   const phone  = process.env.CALLMEBOT_PHONE!;
-  const apiKey = process.env.CALLMEBOT_KEY!;
+  const apiKey = process.env.CALLMEBOT_API_KEY!;
   if (!phone || !apiKey) return;
   const encoded = encodeURIComponent(message);
   await fetch(
