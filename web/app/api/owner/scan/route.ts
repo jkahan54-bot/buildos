@@ -16,18 +16,9 @@ const admin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
-const ORG_ID = "f18352de-979e-44d8-a874-c70aa8b05347";
+import { sendOwnerAlert } from "@/lib/whatsapp";
 
-async function sendCallMeBot(message: string) {
-  const phone  = process.env.CALLMEBOT_PHONE!;
-  const apiKey = process.env.CALLMEBOT_API_KEY!;
-  if (!phone || !apiKey) return;
-  const encoded = encodeURIComponent(message);
-  await fetch(
-    `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encoded}&apikey=${apiKey}`,
-    { signal: AbortSignal.timeout(8000) }
-  ).catch(() => {});
-}
+const ORG_ID = "f18352de-979e-44d8-a874-c70aa8b05347";
 
 async function runScan() {
   const now  = new Date();
@@ -211,7 +202,7 @@ ${overruns.map((b: any) => `  - ${b.projects?.name}: ${b.description} | budgeted
     safetyFlag +
     `\n\n📊 ${(openItems ?? []).length} open · ⚡ ${(highPriority ?? []).length} high priority · ⏳ ${(blockedItems ?? []).length} blocked · 🕐 ${(staleItems ?? []).length} stale` +
     `\n\nbuildos-six.vercel.app/command`;
-  await sendCallMeBot(msg);
+  await sendOwnerAlert(msg);
 
   return { ok: true, scan_date: date, summary: briefing };
 }

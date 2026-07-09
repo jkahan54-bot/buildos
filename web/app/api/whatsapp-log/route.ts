@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { enrichTitle } from "@/lib/enrichMessage";
+import { sendOwnerAlert } from "@/lib/whatsapp";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,15 +44,6 @@ function priorityFromText(text: string): "high" | "medium" | "low" {
   return "medium";
 }
 
-async function sendCallMeBot(message: string): Promise<void> {
-  const phone  = process.env.CALLMEBOT_PHONE!;
-  const apiKey = process.env.CALLMEBOT_API_KEY!;
-  if (!phone || !apiKey) return;
-  const encoded = encodeURIComponent(message);
-  await fetch(`https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encoded}&apikey=${apiKey}`, {
-    signal: AbortSignal.timeout(8000),
-  }).catch(() => {});
-}
 
 export async function POST(req: NextRequest) {
   // Shared-secret check (header or ?key= for IFTTT-style callers).
@@ -117,12 +109,12 @@ export async function POST(req: NextRequest) {
         }
 
         if (matched > 0) {
-          await sendCallMeBot(`✅ BuildOS: ${matched} item${matched>1?"s":""} marked complete on ${project.name} from your WhatsApp message.`);
+          await sendOwnerAlert(`✅ BuildOS: ${matched} item${matched>1?"s":""} marked complete on ${project.name} from your WhatsApp message.`);
           return NextResponse.json({ ok: true, action: "completed", count: matched });
         }
       }
       // No match found — log it anyway
-      await sendCallMeBot(`✅ BuildOS received: "${rawMessage.slice(0,80)}" — logged, but no matching open item found to complete.`);
+      await sendOwnerAlert(`✅ BuildOS received: "${rawMessage.slice(0,80)}" — logged, but no matching open item found to complete.`);
       return NextResponse.json({ ok: true, action: "done_logged" });
     }
 
@@ -171,7 +163,7 @@ export async function POST(req: NextRequest) {
 
       if (createdCount > 0) {
         const projName = project?.name ?? "BuildOS";
-        await sendCallMeBot(`📋 BuildOS: ${createdCount} item${createdCount>1?"s":""} added to review queue for ${projName}.\nReview: buildos-six.vercel.app/daily-summary`);
+        await sendOwnerAlert(`📋 BuildOS: ${createdCount} item${createdCount>1?"s":""} added to review queue for ${projName}.\nReview: buildos-six.vercel.app/daily-summary`);
         return NextResponse.json({ ok: true, action: "items_created", count: createdCount });
       }
     }
@@ -187,7 +179,7 @@ export async function POST(req: NextRequest) {
         project_id: project?.id ?? null,
         incident_date: new Date().toISOString(),
       });
-      await sendCallMeBot(`🚨 SAFETY ALERT logged in BuildOS: "${rawMessage.slice(0,100)}". Check BuildOS immediately.`);
+      await sendOwnerAlert(`🚨 SAFETY ALERT logged in BuildOS: "${rawMessage.slice(0,100)}". Check BuildOS immediately.`);
       return NextResponse.json({ ok: true, action: "safety_incident" });
     }
 
@@ -198,7 +190,7 @@ export async function POST(req: NextRequest) {
       status: "received",
       details: { sender, message: rawMessage, matched_project: project?.name ?? null, date: today },
     });
-    await sendCallMeBot(`📩 BuildOS received: "${rawMessage.slice(0,80)}${rawMessage.length>80?"…":""}"`);
+    await sendOwnerAlert(`📩 BuildOS received: "${rawMessage.slice(0,80)}${rawMessage.length>80?"…":""}"`);
     return NextResponse.json({ ok: true, action: "logged" });
 
   } catch (e: any) {

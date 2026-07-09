@@ -8,19 +8,10 @@ const admin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
+import { sendOwnerAlert } from "@/lib/whatsapp";
+
 const ORG_ID       = "f18352de-979e-44d8-a874-c70aa8b05347";
 const REPORT_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
-
-async function sendCallMeBot(message: string) {
-  const phone  = process.env.CALLMEBOT_PHONE!;
-  const apiKey = process.env.CALLMEBOT_API_KEY!;
-  if (!phone || !apiKey) return;
-  const encoded = encodeURIComponent(message);
-  await fetch(
-    `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encoded}&apikey=${apiKey}`,
-    { signal: AbortSignal.timeout(8000) }
-  ).catch(() => {});
-}
 
 // POST /api/daily-report — called by the nightly SKILL.md scan
 export async function POST(req: NextRequest) {
@@ -49,7 +40,7 @@ export async function POST(req: NextRequest) {
     `📧 ${emails_scanned} email${emails_scanned !== 1 ? "s" : ""} scanned` +
     ` • ✅ ${tasks_created} task${tasks_created !== 1 ? "s" : ""} created` +
     `\n\nbuildos-six.vercel.app/daily-summary`;
-  await sendCallMeBot(msg);
+  await sendOwnerAlert(msg);
 
   return NextResponse.json({ ok: true });
 }

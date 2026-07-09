@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { categorizeWaitingOn } from "@/lib/waitingOn";
 import { lookupSenderName, enrichTitle } from "@/lib/enrichMessage";
+import { sendOwnerAlert } from "@/lib/whatsapp";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -90,15 +91,6 @@ async function sendWhatsAppMessage(toNumber: string, message: string): Promise<v
   }
 }
 
-async function sendCallMeBot(message: string): Promise<void> {
-  const phone  = process.env.CALLMEBOT_PHONE!;
-  const apiKey = process.env.CALLMEBOT_API_KEY!;
-  if (!phone || !apiKey) return;
-  const encoded = encodeURIComponent(message);
-  await fetch(`https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encoded}&apikey=${apiKey}`, {
-    signal: AbortSignal.timeout(8000),
-  }).catch(() => {});
-}
 
 // ── VERIFICATION (webhook setup) ────────────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -314,7 +306,7 @@ export async function POST(req: NextRequest) {
             incident_date: new Date().toISOString(),
           });
           await sendWhatsAppMessage(fromPhone, `🚨 SAFETY ALERT logged. Check BuildOS immediately.`);
-          await sendCallMeBot(`🚨 WhatsApp safety alert: "${rawMessage.slice(0, 100)}"`);
+          await sendOwnerAlert(`🚨 WhatsApp safety alert: "${rawMessage.slice(0, 100)}"`);
           await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "safety_incident" });
           return NextResponse.json({ ok: true, action: "safety_incident" });
         }

@@ -14,19 +14,10 @@ const admin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
+import { sendOwnerAlert } from "@/lib/whatsapp";
+
 const ORG_ID       = "f18352de-979e-44d8-a874-c70aa8b05347";
 const REPORT_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
-
-async function sendCallMeBot(message: string) {
-  const phone  = process.env.CALLMEBOT_PHONE!;
-  const apiKey = process.env.CALLMEBOT_API_KEY!;
-  if (!phone || !apiKey) return;
-  const encoded = encodeURIComponent(message);
-  await fetch(
-    `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encoded}&apikey=${apiKey}`,
-    { signal: AbortSignal.timeout(8000) }
-  ).catch(() => {});
-}
 
 // Vercel cron hits GET at 7 PM ET — generates report with no email data
 export async function GET(req: NextRequest) {
@@ -281,7 +272,7 @@ Only include projects that had activity today.`
     (flags ? `\n\n${flags}` : "") +
     `\n\n📱 ${waCount} WhatsApp  📧 ${emailCount} email  →  buildos-six.vercel.app/daily-summary`;
 
-  await sendCallMeBot(msg);
+  await sendOwnerAlert(msg);
 
   return NextResponse.json({ ok: true, report });
 }
