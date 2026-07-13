@@ -2,7 +2,7 @@
  * GET /api/owner/stats
  * Quick system stats + last master scan for the Command Center header.
  */
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
@@ -14,10 +14,18 @@ const admin = createClient(
 
 const ORG_ID = "f18352de-979e-44d8-a874-c70aa8b05347";
 
-export async function GET() {
-  const supabase = await createServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(req: NextRequest) {
+  // Headless callers (the nightly email scan) may authenticate with the shared
+  // webhook key (header x-buildos-key or ?key=) instead of a browser session.
+  // Browser callers still use the logged-in Supabase session.
+  const secret = process.env.BUILDOS_WEBHOOK_SECRET;
+  const key = req.headers.get("x-buildos-key") ?? new URL(req.url).searchParams.get("key");
+  const keyOk = !!secret && key === secret;
+  if (!keyOk) {
+    const supabase = await createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const week_ago = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
