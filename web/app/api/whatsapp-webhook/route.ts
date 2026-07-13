@@ -20,6 +20,11 @@ const ACCESS_TOKEN = process.env.WHATSAPP_API_TOKEN || "";
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 const ORG_ID       = "f18352de-979e-44d8-a874-c70aa8b05347";
 
+// Actionable emails whose site can't be matched to a known project are filed
+// here (pending_review) so the PM still sees them in Daily Review — instead of
+// being silently logged to system_events and never surfaced.
+const UNVERIFIED_PROJECT_ID = "5c25ba58-7cfa-47c3-9acb-c95f59772f6c"; // "⚠️ Unverified Site"
+
 // Project mapping
 const PROJECT_MAP: { keywords: string[]; id: string; name: string }[] = [
   { keywords: ["ditmas","125","123"],     id: "8d3354b0-1028-4b5c-9147-79f04f3e9a5c", name: "123-125 Ditmas" },
@@ -28,6 +33,7 @@ const PROJECT_MAP: { keywords: string[]; id: string; name: string }[] = [
   { keywords: ["rambam"],                 id: "4e67b531-3402-49d3-ae88-cf65f450d649", name: "Rambam Clinic" },
   { keywords: ["chc"],                    id: "1231a2e5-f98c-4601-98ca-1e9eef4f995f", name: "CHC Construction" },
   { keywords: ["ocean","1187"],           id: "e974caa4-d1f8-46f8-b0f4-6e0fddcc7a5a", name: "1187 Ocean Avenue" },
+  { keywords: ["concord"],                id: "711eb036-0047-47d6-80c4-d5b69f9413e7", name: "185 Concord" },
 ];
 
 const ACTION_WORDS = /\b(fix|check|need|needs|waiting|broken|damaged|issue|problem|repair|replace|finish|missing|wrong|cracked|leaking|not working|install|remove|stuck|blocked|urgent|asap|call|follow up|inspect|review|waiting on|pending|schedule)\b/i;
@@ -171,6 +177,21 @@ export async function POST(req: NextRequest) {
               waiting_on:          waitingOn,
             });
           } else {
+            // No known project keyword. File under the "Unverified Site" bucket
+            // as pending_review so the PM still sees and can triage it in Daily
+            // Review (previously these vanished into system_events). Also keep
+            // the audit log so unmatched senders can be reviewed for new sites.
+            const flaggedTitle = taskTitle.startsWith("[VERIFY SITE]") ? taskTitle : `[VERIFY SITE] ${taskTitle}`;
+            await admin.from("punch_list_items").insert({
+              project_id:     UNVERIFIED_PROJECT_ID,
+              org_id:         ORG_ID,
+              title:          flaggedTitle.slice(0, 200),
+              description:    emailCtx || taskTitle,
+              source:         "email",
+              source_message: emailCtx || rawMessage.slice(0, 500),
+              status:         "pending_review",
+              priority:       priorityFromText(rawMessage),
+            });
             await admin.from("system_events").insert({
               org_id:  ORG_ID,
               type:    "email_unmatched",
