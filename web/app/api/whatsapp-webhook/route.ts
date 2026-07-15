@@ -34,6 +34,7 @@ const PROJECT_MAP: { keywords: string[]; id: string; name: string }[] = [
   { keywords: ["chc"],                    id: "1231a2e5-f98c-4601-98ca-1e9eef4f995f", name: "CHC Construction" },
   { keywords: ["ocean","1187"],           id: "e974caa4-d1f8-46f8-b0f4-6e0fddcc7a5a", name: "1187 Ocean Avenue" },
   { keywords: ["concord"],                id: "711eb036-0047-47d6-80c4-d5b69f9413e7", name: "185 Concord" },
+  { keywords: ["myrtle","57-23"],         id: "fd192abe-57ef-4a7e-b121-217e3cd48287", name: "57-23 Myrtle Ave" },
 ];
 
 const ACTION_WORDS = /\b(fix|check|need|needs|waiting|broken|damaged|issue|problem|repair|replace|finish|missing|wrong|cracked|leaking|not working|install|remove|stuck|blocked|urgent|asap|call|follow up|inspect|review|waiting on|pending|schedule)\b/i;
