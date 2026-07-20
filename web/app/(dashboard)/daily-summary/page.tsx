@@ -16,7 +16,7 @@ const PRIORITY_COLOR: Record<string, { c: string; b: string }> = {
   fire_code: { c:"#dc2626", b:"#fee2e2" },
 };
 
-type DailyReportProject = { name: string; summary: string; task_count: number; whatsapp_count: number; email_count: number };
+type DailyReportProject = { name: string; summary: string; task_count: number; whatsapp_count: number; email_count: number; crew_count?: number | null; crew_source?: string | null; forward_text?: string };
 type DailyReport = {
   report_date: string;
   overall_summary: string;
@@ -40,6 +40,9 @@ type SiteData = {
   incidents: any[];
   transcript: any[];
   aiSummary?: string;
+  crewCount?: number | null;
+  crewSource?: string | null;
+  forwardText?: string;
 };
 
 const WA_ACTION_META: Record<string, { label: string; color: string; bg: string }> = {
@@ -177,7 +180,12 @@ export default function DailySummaryPage() {
     if (reportData?.projects) {
       for (const rp of reportData.projects) {
         const match = Object.values(siteMap).find(s => s.name === rp.name);
-        if (match) match.aiSummary = rp.summary;
+        if (match) {
+          match.aiSummary   = rp.summary;
+          match.crewCount   = rp.crew_count ?? null;
+          match.crewSource  = rp.crew_source ?? null;
+          match.forwardText = rp.forward_text;
+        }
       }
     }
 
@@ -344,6 +352,9 @@ export default function DailySummaryPage() {
                     {site.transcript.length > 0 && (
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">💬 {site.transcript.length} msgs</span>
                     )}
+                    {site.crewCount != null && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">👷 {site.crewCount} on site</span>
+                    )}
                     {isOpen ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
                   </div>
                 </button>
@@ -355,6 +366,11 @@ export default function DailySummaryPage() {
                       <div className="bg-blue-50 rounded-lg px-4 py-3 border border-blue-100">
                         <p className="text-sm text-gray-800 leading-relaxed">{site.aiSummary}</p>
                       </div>
+                    )}
+
+                    {/* Client-ready version — copy & forward to the site owner as-is */}
+                    {site.forwardText && (
+                      <ForwardBlock siteName={site.name} text={site.forwardText} />
                     )}
 
                     {/* WhatsApp items */}
@@ -593,6 +609,29 @@ export default function DailySummaryPage() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function ForwardBlock({ siteName, text }: { siteName: string; text: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    await navigator.clipboard.writeText(`${siteName} — Daily Update\n\n${text}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Client-ready — forward as-is</span>
+        <button
+          onClick={copy}
+          className="text-xs font-semibold px-2.5 py-1 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+        >
+          {copied ? "Copied ✓" : "Copy"}
+        </button>
+      </div>
+      <p className="text-sm text-gray-800 whitespace-pre-line leading-relaxed">{text}</p>
     </div>
   );
 }

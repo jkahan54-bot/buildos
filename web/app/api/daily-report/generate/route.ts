@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
     { data: completedItems },
     { data: incidents },
     { data: blockers },
+    { data: logs },
   ] = await Promise.all([
     // All new punch list items created today (WhatsApp + email)
     admin.from("punch_list_items")
@@ -97,6 +98,14 @@ export async function POST(req: NextRequest) {
       .eq("org_id", ORG_ID)
       .eq("status", "open")
       .not("blocked_by", "is", null),
+
+    // Manually-entered daily logs for today (crew count, weather, materials — see /daily-log).
+    // Filter by created_at (not log_date — the quick-entry form on /daily-log doesn't set log_date).
+    admin.from("daily_logs")
+      .select("project_id, crew_count, weather, work_done, materials, equipment, issues, projects(name)")
+      .eq("org_id", ORG_ID)
+      .gte("created_at", dayStart)
+      .lte("created_at", dayEnd),
   ]);
 
   // Full WhatsApp transcript today — every message, including plain chatter
@@ -117,6 +126,13 @@ export async function POST(req: NextRequest) {
     else byProject[name].email.push(item);
   }
 
+  // Make sure a project with ONLY a manual daily-log entry (no WhatsApp/email
+  // items) still shows up in the site-by-site breakdown.
+  for (const l of (logs ?? [])) {
+    const name = (l as any).projects?.name;
+    if (name && !byProject[name]) byProject[name] = { name, whatsapp: [], email: [] };
+  }
+
   const waCount    = (newItems ?? []).filter(i => i.source === "whatsapp").length;
   const emailCount = (newItems ?? []).filter(i => i.source === "email").length;
 
@@ -128,6 +144,30 @@ export async function POST(req: NextRequest) {
     byGroup[g].push(m);
   }
 
+  // ── Crew headcount: prefer the PM's manual /daily-log entry; otherwise
+  // fall back to parsing mentions like "12 guys on site" / "crew of 8" from
+  // today's WhatsApp transcript for that project. ──────────────────────────
+  const CREW_PATTERN = /\b(\d{1,3})\s*(?:guys|men|man|workers|laborers|crew|hands)\b|\bcrew\s*(?:of|:)?\s*(\d{1,3})\b/i;
+  const loggedCrew: Record<string, { count: number; source: string }> = {};
+  for (const l of (logs ?? [])) {
+    const name = (l as any).projects?.name;
+    if (name && l.crew_count != null) loggedCrew[name] = { count: l.crew_count, source: "daily log" };
+  }
+  const reportedCrew: Record<string, { count: number; source: string }> = {};
+  for (const m of (transcript ?? [])) {
+    const name = (m as any).projects?.name;
+    if (!name) continue;
+    const match = CREW_PATTERN.exec((m as any).content ?? "");
+    const n = match ? parseInt(match[1] ?? match[2], 10) : null;
+    if (n && n > 0 && n < 300) reportedCrew[name] = { count: n, source: "field report" };
+  }
+  const crewByProject: Record<string, { count: number; source: string }> = { ...reportedCrew, ...loggedCrew };
+  const logsByProject: Record<string, any> = {};
+  for (const l of (logs ?? [])) {
+    const name = (l as any).projects?.name;
+    if (name) logsByProject[name] = l;
+  }
+
   // ── Build a structured data block for Claude ────────────────────────────
   // Include full source messages so the AI can write a real narrative
   const dataBlock = `
@@ -136,6 +176,9 @@ DATE: ${today}
 ACTIVITY BY SITE:
 ${Object.values(byProject).map(p => `
 ═══ ${p.name} ═══
+Crew today: ${crewByProject[p.name] ? `${crewByProject[p.name].count} (${crewByProject[p.name].source})` : "not reported"}
+Daily log entry: ${logsByProject[p.name] ? `weather ${logsByProject[p.name].weather ?? "n/a"}; work: ${logsByProject[p.name].work_done ?? "n/a"}; materials: ${logsByProject[p.name].materials ?? "none"}; equipment: ${logsByProject[p.name].equipment ?? "none"}; issues: ${logsByProject[p.name].issues ?? "none"}` : "none filed today"}
+
 WhatsApp field messages (${p.whatsapp.length}):
 ${p.whatsapp.map(i => `  - ${i.title}${i.source_message ? `\n    Original message: "${i.source_message}"` : ""}${i.description ? `\n    Details: ${i.description}` : ""}`).join("\n") || "  (none)"}
 
@@ -176,10 +219,10 @@ ${msgs.map((m: any) => `[${new Date(m.sent_at).toLocaleTimeString("en-US", { hou
         max_tokens: 2000,
         messages: [{
           role: "user",
-          content: `You are writing a daily site diary for a construction company owner who was NOT on site today. He needs to read this and know exactly what happened at each jobsite — like he was there. Read the raw WhatsApp messages and emails below carefully, then write a plain-English narrative for each site.
+          content: `You are writing a daily site diary for a construction company owner who was NOT on site today. He needs to read this and know exactly what happened at each jobsite — like he was there. Read the raw WhatsApp messages, emails, and daily log entries below carefully, then write a plain-English narrative for each site, PLUS a separate client-ready version he can forward as-is to the property/site owner.
 
-DO: mention specific work being done (e.g. "shed removal in progress", "cameras being relocated to the fence"), who said what if relevant, materials/deliveries, any issues or blockers.
-DON'T: list task titles back, use generic language like "several items were logged", or fabricate anything not in the data.
+DO: mention specific work being done (e.g. "shed removal in progress", "cameras being relocated to the fence"), who said what if relevant, materials/deliveries, any issues or blockers, and the crew headcount if known.
+DON'T: list task titles back, use generic language like "several items were logged", fabricate anything not in the data, or invent a crew count that wasn't reported.
 
 ${dataBlock}
 
@@ -189,7 +232,10 @@ Return ONLY valid JSON (no markdown, no explanation):
   "projects": [
     {
       "name": "exact project name from data",
-      "summary": "2-4 sentences: a plain-English narrative of what happened on this site today. Synthesize the WhatsApp field messages and emails into one coherent update. Be specific — mention actual work (demolition, inspections, deliveries, installations), coordination requests, and any issues. Write it like a foreman's end-of-day update.",
+      "summary": "2-4 sentences: a plain-English internal narrative of what happened on this site today, for the PM/owner's own records. Synthesize the WhatsApp field messages, emails, and daily log into one coherent update. Be specific — mention actual work (demolition, inspections, deliveries, installations), coordination requests, and any issues. Write it like a foreman's end-of-day update.",
+      "crew_count": null,
+      "crew_source": null,
+      "forward_text": "A short, professional, CLIENT-FACING update for this site only, written to be copy-pasted and forwarded directly to the site/property owner (an outside party, not Brookstone staff). Plain business tone, no internal jargon, no vendor names being chased or internal task-management language. Structure as 3-5 short lines: Date, Crew on site (only if known — say 'not reported' rather than guessing), Work performed today, Progress/notes, and Safety (only mention if there was an incident, otherwise omit the line entirely). If there is truly nothing to report for this site, still write a short 'no activity today' line rather than omitting the field.",
       "whatsapp_count": 0,
       "email_count": 0,
       "task_count": 0
@@ -200,7 +246,9 @@ Return ONLY valid JSON (no markdown, no explanation):
   "incident_count": 0
 }
 
-Only include projects that had activity today.`
+For "crew_count" and "crew_source": use the "Crew today" line given for each site above — copy the number as crew_count (integer) and the parenthetical ("daily log" or "field report") as crew_source. If it says "not reported", set both to null.
+
+Only include projects that had activity today (WhatsApp, email, OR a daily log entry).`
         }]
       }),
       signal: AbortSignal.timeout(25000),
@@ -220,16 +268,30 @@ Only include projects that had activity today.`
         `${waCount} field message${waCount !== 1 ? "s" : ""} via WhatsApp and ${emailCount} email task${emailCount !== 1 ? "s" : ""} were logged. ` +
         ((completedItems ?? []).length > 0 ? `${(completedItems ?? []).length} item${(completedItems ?? []).length > 1 ? "s" : ""} completed today.` : "")
       : "No jobsite activity logged today.";
-    parsed.projects = Object.values(byProject).map(p => ({
-      name:           p.name,
-      summary:        [
-        p.whatsapp.length > 0 ? `${p.whatsapp.length} field item${p.whatsapp.length > 1 ? "s" : ""} from WhatsApp: ${p.whatsapp.map(i => i.title).join("; ")}.` : "",
-        p.email.length  > 0  ? `${p.email.length} email item${p.email.length > 1 ? "s" : ""}: ${p.email.map(i => i.title).join("; ")}.` : "",
-      ].filter(Boolean).join(" "),
-      whatsapp_count: p.whatsapp.length,
-      email_count:    p.email.length,
-      task_count:     p.whatsapp.length + p.email.length,
-    }));
+    parsed.projects = Object.values(byProject).map(p => {
+      const crew = crewByProject[p.name];
+      const log  = logsByProject[p.name];
+      const crewLine = crew ? `Crew: ${crew.count} (${crew.source}).` : "Crew: not reported.";
+      const workLine = log?.work_done ? `Work performed: ${log.work_done}.` : "";
+      return {
+        name:           p.name,
+        summary:        [
+          p.whatsapp.length > 0 ? `${p.whatsapp.length} field item${p.whatsapp.length > 1 ? "s" : ""} from WhatsApp: ${p.whatsapp.map(i => i.title).join("; ")}.` : "",
+          p.email.length  > 0  ? `${p.email.length} email item${p.email.length > 1 ? "s" : ""}: ${p.email.map(i => i.title).join("; ")}.` : "",
+        ].filter(Boolean).join(" "),
+        crew_count:  crew?.count ?? null,
+        crew_source: crew?.source ?? null,
+        forward_text: [
+          `Date: ${today}`,
+          crewLine,
+          workLine || "Work performed: see field notes below.",
+          p.whatsapp.length + p.email.length > 0 ? `Notes: ${p.whatsapp.length + p.email.length} item(s) logged today.` : "No activity reported today.",
+        ].filter(Boolean).join("\n"),
+        whatsapp_count: p.whatsapp.length,
+        email_count:    p.email.length,
+        task_count:     p.whatsapp.length + p.email.length,
+      };
+    });
   }
 
   const report = {
@@ -256,7 +318,7 @@ Only include projects that had activity today.`
 
   // ── WhatsApp push ───────────────────────────────────────────────────────
   const projLines = (parsed.projects ?? [])
-    .map((p: any) => `• ${p.name}: ${p.summary}`)
+    .map((p: any) => `• ${p.name}${p.crew_count ? ` (${p.crew_count} on site)` : ""}: ${p.summary}`)
     .join("\n");
 
   const flags = [
@@ -270,7 +332,8 @@ Only include projects that had activity today.`
     `${report.overall_summary}\n\n` +
     `${projLines}` +
     (flags ? `\n\n${flags}` : "") +
-    `\n\n📱 ${waCount} WhatsApp  📧 ${emailCount} email  →  buildos-six.vercel.app/daily-summary`;
+    `\n\n📱 ${waCount} WhatsApp  📧 ${emailCount} email  →  buildos-six.vercel.app/daily-summary` +
+    `\n\n✂️ Client-ready, forward-as-is versions for each site are on the dashboard under "Report" — tap a site to copy.`;
 
   await sendOwnerAlert(msg);
 
