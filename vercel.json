@@ -2,6 +2,7 @@
   "framework": "nextjs",
   "crons": [
     { "path": "/api/owner/scan",              "schedule": "0 1 * * 6"  },
-    { "path": "/api/daily-report/generate",   "schedule": "0 23 * * *" }
+    { "path": "/api/daily-report/generate",   "schedule": "0 23 * * *" },
+    { "path": "/api/weekly-report/generate",  "schedule": "33 0 * * 5" }
   ]
 }
