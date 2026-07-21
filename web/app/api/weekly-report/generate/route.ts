@@ -22,7 +22,11 @@ const admin = createClient(
 
 const ORG_ID       = "f18352de-979e-44d8-a874-c70aa8b05347";
 const REPORT_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
-const REPORT_TO    = (process.env.WEEKLY_REPORT_TO || "info@brookstonedevelopers.com").split(",").map(s => s.trim());
+// TEMPORARY: Resend account is unverified for brookstonedevelopers.com, so it
+// can only deliver to the account owner's own address. Switch REPORT_TO back
+// to info@brookstonedevelopers.com once the domain is verified in Resend
+// (Dashboard → Domains → add brookstonedevelopers.com → add the DNS records).
+const REPORT_TO    = (process.env.WEEKLY_REPORT_TO || "jkahan54@gmail.com").split(",").map(s => s.trim());
 
 // Vercel cron hits this Thursday evening — no auth header available from cron, use CRON_SECRET
 export async function GET(req: NextRequest) {
