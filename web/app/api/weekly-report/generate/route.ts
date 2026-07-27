@@ -230,7 +230,7 @@ Return ONLY valid JSON (no markdown fences):
     `📅 Weekly Report — week ending ${weekEndingLabel}\n\n` +
     (parsed.week_at_a_glance ?? []).map((b: string) => `• ${b}`).join("\n") +
     (emailResult.ok ? `\n\n✅ Full report emailed to ${REPORT_TO.join(", ")}` : `\n\n⚠️ Email send failed (${emailResult.error}) — full report saved, check buildos-six.vercel.app`);
-  await sendOwnerAlert(waMsg);
+  const whatsappResult = await sendOwnerAlert(waMsg);
 
-  return NextResponse.json({ ok: true, email: emailResult, report: parsed });
+  return NextResponse.json({ ok: true, email: emailResult, whatsapp: whatsappResult, report: parsed });
 }

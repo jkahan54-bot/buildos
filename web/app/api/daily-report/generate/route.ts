@@ -335,7 +335,7 @@ Only include projects that had activity today (WhatsApp, email, OR a daily log e
     `\n\n📱 ${waCount} WhatsApp  📧 ${emailCount} email  →  buildos-six.vercel.app/daily-summary` +
     `\n\n✂️ Client-ready, forward-as-is versions for each site are on the dashboard under "Report" — tap a site to copy.`;
 
-  await sendOwnerAlert(msg);
+  const whatsappResult = await sendOwnerAlert(msg);
 
-  return NextResponse.json({ ok: true, report });
+  return NextResponse.json({ ok: true, report, whatsapp: whatsappResult });
 }
