@@ -62,10 +62,21 @@ export async function POST(req: NextRequest) {
       max_tokens: 400,
       system: `You are a construction PM assistant for Brookstone Development. Classify incoming emails.
 
-Active projects: rambam (26010, IAQ), ditmas (125 Ditmas, 123 Ditmas), onderdonk (910), klein (1852, 60th St), chc
+Active projects (use the keyword before the parentheses as project_keyword):
+- ditmas (125 Ditmas, 123 Ditmas)
+- klein (1852, 60th St)
+- onderdonk (910 Onderdonk)
+- rambam (26010, IAQ)
+- chc
+- ocean (1187 Ocean Avenue)
+- concord (185 Concord)
+- myrtle (57-23 Myrtle Ave)
+- 5909 (5909 20th Ave)
 
 Mark ACTIONABLE if the email requires: signing/approving, following up/responding, scheduling/confirming, submitting a document, resolving an issue, paying/reviewing an invoice, acting on a permit.
-SKIP: "thanks!", "sounds good", spam, automated notifications.`,
+SKIP: "thanks!", "sounds good", spam, automated notifications.
+
+If the email is clearly ACTIONABLE but you cannot tie it to any project above, still mark it actionable and set project_keyword to "unknown" — never drop an actionable email.`,
       messages: [{
         role:    "user",
         content: `Email:
@@ -73,7 +84,7 @@ Subject: ${subject}
 From: ${from_name} <${from_email}>
 Body: ${bodyText}
 
-If ACTIONABLE, return JSON: {"actionable":true,"project_keyword":"rambam|ditmas|onderdonk|klein|chc","task_title":"Verb phrase action","summary":"From: ${from_name} | Re: ${subject} | 2-3 sentences explaining what and why"}
+If ACTIONABLE, return JSON: {"actionable":true,"project_keyword":"ditmas|klein|onderdonk|rambam|chc|ocean|concord|myrtle|5909|unknown","task_title":"<Person/Company> to <specific action> <specific deliverable> for <site/address>","summary":"From: ${from_name} <${from_email}> | Re: ${subject} | What happened, what is needed, who at Brookstone owns it, and any deadline"}
 If NOT actionable, return: {"actionable":false}
 Return ONLY JSON, no markdown.`,
       }],
@@ -92,29 +103,53 @@ Return ONLY JSON, no markdown.`,
     return NextResponse.json({ ok: true, action: "not_actionable" });
   }
 
-  // Post to the BuildOS webhook as a pending task
-  await fetch(WEBHOOK_URL, {
-    method:  "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      entry: [{
-        changes: [{
-          value: {
-            source:   "email",
-            metadata: { display_phone_number: "Email" },
-            messages: [{
-              type: "text",
-              from: "outlook",
-              text: {
-                body: `${parsed.project_keyword} — ${parsed.task_title}\n---\n${parsed.summary}`,
-              },
-            }],
-          },
-        }],
-      }],
-    }),
-    signal: AbortSignal.timeout(10000),
-  }).catch(e => console.error("[email-inbound] webhook post failed:", e));
+  // An actionable email we couldn't tie to a project must still reach the PM —
+  // prefix it so it lands under "⚠️ Unverified Site" for triage rather than vanishing.
+  const unmatched = !parsed.project_keyword || parsed.project_keyword === "unknown";
+  const taskLine = unmatched
+    ? `[VERIFY SITE] ${parsed.task_title}`
+    : `${parsed.project_keyword} — ${parsed.task_title}`;
 
-  return NextResponse.json({ ok: true, action: "task_created", project: parsed.project_keyword });
+  // Post to the BuildOS webhook as a pending task.
+  // The webhook enforces x-buildos-key (403 without it) — omitting it here used to
+  // drop every Power Automate email silently, since the failure was only logged.
+  let posted = false;
+  let postError: string | undefined;
+  try {
+    const res = await fetch(WEBHOOK_URL, {
+      method:  "POST",
+      headers: {
+        "Content-Type":  "application/json",
+        "x-buildos-key": process.env.BUILDOS_WEBHOOK_SECRET ?? "",
+      },
+      body: JSON.stringify({
+        entry: [{
+          changes: [{
+            value: {
+              source:   "email",
+              metadata: { display_phone_number: "Email" },
+              messages: [{
+                type: "text",
+                from: "outlook",
+                text: { body: `${taskLine}\n---\n${parsed.summary}` },
+              }],
+            },
+          }],
+        }],
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    posted = res.ok;
+    if (!res.ok) postError = `${res.status}: ${(await res.text()).slice(0, 200)}`;
+  } catch (e: any) {
+    postError = e.message;
+  }
+  if (!posted) console.error("[email-inbound] webhook post failed:", postError);
+
+  return NextResponse.json({
+    ok:      posted,
+    action:  posted ? "task_created" : "webhook_post_failed",
+    project: unmatched ? "unverified" : parsed.project_keyword,
+    error:   postError,
+  }, { status: posted ? 200 : 502 });
 }
