@@ -4,7 +4,7 @@ import Link from "next/link";
 import { TrendingUp, AlertTriangle, FolderOpen, DollarSign, Plus, ArrowUpRight, ShieldAlert, HelpCircle, FileText, Hourglass } from "lucide-react";
 import { WAITING_ON_META, WAITING_ON_OPTIONS } from "@/lib/waitingOn";
 
-const TYPE_HREF: Record<string,string> = { RFI:"/rfis", Submittal:"/submittals", "Change Order":"/change-orders", "Punch List":"/punch-list" };
+const TYPE_HREF: Record<string,string> = { RFI:"/rfis", Submittal:"/submittals", "Change Order":"/change-orders", "Punch List":"/punch-list", "Pre-Con":"/precon" };
 
 const daysAgo = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
 
@@ -22,10 +22,11 @@ const statusStyle = (s: string): { color:string; bg:string; text:string; label:s
     cancelled: { color:"#9ca3af", bg:"#f3f4f6", text:"#6b7280", label:"Cancelled" },
   } as any)[s] ?? { color:"#9ca3af", bg:"#f3f4f6", text:"#6b7280", label:s });
 
-export default function DashboardClient({ profile, projects, totalBudget, totalSpent, openIncidents, openRFIs, waitingOn = [] }: any) {
+export default function DashboardClient({ profile, projects, preconProjects = [], pendingProjects = [], totalBudget, totalSpent, openIncidents, openRFIs, waitingOn = [] }: any) {
   const remaining = totalBudget - totalSpent;
   const spentPct  = totalBudget > 0 ? Math.round(totalSpent / totalBudget * 100) : 0;
   const name      = profile?.full_name?.split(" ")[0] ?? "there";
+  const totalProjects = projects.length + preconProjects.length + pendingProjects.length;
 
   const waitingGroups = WAITING_ON_OPTIONS
     .map(category => ({
@@ -50,7 +51,9 @@ export default function DashboardClient({ profile, projects, totalBudget, totalS
           <h1 className="text-xl lg:text-2xl font-bold text-gray-900">
             Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, {name} 👋
           </h1>
-          <p className="text-gray-500 text-sm mt-0.5">{projects.length} active project{projects.length !== 1 ? "s" : ""}</p>
+          <p className="text-gray-500 text-sm mt-0.5">
+            {projects.length} running · {pendingProjects.length} pending · {preconProjects.length} pre-con
+          </p>
         </div>
         <Link href="/projects/new"
           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white shadow-sm flex-shrink-0"
@@ -67,7 +70,7 @@ export default function DashboardClient({ profile, projects, totalBudget, totalS
           { label:"Total Budget",   value:fmtMoney(totalBudget), sub:`${spentPct}% used`,      icon:DollarSign,  color:"#2563eb", light:"#dbeafe" },
           { label:"Remaining",      value:fmtMoney(remaining),   sub:"available",              icon:TrendingUp,  color:"#16a34a", light:"#dcfce7" },
           { label:"Incidents",      value:openIncidents,          sub:`${openRFIs} open RFIs`, icon:ShieldAlert, color: openIncidents > 0 ? "#dc2626" : "#16a34a", light: openIncidents > 0 ? "#fee2e2" : "#dcfce7" },
-          { label:"Projects",       value:projects.length,        sub:"total active",           icon:FolderOpen,  color:"#f97316", light:"#fff7ed" },
+          { label:"Projects",       value:totalProjects,          sub:"total",                   icon:FolderOpen,  color:"#f97316", light:"#fff7ed" },
         ].map((s, i) => {
           const Icon = s.icon;
           return (
@@ -145,10 +148,16 @@ export default function DashboardClient({ profile, projects, totalBudget, totalS
         </div>
       )}
 
-      {/* Projects */}
+      {/* Pre-Construction */}
+      <ProjectLane title="Pre-Construction" href="/precon" items={preconProjects} renderStage />
+
+      {/* Pending (contracted, waiting on mobilization) */}
+      <ProjectLane title="Pending" href="/precon" items={pendingProjects} renderStage />
+
+      {/* Running */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-900">Projects</h2>
+          <h2 className="font-semibold text-gray-900">Running <span className="text-xs text-gray-400 font-normal">({projects.length})</span></h2>
           <Link href="/projects" className="text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-0.5">
             View all <ArrowUpRight size={12} />
           </Link>
@@ -208,6 +217,45 @@ export default function DashboardClient({ profile, projects, totalBudget, totalS
                 <Icon size={16} style={{ color: a.color }} />
               </div>
               <span className="text-sm font-medium text-gray-700">{a.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ProjectLane({ title, href, items, renderStage = false }: { title: string; href: string; items: any[]; renderStage?: boolean }) {
+  if (items.length === 0) return null;
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-semibold text-gray-900">{title} <span className="text-xs text-gray-400 font-normal">({items.length})</span></h2>
+        <Link href={href} className="text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-0.5">
+          View all <ArrowUpRight size={12} />
+        </Link>
+      </div>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        {items.map((p: any, idx: number) => {
+          const meta = p.waitingOn ? WAITING_ON_META[p.waitingOn as keyof typeof WAITING_ON_META] : null;
+          return (
+            <Link key={p.id} href={`/projects/${p.id}`}
+              className={`flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 active:bg-gray-100 transition-all ${idx < items.length - 1 ? "border-b border-gray-100" : ""}`}>
+              <div className="w-1.5 h-8 rounded-full flex-shrink-0 bg-amber-400" />
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-sm text-gray-900 truncate">{p.name}</div>
+                {renderStage && (
+                  <div className="text-xs text-gray-400 mt-0.5 truncate">
+                    {p.currentStage ?? p.phase ?? "—"}
+                    {p.waitingFor && <> · waiting on {p.waitingFor}</>}
+                  </div>
+                )}
+              </div>
+              {meta && (
+                <span className="text-[10px] font-semibold px-2 py-1 rounded-full flex-shrink-0" style={{ background: meta.bg, color: meta.color }}>
+                  {meta.label}
+                </span>
+              )}
             </Link>
           );
         })}
