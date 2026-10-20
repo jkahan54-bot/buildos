@@ -1,13 +1,22 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Lock, ArrowRight, AlertCircle, Check } from "lucide-react";
 
 const inp = "w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all shadow-sm";
 
 export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordInner />
+    </Suspense>
+  );
+}
+
+function ResetPasswordInner() {
   const router = useRouter();
+  const params = useSearchParams();
   const [ready, setReady]       = useState(false);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm]   = useState("");
@@ -16,14 +25,26 @@ export default function ResetPasswordPage() {
   const [done, setDone]         = useState(false);
 
   useEffect(() => {
-    // The recovery link lands here with the session already set by the Supabase client
-    // (detectSessionInUrl). We just confirm a session exists before showing the form.
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => {
+    const code = params.get("code");
+
+    (async () => {
+      // Supabase's recovery link uses the PKCE flow (a ?code=... param), which
+      // needs to be explicitly exchanged for a session — it isn't auto-detected
+      // the way the older hash-token flow was.
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) {
+          setError("This reset link is invalid or has expired. Request a new one from the login page.");
+          setReady(true);
+          return;
+        }
+      }
+      const { data } = await supabase.auth.getSession();
       if (!data.session) { setError("This reset link is invalid or has expired. Request a new one from the login page."); }
       setReady(true);
-    });
-  }, []);
+    })();
+  }, [params]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
