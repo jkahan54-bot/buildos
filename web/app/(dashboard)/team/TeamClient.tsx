@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus, Mail, ChevronDown, CheckCircle, Clock, X, ShieldCheck, ShieldX, AlertCircle } from "lucide-react";
+import ConfirmPassword from "@/components/ConfirmPassword";
 
 const ROLE_META: Record<string,{ color:string; bg:string; label:string; icon?:string }> = {
   owner:         { color:"#92400e", bg:"#fef3c7", label:"Master Owner",   icon:"👑"  },
@@ -25,6 +26,7 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
   const [updatingSite, setUpdatingSite] = useState<string | null>(null);
   const [actioning, setActioning]     = useState<string | null>(null);
+  const [confirmingInvite, setConfirmingInvite] = useState(false);
 
   const weekHours = (id: string) =>
     (timeLogs ?? []).filter((l: any) => l.profile_id === id && new Date(l.clock_in) > new Date(Date.now() - 7*86400000))
@@ -40,7 +42,14 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
   );
 
   const sendInvite = async (e: React.FormEvent) => {
-    e.preventDefault(); setError(""); setSending(true);
+    e.preventDefault(); setError("");
+    // Inviting an owner or admin is sensitive — re-confirm the inviter's password first.
+    if (inviteRole === "owner" || inviteRole === "admin") { setConfirmingInvite(true); return; }
+    await doSendInvite();
+  };
+
+  const doSendInvite = async () => {
+    setError(""); setSending(true);
     const res  = await fetch("/api/invite", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ email: inviteEmail, role: inviteRole }) });
     const data = await res.json();
     if (data.error) { setError(data.error); setSending(false); return; }
@@ -82,6 +91,14 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
 
   return (
     <div className="space-y-6">
+      {confirmingInvite && (
+        <ConfirmPassword
+          title="Confirm this invite"
+          description={`Inviting someone as ${ROLE_META[inviteRole]?.label ?? inviteRole} gives them broad access — please confirm it's really you.`}
+          onCancel={() => setConfirmingInvite(false)}
+          onConfirm={() => { setConfirmingInvite(false); doSendInvite(); }}
+        />
+      )}
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Team</h1>

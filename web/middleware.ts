@@ -123,6 +123,17 @@ export async function middleware(request: NextRequest) {
   const isApi    = pathname.startsWith("/api/");
   const isPublic = pathname === "/" || isAuth || isApi || pathname.startsWith("/invite/") || pathname === "/reset-password";
 
+  // Absolute session cap: the refresh token otherwise keeps a browser logged in
+  // forever. Force a fresh password sign-in after 14 days, even if active.
+  const MAX_SESSION_AGE_MS = 14 * 24 * 60 * 60 * 1000;
+  if (user && !isPublic && user.last_sign_in_at) {
+    const sessionAge = Date.now() - new Date(user.last_sign_in_at).getTime();
+    if (sessionAge > MAX_SESSION_AGE_MS) {
+      await supabase.auth.signOut();
+      return NextResponse.redirect(new URL("/login?reason=expired", request.url));
+    }
+  }
+
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
   }

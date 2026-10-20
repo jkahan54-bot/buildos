@@ -47,6 +47,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
     const { data: prefs } = await supabase
       .from("role_menu_prefs").select("role, hidden").eq("org_id", profile.org_id);
     for (const p of prefs ?? []) menuPrefs[p.role] = p.hidden ?? [];
+
+    // Per-person overrides can only hide additional items on top of the role
+    // default — merge this user's own overrides into their effective role entry.
+    const { data: userPrefs } = await supabase
+      .from("user_menu_prefs").select("hidden").eq("org_id", profile.org_id).eq("user_id", user.id).maybeSingle();
+    if (userPrefs?.hidden?.length) {
+      menuPrefs[role] = Array.from(new Set([...(menuPrefs[role] ?? []), ...userPrefs.hidden]));
+    }
   }
 
   return (
