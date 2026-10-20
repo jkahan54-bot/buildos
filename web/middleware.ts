@@ -121,7 +121,7 @@ export async function middleware(request: NextRequest) {
 
   const isAuth   = pathname.startsWith("/login") || pathname.startsWith("/register");
   const isApi    = pathname.startsWith("/api/");
-  const isPublic = pathname === "/" || isAuth || isApi || pathname.startsWith("/invite/");
+  const isPublic = pathname === "/" || isAuth || isApi || pathname.startsWith("/invite/") || pathname === "/reset-password";
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
