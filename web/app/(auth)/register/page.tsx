@@ -48,7 +48,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="flex items-center gap-2 justify-center mb-8">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-sm shadow-sm"
-            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
+            style={{ background:"#111827" }}>B</div>
           <span className="font-bold text-gray-900 text-lg">BuildOS</span>
         </div>
 
@@ -112,7 +112,7 @@ export default function RegisterPage() {
                 <button type="button" onClick={() => orgName && fullName && setStep(2)}
                   disabled={!orgName || !fullName}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-40 mt-2"
-                  style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+                  style={{ background:"#111827" }}>
                   Continue <ArrowRight size={14} />
                 </button>
               </div>
@@ -150,7 +150,7 @@ export default function RegisterPage() {
                   </button>
                   <button type="submit" disabled={loading}
                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50"
-                    style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+                    style={{ background:"#111827" }}>
                     {loading ? "Creating…" : <><span>Create Account</span><ArrowRight size={14} /></>}
                   </button>
                 </div>

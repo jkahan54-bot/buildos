@@ -41,7 +41,7 @@ export default function SubcontractorsPage() {
         </div>
         <button onClick={() => setShowForm(!showForm)}
           className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm"
-          style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+          style={{ background:"#111827" }}>
           <Plus size={15} />Add Subcontractor
         </button>
       </div>
@@ -76,7 +76,7 @@ export default function SubcontractorsPage() {
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all">Cancel</button>
-              <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+              <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"#111827" }}>
                 {loading ? "Saving…" : "Save"}
               </button>
             </div>

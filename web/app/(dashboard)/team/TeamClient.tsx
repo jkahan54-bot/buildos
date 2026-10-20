@@ -111,7 +111,7 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
         {isAdmin && (
           <button onClick={() => setShowInvite(!showInvite)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm flex-shrink-0"
-            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+            style={{ background:"#111827" }}>
             <UserPlus size={15} />Invite Member
           </button>
         )}
@@ -173,7 +173,7 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
                   className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all">Cancel</button>
                 <button type="submit" disabled={sending}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-                  style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+                  style={{ background:"#111827" }}>
                   {sending ? "Sending…" : <><Mail size={14} />Send Invite</>}
                 </button>
               </div>

@@ -64,7 +64,7 @@ export default function ConfirmPassword({
             </button>
             <button type="submit" disabled={checking || !password}
               className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50"
-              style={{ background: "linear-gradient(135deg,#f97316,#ea580c)" }}>
+              style={{ background: "#111827" }}>
               {checking ? "Checking…" : "Confirm"}
             </button>
           </div>

@@ -231,7 +231,7 @@ export default function PermissionsPage() {
       <div className="sticky bottom-0 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-4 pb-2 flex items-center gap-4">
         <button onClick={() => setConfirming("role")} disabled={saving || tableMissing}
           className="px-6 py-2.5 rounded-lg text-sm font-bold text-white shadow-sm disabled:opacity-50"
-          style={{ background: "linear-gradient(135deg,#f97316,#ea580c)" }}>
+          style={{ background: "#111827" }}>
           {saving ? "Saving…" : "Save Changes"}
         </button>
         {saved && <span className="text-green-600 text-sm font-semibold flex items-center gap-1"><Check size={15} /> Saved — menus updated</span>}
@@ -307,7 +307,7 @@ export default function PermissionsPage() {
           <div className="sticky bottom-0 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-4 pb-2 flex items-center gap-4">
             <button onClick={() => setConfirming("user")} disabled={savingUser || userTableMissing}
               className="px-6 py-2.5 rounded-lg text-sm font-bold text-white shadow-sm disabled:opacity-50"
-              style={{ background: "linear-gradient(135deg,#f97316,#ea580c)" }}>
+              style={{ background: "#111827" }}>
               {savingUser ? "Saving…" : "Save for this person"}
             </button>
             {savedUser && <span className="text-green-600 text-sm font-semibold flex items-center gap-1"><Check size={15} /> Saved</span>}

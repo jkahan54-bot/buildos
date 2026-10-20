@@ -26,7 +26,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-[45%] flex-col justify-between p-12 bg-white border-r border-gray-200">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-sm shadow-sm"
-            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
+            style={{ background:"#111827" }}>B</div>
           <span className="font-bold text-gray-900 text-lg">BuildOS</span>
         </div>
         <div>
@@ -58,7 +58,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           <div className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-white text-sm shadow-sm"
-              style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
+              style={{ background:"#111827" }}>B</div>
             <span className="font-bold text-gray-900">BuildOS</span>
           </div>
 
@@ -93,7 +93,7 @@ export default function LoginPage() {
 
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50 mt-2"
-              style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+              style={{ background:"#111827" }}>
               {loading ? "Signing in…" : <><span>Sign In</span><ArrowRight size={14} /></>}
             </button>
           </form>

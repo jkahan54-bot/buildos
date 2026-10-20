@@ -165,7 +165,7 @@ export default function EditProjectPage() {
           </Link>
           <button type="submit" disabled={saving}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+            style={{ background:"#111827" }}>
             <Save size={14} />
             {saving ? "Saving…" : "Save Changes"}
           </button>

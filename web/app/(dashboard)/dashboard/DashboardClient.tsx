@@ -49,15 +49,14 @@ export default function DashboardClient({ profile, projects, preconProjects = []
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl lg:text-2xl font-bold text-gray-900">
-            Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, {name} 👋
+            Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, {name}
           </h1>
           <p className="text-gray-500 text-sm mt-0.5">
             {projects.length} running · {pendingProjects.length} pending · {preconProjects.length} pre-con
           </p>
         </div>
         <Link href="/projects/new"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white shadow-sm flex-shrink-0"
-          style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 transition-all flex-shrink-0">
           <Plus size={15} />
           <span className="hidden sm:inline">New Project</span>
           <span className="sm:hidden">New</span>
@@ -98,7 +97,7 @@ export default function DashboardClient({ profile, projects, preconProjects = []
           {waitingOn.length > 0 && <span className="text-xs text-gray-400">{waitingOn.length} open item{waitingOn.length !== 1 ? "s" : ""}</span>}
         </div>
         {waitingGroups.length === 0 ? (
-          <div className="text-center py-6 text-sm text-gray-400">Nothing pending — the ball's in our court 🎉</div>
+          <div className="text-center py-6 text-sm text-gray-400">Nothing pending — the ball's in our court</div>
         ) : (
           <div className="space-y-4">
             {waitingGroups.map(({ category, items }) => {
@@ -167,8 +166,7 @@ export default function DashboardClient({ profile, projects, preconProjects = []
             <FolderOpen size={32} className="text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 font-medium text-sm">No projects yet</p>
             <Link href="/projects/new"
-              className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-lg text-sm font-semibold text-white"
-              style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+              className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 transition-all">
               <Plus size={14} />Create Project
             </Link>
           </div>

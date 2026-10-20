@@ -151,7 +151,7 @@ export default function PipelinePage() {
           </div>
           <button onClick={()=>setShowForm(true)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm"
-            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+            style={{ background:"#111827" }}>
             <Plus size={15} />Add Lead
           </button>
         </div>
@@ -216,7 +216,7 @@ export default function PipelinePage() {
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={()=>setShowForm(false)} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200">Cancel</button>
-              <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+              <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"#111827" }}>
                 {loading ? "Saving…" : "Add Lead"}
               </button>
             </div>
@@ -408,7 +408,7 @@ export default function PipelinePage() {
                     rows={2} className="flex-1 bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-orange-500 shadow-sm resize-none" />
                   <button onClick={addNote} disabled={!newNote.trim()}
                     className="px-3 py-2.5 rounded-xl text-white font-bold disabled:opacity-40 flex-shrink-0"
-                    style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+                    style={{ background:"#111827" }}>
                     <ArrowRight size={16} />
                   </button>
                 </div>

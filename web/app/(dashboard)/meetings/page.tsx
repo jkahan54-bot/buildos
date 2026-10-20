@@ -42,7 +42,7 @@ export default function MeetingsPage() {
       <div className="flex items-start justify-between gap-3">
         <div><h1 className="text-xl lg:text-2xl font-bold text-gray-900">Meeting Minutes</h1>
           <p className="text-gray-500 text-sm mt-0.5">{meetings.length} meetings logged</p></div>
-        <button onClick={()=>setShowForm(true)} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm flex-shrink-0" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}><Plus size={15} />New Meeting</button>
+        <button onClick={()=>setShowForm(true)} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm flex-shrink-0" style={{ background:"#111827" }}><Plus size={15} />New Meeting</button>
       </div>
 
       {showForm && (
@@ -69,7 +69,7 @@ export default function MeetingsPage() {
               <textarea value={form.notes} onChange={e=>set("notes",e.target.value)} rows={4} className={inp+" resize-none"} placeholder="Discussion points, decisions made…" /></div>
             <div className="flex gap-3">
               <button type="button" onClick={()=>setShowForm(false)} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-600 bg-gray-100">Cancel</button>
-              <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>{loading?"Saving…":"Save Minutes"}</button>
+              <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"#111827" }}>{loading?"Saving…":"Save Minutes"}</button>
             </div>
           </form>
         </div>

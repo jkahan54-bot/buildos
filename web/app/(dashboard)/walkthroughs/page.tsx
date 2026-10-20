@@ -63,7 +63,7 @@ export default function WalkthroughsPage() {
         {view === "list" && (
           <button onClick={() => setView("new")}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm flex-shrink-0"
-            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+            style={{ background:"#111827" }}>
             <Plus size={15} />Schedule Walkthrough
           </button>
         )}
@@ -108,7 +108,7 @@ export default function WalkthroughsPage() {
             )}
             <div className="flex gap-3 pt-2">
               <button type="button" onClick={()=>setView("list")} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200">Cancel</button>
-              <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+              <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"#111827" }}>
                 {loading ? "Creating…" : "Create & Start Assessment"}
               </button>
             </div>
@@ -303,7 +303,7 @@ function AssessmentView({ walkthrough, onComplete }: { walkthrough:any; onComple
             <div className="font-semibold text-gray-900">{room.name}</div>
             <button onClick={()=>fileRef.current?.click()} disabled={analyzing}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
-              style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+              style={{ background:"#111827" }}>
               {analyzing ? <><RefreshCw size={13} className="animate-spin" />Analyzing…</> : <><Camera size={13} />Add Photos + AI Analyze</>}
             </button>
             <input ref={fileRef} type="file" accept="image/*" multiple capture="environment"
@@ -380,7 +380,7 @@ function AssessmentView({ walkthrough, onComplete }: { walkthrough:any; onComple
             className="flex-1 bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-orange-500 shadow-sm" />
           <button onClick={addRoom} disabled={!newRoomName.trim()}
             className="px-4 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-40"
-            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>Add</button>
+            style={{ background:"#111827" }}>Add</button>
         </div>
         <div className="text-xs text-gray-400 mt-2">Quick add: <span className="cursor-pointer hover:text-orange-500" onClick={()=>{setNewRoomName("Patient Room");addRoom();}}>Patient Room</span> · <span className="cursor-pointer hover:text-orange-500" onClick={()=>{setNewRoomName("Corridor");addRoom();}}>Corridor</span> · <span className="cursor-pointer hover:text-orange-500" onClick={()=>{setNewRoomName("Bathroom");addRoom();}}>Bathroom</span> · <span className="cursor-pointer hover:text-orange-500" onClick={()=>{setNewRoomName("Nurse Station");addRoom();}}>Nurse Station</span> · <span className="cursor-pointer hover:text-orange-500" onClick={()=>{setNewRoomName("Common Area");addRoom();}}>Common Area</span></div>
       </div>

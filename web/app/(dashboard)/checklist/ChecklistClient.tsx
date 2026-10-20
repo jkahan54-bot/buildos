@@ -47,7 +47,7 @@ export default function ChecklistClient({ projects, checklists }: any) {
         <div className="bg-white rounded-xl border border-dashed border-gray-300 p-12 text-center">
           <CheckSquare size={32} className="text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">No projects yet</p>
-          <Link href="/projects/new" className="inline-block mt-3 px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>Create Project</Link>
+          <Link href="/projects/new" className="inline-block mt-3 px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background:"#111827" }}>Create Project</Link>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -79,12 +79,12 @@ export default function ChecklistClient({ projects, checklists }: any) {
         <button onClick={() => setSelProj(null)} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100"><ArrowLeft size={16} /></button>
         <div><h1 className="text-xl font-bold text-gray-900">{selProj.name}</h1>
           <p className="text-gray-500 text-sm">Select a room checklist</p></div>
-        <Link href={`/projects/${selProj.id}/import-checklist`} className="ml-auto px-3 py-1.5 rounded-lg text-xs font-semibold text-white" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>📊 Import Excel</Link>
+        <Link href={`/projects/${selProj.id}/import-checklist`} className="ml-auto px-3 py-1.5 rounded-lg text-xs font-semibold text-white" style={{ background:"#111827" }}>📊 Import Excel</Link>
       </div>
       {projChecklists.length === 0 ? (
         <div className="bg-white rounded-xl border border-dashed border-gray-300 p-12 text-center">
           <p className="text-gray-500 font-medium">No checklists imported yet</p>
-          <Link href={`/projects/${selProj.id}/import-checklist`} className="inline-block mt-3 px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>Import from Excel</Link>
+          <Link href={`/projects/${selProj.id}/import-checklist`} className="inline-block mt-3 px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background:"#111827" }}>Import from Excel</Link>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">

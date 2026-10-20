@@ -91,7 +91,7 @@ export default function AIToolsPage() {
                   m.role==="user"
                     ? "text-white rounded-br-sm"
                     : "bg-gray-100 text-gray-800 rounded-bl-sm border border-gray-200"
-                }`} style={m.role==="user" ? { background:"linear-gradient(135deg,#f97316,#ea580c)" } : {}}>
+                }`} style={m.role==="user" ? { background:"#111827" } : {}}>
                   {m.content}
                 </div>
               </div>
@@ -111,7 +111,7 @@ export default function AIToolsPage() {
               className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-orange-500" />
             <button onClick={sendChat} disabled={loading||!input.trim()}
               className="w-10 h-10 rounded-xl flex items-center justify-center text-white disabled:opacity-40 flex-shrink-0"
-              style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+              style={{ background:"#111827" }}>
               <Send size={16} />
             </button>
           </div>
@@ -128,7 +128,7 @@ export default function AIToolsPage() {
               placeholder="Paste content here…" className={inp+" resize-none"} />
             <button onClick={runReview} disabled={loading||!reviewContent.trim()}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
-              style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+              style={{ background:"#111827" }}>
               {loading ? <><RefreshCw size={14} className="animate-spin" />Reviewing…</> : "🔁 Run Dual AI Review"}
             </button>
           </div>
@@ -167,7 +167,7 @@ export default function AIToolsPage() {
               placeholder="Paste email here…" className={inp+" resize-none"} />
             <button onClick={parseEmail} disabled={loading||!emailContent.trim()}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
-              style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+              style={{ background:"#111827" }}>
               {loading ? <><RefreshCw size={14} className="animate-spin" />Parsing…</> : "🤖 Parse with AI"}
             </button>
           </div>

@@ -19,7 +19,7 @@ export default async function ClientPortalView({ params }: { params: { id: strin
   return (
     <div style={{ fontFamily:"Arial,sans-serif", background:"#f9fafb", minHeight:"100vh", padding:"0" }}>
       {/* Header */}
-      <div style={{ background:"linear-gradient(135deg,#f97316,#ea580c)", padding:"24px 32px", color:"#fff" }}>
+      <div style={{ background:"#111827", padding:"24px 32px", color:"#fff" }}>
         <div style={{ maxWidth:800, margin:"0 auto" }}>
           <div style={{ fontSize:12, opacity:0.8, marginBottom:4 }}>Brookstone Developers · Project Update</div>
           <h1 style={{ fontSize:24, fontWeight:900, margin:0 }}>{project.name}</h1>

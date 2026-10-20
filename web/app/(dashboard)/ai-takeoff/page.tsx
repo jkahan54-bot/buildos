@@ -75,7 +75,7 @@ export default function AITakeoffPage() {
           {image && <button onClick={()=>{setImage(null);setFile(null);setResult(null);}} className="px-4 py-2.5 rounded-lg border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 bg-white"><RefreshCw size={14} className="inline mr-1.5" />Clear</button>}
           <button onClick={analyze} disabled={!file||analyzing}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+            style={{ background:"#111827" }}>
             {analyzing?<><RefreshCw size={14} className="animate-spin" />Reading plan…</>:<><Calculator size={14} />Generate Takeoff</>}
           </button>
         </div>

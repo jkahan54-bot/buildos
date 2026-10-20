@@ -67,7 +67,7 @@ export default function QuotesPage() {
           <button onClick={()=>setView("list")} className="text-sm text-orange-500 hover:text-orange-600 mb-1">← Back to quotes</button>
           <h1 className="text-xl font-bold text-gray-900">{current.id?"Edit Quote":"New Quote"}</h1>
         </div>
-        <button onClick={save} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>Save Quote</button>
+        <button onClick={save} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm" style={{ background:"#111827" }}>Save Quote</button>
       </div>
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4">
         <div className="grid grid-cols-3 gap-4">
@@ -124,7 +124,7 @@ export default function QuotesPage() {
       <div className="flex items-start justify-between gap-3">
         <div><h1 className="text-xl lg:text-2xl font-bold text-gray-900">Quote Builder</h1>
           <p className="text-gray-500 text-sm mt-0.5">{quotes.length} quotes · AI writes the cover letter</p></div>
-        <button onClick={newQuote} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm flex-shrink-0" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+        <button onClick={newQuote} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm flex-shrink-0" style={{ background:"#111827" }}>
           <Plus size={15} />New Quote</button>
       </div>
       {quotes.length===0 ? (

@@ -60,7 +60,7 @@ function AcceptInviteInner() {
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-2 justify-center mb-8">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-sm shadow-sm"
-            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
+            style={{ background:"#111827" }}>B</div>
           <span className="font-bold text-gray-900 text-lg">BuildOS</span>
         </div>
 
@@ -99,7 +99,7 @@ function AcceptInviteInner() {
 
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-              style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+              style={{ background:"#111827" }}>
               {loading ? "Setting up…" : <><span>Join BuildOS</span><ArrowRight size={14} /></>}
             </button>
           </form>

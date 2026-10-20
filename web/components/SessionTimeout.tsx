@@ -98,7 +98,7 @@ export default function SessionTimeout() {
           </button>
           <button onClick={stayLoggedIn}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-all"
-            style={{ background: "linear-gradient(135deg,#f97316,#ea580c)" }}>
+            style={{ background: "#111827" }}>
             Stay logged in
           </button>
         </div>

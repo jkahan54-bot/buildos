@@ -123,7 +123,7 @@ export default function SystemPage() {
           </button>
           <button onClick={runHealthCheck} disabled={checkStatus === "checking"}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm disabled:opacity-60"
-            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+            style={{ background:"#111827" }}>
             <RefreshCw size={14} className={checkStatus === "checking" ? "animate-spin" : ""} />
             {checkStatus === "checking" ? `${elapsed}s…` : "Run Check"}
           </button>
@@ -314,7 +314,7 @@ export default function SystemPage() {
             <p className="text-sm text-gray-500">A backup is created automatically before every fix. You can also backup manually.</p>
             <button onClick={createBackup}
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm"
-              style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+              style={{ background:"#111827" }}>
               <Archive size={14} />Backup Now
             </button>
           </div>

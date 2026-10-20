@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-white text-2xl shadow-md mx-auto mb-6"
-            style={{ background: "linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
+            style={{ background: "#111827" }}>B</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Account Pending Approval</h1>
           <p className="text-gray-500 mb-6">
             Your account has been created successfully. An administrator needs to approve your access before you can log in.

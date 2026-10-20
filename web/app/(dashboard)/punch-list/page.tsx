@@ -48,7 +48,7 @@ export default function PunchListPage() {
       <div className="flex items-start justify-between gap-3">
         <div><h1 className="text-xl lg:text-2xl font-bold text-gray-900">Punch List</h1>
           <p className="text-gray-500 text-sm mt-0.5">{openCount} open items · {items.filter(i=>i.status==="completed").length} completed</p></div>
-        <button onClick={()=>setShowForm(true)} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm flex-shrink-0" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}><Plus size={15} />Add Item</button>
+        <button onClick={()=>setShowForm(true)} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm flex-shrink-0" style={{ background:"#111827" }}><Plus size={15} />Add Item</button>
       </div>
 
       {showForm && (
@@ -78,7 +78,7 @@ export default function PunchListPage() {
               </select></div>
             <div className="flex gap-3">
               <button type="button" onClick={()=>setShowForm(false)} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-600 bg-gray-100">Cancel</button>
-              <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>{loading?"Saving…":"Add"}</button>
+              <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"#111827" }}>{loading?"Saving…":"Add"}</button>
             </div>
           </form>
         </div>

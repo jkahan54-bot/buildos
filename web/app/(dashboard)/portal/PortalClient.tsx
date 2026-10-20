@@ -68,7 +68,7 @@ export default function PortalClient({ projects, appUrl }: { projects: any[]; ap
                   </button>
                   <Link href={`/client/${p.id}`} target="_blank"
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white transition-all whitespace-nowrap shadow-sm"
-                    style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+                    style={{ background:"#111827" }}>
                     <ExternalLink size={12} />Preview
                   </Link>
                 </div>

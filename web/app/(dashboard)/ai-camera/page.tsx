@@ -135,7 +135,7 @@ export default function AICameraPage() {
             </button>
             <button onClick={() => cameraRef.current?.click()}
               className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition-all shadow-sm"
-              style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+              style={{ background:"#111827" }}>
               <Camera size={16} />Take Photo
             </button>
             <input ref={cameraRef} type="file" accept="image/*" capture="environment"

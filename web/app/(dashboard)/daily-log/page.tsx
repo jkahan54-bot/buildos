@@ -74,7 +74,7 @@ export default function DailyLogPage() {
         <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Issues / delays</label>
           <textarea value={form.issues} onChange={e => set("issues", e.target.value)} rows={2} className={inp + " resize-none"} placeholder="Any issues, delays or safety concerns…" /></div>
         <button type="submit" disabled={loading} className="w-full py-3 rounded-lg text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-          style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>
+          style={{ background:"#111827" }}>
           {loading ? "Saving…" : "Save Daily Log"}
         </button>
       </form>
