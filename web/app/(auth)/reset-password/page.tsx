@@ -27,18 +27,24 @@ function ResetPasswordInner() {
   useEffect(() => {
     const supabase = createClient();
     const code = params.get("code");
+    const hashParams = new URLSearchParams(typeof window !== "undefined" ? window.location.hash.slice(1) : "");
+    const access_token  = hashParams.get("access_token");
+    const refresh_token = hashParams.get("refresh_token");
 
     (async () => {
-      // Supabase's recovery link uses the PKCE flow (a ?code=... param), which
-      // needs to be explicitly exchanged for a session — it isn't auto-detected
-      // the way the older hash-token flow was.
-      if (code) {
+      // Implicit-flow recovery links carry tokens in the URL fragment (never
+      // sent to any server, so a mail-client link-safety prefetch can't burn
+      // them). Fall back to the PKCE ?code= form for compatibility.
+      if (access_token && refresh_token) {
+        const { error: setErr } = await supabase.auth.setSession({ access_token, refresh_token });
+        if (setErr) { setError(`Could not start a session: ${setErr.message}`); setReady(true); return; }
+      } else if (code) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) {
-          setError("This reset link is invalid or has expired. Request a new one from the login page.");
-          setReady(true);
-          return;
-        }
+        if (exchangeError) { setError(`This reset link didn't work: ${exchangeError.message}`); setReady(true); return; }
+      } else {
+        setError("No reset token found in this link. Request a new one from the login page.");
+        setReady(true);
+        return;
       }
       const { data } = await supabase.auth.getSession();
       if (!data.session) { setError("This reset link is invalid or has expired. Request a new one from the login page."); }
