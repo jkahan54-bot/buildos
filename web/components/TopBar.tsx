@@ -77,9 +77,8 @@ export default function TopBar({ profile, menuPrefs }: { profile: any; menuPrefs
 
         {/* Logo — mobile only */}
         <div className="lg:hidden flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-xs"
-            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
-          <span className="font-bold text-gray-900 text-sm">BuildOS</span>
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-xs bg-gray-900">B</div>
+          <span className="font-semibold text-gray-900 text-sm">BuildOS</span>
         </div>
 
         <span className="hidden lg:block text-sm font-medium text-gray-500">{org}</span>
@@ -133,10 +132,9 @@ export default function TopBar({ profile, menuPrefs }: { profile: any; menuPrefs
           <div className="relative w-[280px] bg-white h-full flex flex-col shadow-xl">
             <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm"
-                  style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm bg-gray-900">B</div>
                 <div>
-                  <div className="font-bold text-sm text-gray-900">BuildOS</div>
+                  <div className="font-semibold text-sm text-gray-900">BuildOS</div>
                   <div className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full inline-block"
                     style={{ color: meta.color, background: meta.bg }}>{meta.label}</div>
                 </div>
@@ -175,10 +173,10 @@ export default function TopBar({ profile, menuPrefs }: { profile: any; menuPrefs
                       const active = pathname === item.href;
                       return (
                         <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                            active ? "bg-orange-50 text-orange-700" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                            active ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                           }`}>
-                          <Icon size={17} strokeWidth={active ? 2.4 : 1.8} style={active ? { color: "#ea580c" } : {}} />
+                          <Icon size={17} strokeWidth={active ? 2.2 : 1.8} />
                           {item.label}
                         </Link>
                       );

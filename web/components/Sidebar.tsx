@@ -16,12 +16,12 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
   // Master Owner — everything
   owner: [
     { href:"/dashboard",       label:"Dashboard",       icon:LayoutDashboard },
-    { href:"/command",         label:"Command Center",  icon:Bot,            badge:"👑" },
-    { href:"/sites",           label:"Site Command",    icon:BarChart2,      badge:"🎯" },
-    { href:"/daily-summary",   label:"Daily Review",    icon:ClipboardList,  badge:"📋" },
-    { href:"/pipeline",        label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
-    { href:"/precon",          label:"Pre-Con",         icon:FileSignature,  badge:"📐" },
-    { href:"/walkthroughs",    label:"Walkthroughs",    icon:Camera,         badge:"🏥" },
+    { href:"/command",         label:"Command Center",  icon:Bot },
+    { href:"/sites",           label:"Site Command",    icon:BarChart2 },
+    { href:"/daily-summary",   label:"Daily Review",    icon:ClipboardList },
+    { href:"/pipeline",        label:"Pipeline",        icon:GitPullRequest },
+    { href:"/precon",          label:"Pre-Con",         icon:FileSignature },
+    { href:"/walkthroughs",    label:"Walkthroughs",    icon:Camera },
     { href:"/projects",        label:"Projects",        icon:FolderKanban },
     { href:"/milestones",      label:"Milestones",      icon:Milestone },
     { href:"/budget",          label:"Budget",          icon:DollarSign },
@@ -44,10 +44,10 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
     { href:"/quotes",          label:"Quote Builder",   icon:Receipt },
     { href:"/portal",          label:"Client Portal",   icon:Globe },
     { href:"/messages",        label:"Messages",        icon:MessageSquare },
-    { href:"/permissions",     label:"Role Access",     icon:Lock,       badge:"🔑" },
+    { href:"/permissions",     label:"Role Access",     icon:Lock },
     { href:"/settings",        label:"Settings",        icon:Settings },
-    { href:"/security",        label:"Security Log",    icon:Shield,     badge:"🔒" },
-    { href:"/system",          label:"System Health",   icon:Settings,   badge:"⚡" },
+    { href:"/security",        label:"Security Log",    icon:Shield },
+    { href:"/system",          label:"System Health",   icon:Settings },
   ],
   // Jobsite Owner — high-level project visibility only
   jobsite_owner: [
@@ -60,11 +60,11 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
   ],
   admin: [
     { href:"/dashboard",      label:"Dashboard",       icon:LayoutDashboard },
-    { href:"/sites",          label:"Site Command",    icon:BarChart2,      badge:"🎯" },
-    { href:"/daily-summary",  label:"Daily Review",    icon:ClipboardList,  badge:"📋" },
-    { href:"/pipeline",       label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
-    { href:"/precon",         label:"Pre-Con",         icon:FileSignature,  badge:"📐" },
-    { href:"/walkthroughs",   label:"Walkthroughs",    icon:Camera,         badge:"🏥" },
+    { href:"/sites",          label:"Site Command",    icon:BarChart2 },
+    { href:"/daily-summary",  label:"Daily Review",    icon:ClipboardList },
+    { href:"/pipeline",       label:"Pipeline",        icon:GitPullRequest },
+    { href:"/precon",         label:"Pre-Con",         icon:FileSignature },
+    { href:"/walkthroughs",   label:"Walkthroughs",    icon:Camera },
     { href:"/projects",       label:"Projects",        icon:FolderKanban },
     { href:"/milestones",     label:"Milestones",      icon:Milestone },
     { href:"/budget",         label:"Budget",          icon:DollarSign },
@@ -86,17 +86,17 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
     { href:"/quotes",         label:"Quote Builder",   icon:Receipt },
     { href:"/portal",         label:"Client Portal",   icon:Globe },
     { href:"/messages",       label:"Messages",        icon:MessageSquare },
-    { href:"/permissions",    label:"Role Access",     icon:Lock,       badge:"🔑" },
+    { href:"/permissions",    label:"Role Access",     icon:Lock },
     { href:"/settings",       label:"Settings",        icon:Settings },
-    { href:"/security",       label:"Security Log",    icon:Shield,     badge:"🔒" },
-    { href:"/system",         label:"System Health",   icon:Settings,   badge:"⚡" },
+    { href:"/security",       label:"Security Log",    icon:Shield },
+    { href:"/system",         label:"System Health",   icon:Settings },
   ],
   office: [
     { href:"/dashboard",      label:"Dashboard",       icon:LayoutDashboard },
-    { href:"/sites",          label:"Site Command",    icon:BarChart2,      badge:"🎯" },
-    { href:"/daily-summary",  label:"Daily Review",    icon:ClipboardList,  badge:"📋" },
-    { href:"/pipeline",       label:"Pipeline",        icon:GitPullRequest, badge:"🔥" },
-    { href:"/precon",         label:"Pre-Con",         icon:FileSignature,  badge:"📐" },
+    { href:"/sites",          label:"Site Command",    icon:BarChart2 },
+    { href:"/daily-summary",  label:"Daily Review",    icon:ClipboardList },
+    { href:"/pipeline",       label:"Pipeline",        icon:GitPullRequest },
+    { href:"/precon",         label:"Pre-Con",         icon:FileSignature },
     { href:"/projects",       label:"Projects",        icon:FolderKanban },
     { href:"/budget",         label:"Budget",          icon:DollarSign },
     { href:"/invoices",       label:"Invoices",        icon:Receipt },
@@ -118,10 +118,10 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
   ],
   field: [
     { href:"/my-day",         label:"My Day",        icon:LayoutDashboard },
-    { href:"/daily-summary",  label:"Daily Review",  icon:ClipboardList, badge:"📋" },
+    { href:"/daily-summary",  label:"Daily Review",  icon:ClipboardList },
     { href:"/timelog",        label:"Time Log",      icon:Clock },
     { href:"/daily-log",      label:"Daily Log",     icon:CalendarCheck },
-    { href:"/walkthroughs",   label:"Walkthroughs",  icon:Camera,        badge:"🏥" },
+    { href:"/walkthroughs",   label:"Walkthroughs",  icon:Camera },
     { href:"/projects",       label:"Projects",      icon:FolderKanban },
     { href:"/schedule",       label:"Schedule",      icon:Calendar },
     { href:"/milestones",     label:"Milestones",    icon:Milestone },
@@ -138,12 +138,13 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
   ],
 };
 
+// Flat, desaturated role tints — a label and a color, no decorative icons.
 export const ROLE_META: Record<string,{ label:string; color:string; bg:string; icon?:string }> = {
-  owner:         { label:"Master Owner",   color:"#92400e", bg:"#fef3c7", icon:"👑" },
-  jobsite_owner: { label:"Jobsite Owner",  color:"#7c3aed", bg:"#ede9fe", icon:"🏗️" },
-  admin:         { label:"Administrator",  color:"#ea580c", bg:"#fff7ed" },
-  office:        { label:"Office Manager", color:"#2563eb", bg:"#eff6ff" },
-  field:         { label:"Field Worker",   color:"#16a34a", bg:"#f0fdf4" },
+  owner:         { label:"Master Owner",   color:"#92400e", bg:"#fef3c7" },
+  jobsite_owner: { label:"Jobsite Owner",  color:"#6d28d9", bg:"#f3f0ff" },
+  admin:         { label:"Administrator",  color:"#c2410c", bg:"#fff1e8" },
+  office:        { label:"Office Manager", color:"#1d4ed8", bg:"#eef3ff" },
+  field:         { label:"Field Worker",   color:"#15803d", bg:"#effaf1" },
 };
 
 // Menu sections — items are grouped under these headers in the sidebar.
@@ -210,13 +211,12 @@ export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPref
       {/* Logo */}
       <div className="px-4 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-black text-sm shadow-sm"
-            style={{ background:"linear-gradient(135deg,#f97316,#ea580c)" }}>B</div>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-bold text-sm bg-gray-900">B</div>
           <div>
-            <div className="font-bold text-sm text-gray-900 tracking-tight">BuildOS</div>
-            <div className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-0.5 inline-flex items-center gap-0.5"
+            <div className="font-semibold text-sm text-gray-900 tracking-tight">BuildOS</div>
+            <div className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-0.5 inline-flex items-center"
               style={{ color: meta.color, background: meta.bg }}>
-              {meta.icon && <span>{meta.icon}</span>}{meta.label}
+              {meta.label}
             </div>
           </div>
         </div>
@@ -226,7 +226,7 @@ export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPref
       <nav className="flex-1 px-2 py-3 overflow-y-auto">
         {groups.map(({ section, items }) => (
           <div key={section} className="mb-3">
-            <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 select-none">{section}</div>
+            <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 select-none">{section}</div>
             <div className="space-y-px">
               {items.map(item => {
                 const Icon   = item.icon;
@@ -234,16 +234,15 @@ export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPref
                   (item.href !== "/dashboard" && item.href !== "/my-day" && pathname.startsWith(item.href + "/"));
                 return (
                   <Link key={item.href} href={item.href}
-                    className={`flex items-center gap-2.5 px-3 py-[7px] rounded-lg text-[13px] font-medium transition-all ${
+                    className={`flex items-center gap-2.5 px-3 py-[7px] rounded-md text-[13px] font-medium transition-all ${
                       active
-                        ? "bg-orange-50 text-orange-700"
+                        ? "bg-gray-900 text-white"
                         : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                     }`}>
-                    <Icon size={15} className="flex-shrink-0" strokeWidth={active ? 2.4 : 1.8}
-                      style={active ? { color: "#ea580c" } : {}} />
+                    <Icon size={15} className="flex-shrink-0" strokeWidth={active ? 2.2 : 1.8} />
                     <span className="flex-1 truncate">{item.label}</span>
                     {item.badge && (
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${active ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-500"}`}>
+                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${active ? "bg-white/15 text-white" : "bg-gray-100 text-gray-500"}`}>
                         {item.badge}
                       </span>
                     )}
@@ -258,7 +257,7 @@ export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPref
       {/* User */}
       <div className="px-2 py-3 border-t border-gray-100">
         <div className="flex items-center gap-2.5 px-2.5 py-2 mb-1">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm"
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
             style={{ background: meta.bg, color: meta.color }}>
             {initials}
           </div>
@@ -268,7 +267,7 @@ export default function Sidebar({ profile, menuPrefs }: { profile: any; menuPref
           </div>
         </div>
         <button onClick={logout}
-          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all">
+          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all">
           <LogOut size={13} />Sign Out
         </button>
       </div>
