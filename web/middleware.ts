@@ -88,6 +88,15 @@ export async function middleware(request: NextRequest) {
         status: 429, headers: { "Content-Type": "application/json" },
       });
     }
+  } else if (pathname.startsWith("/api/whatsapp-webhook") || pathname.startsWith("/api/email-inbound")) {
+    // Backend intake endpoints, key-authed and not user-facing. A reconnect after
+    // downtime replays a large backlog in a short burst — the general API limit
+    // silently dropped most of a backlog once (data loss), so this needs real headroom.
+    if (!checkRateLimit(`intake:${ip}`, 3000, 60 * 1000)) {
+      return new NextResponse(JSON.stringify({ error: "Too many requests." }), {
+        status: 429, headers: { "Content-Type": "application/json" },
+      });
+    }
   } else if (pathname.startsWith("/api/")) {
     // General API: 200 req/min per IP
     if (!checkRateLimit(`api:${ip}`, 200, 60 * 1000)) {
