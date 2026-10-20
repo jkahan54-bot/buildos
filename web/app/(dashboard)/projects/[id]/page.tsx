@@ -4,11 +4,12 @@ import Link from "next/link";
 
 export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
   const supabase = await createClient();
-  const [{ data: project }, { data: checklists }, { data: incidents }, { data: rfis }] = await Promise.all([
+  const [{ data: project }, { data: checklists }, { data: incidents }, { data: rfis }, { data: vendors }] = await Promise.all([
     supabase.from("projects").select("*").eq("id", params.id).single(),
     supabase.from("medical_checklists").select("*, medical_checklist_items(id, checked)").eq("project_id", params.id),
     supabase.from("safety_incidents").select("id, status").eq("project_id", params.id),
     supabase.from("rfis").select("id, status").eq("project_id", params.id),
+    supabase.from("project_vendors").select("vendor_name, last_activity_at").eq("project_id", params.id).order("last_activity_at", { ascending: false }),
   ]);
 
   if (!project) notFound();
@@ -159,6 +160,29 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
               <p className="text-sm mt-1 text-gray-600">Upload your proposal Excel to auto-create all room checklists</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Vendors / subs on this job — synced from the OneDrive job folder */}
+      {(vendors?.length ?? 0) > 0 && (
+        <div className="bg-surface rounded-xl border border-border p-5">
+          <div className="font-bold mb-3">Who's on the Job</div>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {vendors!.map((v) => {
+              const days = v.last_activity_at ? Math.floor((Date.now() - new Date(v.last_activity_at).getTime()) / 86400000) : null;
+              return (
+                <div key={v.vendor_name} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-surface-card border border-border">
+                  <span className="text-sm font-medium truncate">{v.vendor_name}</span>
+                  {days !== null && (
+                    <span className="text-xs text-gray-400 flex-shrink-0">
+                      {days === 0 ? "today" : `${days}d ago`}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-gray-400 mt-3">Pulled from the job's vendor/invoice folder — "recent" means a file was last added that many days ago, not necessarily on-site today.</p>
         </div>
       )}
 
