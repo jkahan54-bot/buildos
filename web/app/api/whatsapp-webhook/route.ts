@@ -39,6 +39,12 @@ const PROJECT_MAP: { keywords: string[]; id: string; name: string }[] = [
   { keywords: ["myrtle","57-23"],         id: "fd192abe-57ef-4a7e-b121-217e3cd48287", name: "57-23 Myrtle Ave" },
   { keywords: ["stuyvesant"],             id: "f487600c-30e7-4301-b12f-d550896ede01", name: "124 Stuyvesant Ave" },
   { keywords: ["nostrand"],               id: "55a52d3a-5b54-46cc-9d9e-c8ea31e4c4c6", name: "517 Nostrand Ave" },
+  // "57-34" is also a neighbor lot on the Onderdonk thread, so Catalpa matches by street name only.
+  { keywords: ["1572"],                   id: "c3f56853-faff-402a-89b5-24b9070e4da2", name: "1572-61st" },
+  { keywords: ["catalpa"],                id: "feab9895-6fd9-4400-ae79-e103ca4ad90a", name: "57-34 Catalpa" },
+  { keywords: ["woodstock"],              id: "9b31b14d-5373-4265-b26d-1cf88e547b61", name: "Woodstock Center" },
+  { keywords: ["king david","cropsy"],    id: "cf84a06a-5eb9-495a-b863-70d28a9b82d5", name: "King David Nursing Home" },
+  { keywords: ["harlem"],                 id: "3428e813-5bc5-4c02-8520-5cb0795b8938", name: "Harlem Center for Rehabilitation" },
   // "20th" alone would false-match dates ("the 20th"), so require the street form.
   { keywords: ["5909","20th ave","20th street","20th st"], id: "a2850fb1-005c-4dcd-9664-e9cc43edd15a", name: "5909 20th Ave" },
 ];
