@@ -28,7 +28,9 @@ const UNVERIFIED_PROJECT_ID = "5c25ba58-7cfa-47c3-9acb-c95f59772f6c"; // "⚠️
 // Project mapping
 const PROJECT_MAP: { keywords: string[]; id: string; name: string }[] = [
   { keywords: ["ditmas","125","123"],     id: "8d3354b0-1028-4b5c-9147-79f04f3e9a5c", name: "123-125 Ditmas" },
-  { keywords: ["klein","1852","60th"],    id: "6e6be30d-1374-4a3f-989e-8f265b29a308", name: "Klein 1852 60th" },
+  // Bare "klein" is also Sam Klein (KNE Group principal), who appears on most threads — it misfiled
+  // unrelated emails here. The 1852 street number still matches the "Klein 1852-60th" WhatsApp group.
+  { keywords: ["klein 1852","1852","60th st","60th street"], id: "6e6be30d-1374-4a3f-989e-8f265b29a308", name: "Klein 1852 60th" },
   { keywords: ["910","onderdonk"],        id: "84ac6d50-0a40-44db-acbe-5975c6a5c877", name: "910 Onderdonk" },
   { keywords: ["rambam"],                 id: "4e67b531-3402-49d3-ae88-cf65f450d649", name: "Rambam Clinic" },
   { keywords: ["chc"],                    id: "1231a2e5-f98c-4601-98ca-1e9eef4f995f", name: "CHC Construction" },
