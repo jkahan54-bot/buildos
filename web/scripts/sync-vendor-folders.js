@@ -13,6 +13,7 @@
 const fs = require("fs");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
+const { inferTrade } = require("./lib/inferTrade");
 
 const env = {};
 for (const line of fs.readFileSync(path.join(__dirname, "..", ".env.local"), "utf8").split(/\r?\n/)) {
@@ -35,6 +36,8 @@ const FOLDER_TO_PROJECT = {
   "185 Concord": "185 Concord",
   "57-23 Myrtle": "57-23 Myrtle Ave",
   "5909 20th Ave": "5909 20th Ave",
+  "124 Stuyvesant Ave": "124 Stuyvesant Ave",
+  "517 Nostrand": "517 Nostrand Ave",
 };
 
 const VENDOR_FOLDER_PATTERN = /vendor|subcontractor|invoice/i;
@@ -79,6 +82,7 @@ function latestMtimeRecursive(dir) {
       return {
         project_id: projectId,
         vendor_name: e.name,
+        trade: inferTrade(e.name),
         last_activity_at: mtime ? new Date(mtime).toISOString() : null,
         source_path: full,
         synced_at: new Date().toISOString(),

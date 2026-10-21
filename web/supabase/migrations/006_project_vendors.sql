@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS project_vendors (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   vendor_name TEXT NOT NULL,
+  trade TEXT,
   last_activity_at TIMESTAMPTZ,
   source_path TEXT,
   synced_at TIMESTAMPTZ DEFAULT NOW(),

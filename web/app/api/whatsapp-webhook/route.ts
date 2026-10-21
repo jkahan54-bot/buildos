@@ -37,6 +37,8 @@ const PROJECT_MAP: { keywords: string[]; id: string; name: string }[] = [
   { keywords: ["ocean","1187"],           id: "e974caa4-d1f8-46f8-b0f4-6e0fddcc7a5a", name: "1187 Ocean Avenue" },
   { keywords: ["concord"],                id: "711eb036-0047-47d6-80c4-d5b69f9413e7", name: "185 Concord" },
   { keywords: ["myrtle","57-23"],         id: "fd192abe-57ef-4a7e-b121-217e3cd48287", name: "57-23 Myrtle Ave" },
+  { keywords: ["stuyvesant"],             id: "f487600c-30e7-4301-b12f-d550896ede01", name: "124 Stuyvesant Ave" },
+  { keywords: ["nostrand"],               id: "55a52d3a-5b54-46cc-9d9e-c8ea31e4c4c6", name: "517 Nostrand Ave" },
   // "20th" alone would false-match dates ("the 20th"), so require the street form.
   { keywords: ["5909","20th ave","20th street","20th st"], id: "a2850fb1-005c-4dcd-9664-e9cc43edd15a", name: "5909 20th Ave" },
 ];
