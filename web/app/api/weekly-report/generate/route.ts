@@ -199,8 +199,6 @@ Use these exact labels for sites, in this order: ${OWNER_SITES.map(s => `"${s.la
       ${keyDates.length ? `<h3 style="margin:16px 0 2px;font-size:16px">Key dates next week</h3>${ul(keyDates)}` : ""}
       ${others.filter(o => o.bullets?.length).length ? `<hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0"/><div style="font-size:12px;text-transform:uppercase;color:#6b7280;margin-bottom:4px">Other active sites — internal, not part of the owner report</div>${others.filter(o => o.bullets?.length).map(o => `<h3 style="margin:12px 0 2px;font-size:15px">${esc(o.name)}</h3>${ul(o.bullets)}`).join("")}` : ""}
       <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0"/>
-      <div style="font-size:12px;text-transform:uppercase;color:#6b7280;margin-bottom:4px">Paste-ready for WhatsApp</div>
-      <pre style="white-space:pre-wrap;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;font-size:13px">${esc(waText)}</pre>
       ${notes.map(n => `<p style="color:#b45309;font-size:13px">${esc(n)}</p>`).join("")}
       <p style="color:#9ca3af;font-size:12px">Built automatically by BuildOS from WhatsApp field groups and the captured email tasks. Payment amounts and private legal detail are left out.</p>
     </div>`;
