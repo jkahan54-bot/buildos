@@ -65,7 +65,7 @@ const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   // Safe deploy check for tooling: older deployments ignore this and 401, so nothing is ever sent by a ping.
-  if (body.ping) return NextResponse.json({ version: "friday-format-v3" });
+  if (body.ping) return NextResponse.json({ version: "friday-format-v4" });
   if (!REPORT_TOKEN || body.token !== REPORT_TOKEN) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -152,7 +152,9 @@ Use these exact labels for sites, in this order: ${OWNER_SITES.map(s => `"${s.la
       const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "x-api-key": process.env.ANTHROPIC_API_KEY!, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-        body: JSON.stringify({ model, max_tokens: 3000, messages: [{ role: "user", content: prompt }] }),
+        // Sonnet 5.5 otherwise burns the whole token budget on thinking and returns no answer; this is
+        // the supported way to switch it off (plain "disabled" is rejected on this model).
+        body: JSON.stringify({ model, max_tokens: 3000, ...(model.includes("sonnet-5") ? { thinking: { type: "between_tools" } } : {}), messages: [{ role: "user", content: prompt }] }),
         signal: AbortSignal.timeout(timeoutMs),
       });
       const aiData = await aiRes.json();
