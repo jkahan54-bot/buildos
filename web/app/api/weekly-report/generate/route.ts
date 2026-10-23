@@ -64,6 +64,8 @@ const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, 
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
+  // Safe deploy check for tooling: older deployments ignore this and 401, so nothing is ever sent by a ping.
+  if (body.ping) return NextResponse.json({ version: "friday-format-v3" });
   if (!REPORT_TOKEN || body.token !== REPORT_TOKEN) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -129,6 +131,8 @@ RULES
 - NO dollar amounts, NO invoices/payment chasing, NO private legal commentary or negotiation detail, NO internal gripes about people.
 - Use ONLY facts in the data below. Never invent progress, dates or approvals. If a site had little real activity, write fewer bullets rather than padding.
 - WhatsApp chatter ("ok", "thanks", questions) is noise — extract only real field progress, deliveries, inspections and schedule facts.
+- A question, hope or request is NOT a fact ("can we start foundation now that the agreement is signed?" does not mean it is signed). Only report something as done/approved/signed if a message or task states it happened, and prefer an authoritative status summary over casual chat if they disagree.
+- Only include items dated within this week; ignore anything that clearly refers to an older period.
 - Put upcoming dated events (inspections, mobilization, deadlines) in key_dates.
 
 OWNER SITES (always include each one that has data):
@@ -148,11 +152,12 @@ Use these exact labels for sites, in this order: ${OWNER_SITES.map(s => `"${s.la
       const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "x-api-key": process.env.ANTHROPIC_API_KEY!, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-        body: JSON.stringify({ model, max_tokens: 2500, messages: [{ role: "user", content: prompt }] }),
+        body: JSON.stringify({ model, max_tokens: 3000, messages: [{ role: "user", content: prompt }] }),
         signal: AbortSignal.timeout(timeoutMs),
       });
       const aiData = await aiRes.json();
-      const text = aiData.content?.[0]?.text ?? "";
+      // Newer models can return a "thinking" block before the answer — take the text block, not content[0].
+      const text = (aiData.content ?? []).find((b: any) => b.type === "text")?.text ?? "";
       if (!text) { aiError = JSON.stringify(aiData).slice(0, 300); continue; }
       parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
       break;
