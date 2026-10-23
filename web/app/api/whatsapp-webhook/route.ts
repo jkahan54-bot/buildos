@@ -63,7 +63,7 @@ function matchProject(text: string): { id: string; name: string } | null {
 
 // Log EVERY WhatsApp message (not just ones that became tasks) so nightly
 // reports can show a full per-group transcript, not just the curated subset.
-async function logWaMessage(opts: { groupName: string; sender: string; body: string; projectId: string | null; action: string }) {
+async function logWaMessage(opts: { groupName: string; sender: string; body: string; projectId: string | null; action: string; sentAt?: string }) {
   await admin.from("whatsapp_messages").insert({
     org_id: ORG_ID,
     project_id: opts.projectId,
@@ -71,7 +71,7 @@ async function logWaMessage(opts: { groupName: string; sender: string; body: str
     sender: opts.sender,
     content: opts.body.slice(0, 2000),
     action: opts.action,
-    sent_at: new Date().toISOString(),
+    sent_at: opts.sentAt ?? new Date().toISOString(),
   }).then(({ error }) => { if (error) console.error("[whatsapp-webhook] log failed:", error.message); });
 }
 
@@ -155,6 +155,10 @@ export async function POST(req: NextRequest) {
         const rawMessage = msg.text?.body ?? "";
         const fromPhone = msg.from;
         if (!rawMessage) continue;
+        // Real send time (unix seconds) when the scanner/Meta provides it — otherwise a backlog
+        // replay would stamp months-old messages with "now" and distort the weekly report.
+        const tsNum = Number(msg.timestamp);
+        const msgSentAt = tsNum > 1e9 && tsNum < 4e9 ? new Date(tsNum * 1000).toISOString() : undefined;
 
         const metaProfile = metaContacts.find((c: any) => c.wa_id === fromPhone);
         const senderName = lookupSenderName(fromPhone, metaProfile?.profile?.name);
@@ -243,11 +247,11 @@ export async function POST(req: NextRequest) {
                 fromPhone,
                 `✅ ${matched} item${matched > 1 ? "s" : ""} marked complete on ${project.name}`
               );
-              await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project.id, action: "completion" });
+              await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project.id, action: "completion", sentAt: msgSentAt });
               return NextResponse.json({ ok: true, action: "completed", count: matched });
             }
           }
-          await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "completion_no_match" });
+          await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "completion_no_match", sentAt: msgSentAt });
           return NextResponse.json({ ok: true, action: "done_logged" });
         }
 
@@ -323,7 +327,7 @@ export async function POST(req: NextRequest) {
               fromPhone,
               `📋 ${createdCount} item${createdCount > 1 ? "s" : ""} added to review for ${projName}.\n\nReview: buildos-six.vercel.app/daily-summary`
             );
-            await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "task_created" });
+            await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "task_created", sentAt: msgSentAt });
             return NextResponse.json({ ok: true, action: "items_created", count: createdCount });
           }
         }
@@ -341,12 +345,12 @@ export async function POST(req: NextRequest) {
           });
           await sendWhatsAppMessage(fromPhone, `🚨 SAFETY ALERT logged. Check BuildOS immediately.`);
           await sendOwnerAlert(`🚨 WhatsApp safety alert: "${rawMessage.slice(0, 100)}"`);
-          await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "safety_incident" });
+          await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "safety_incident", sentAt: msgSentAt });
           return NextResponse.json({ ok: true, action: "safety_incident" });
         }
 
         // ── Fallback — chatter (still logged in full for reporting) ────
-        await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "chatter" });
+        await logWaMessage({ groupName: senderPhone, sender: senderName, body: rawMessage, projectId: project?.id ?? null, action: "chatter", sentAt: msgSentAt });
         await admin.from("system_events").insert({
           org_id: ORG_ID,
           type: "whatsapp_message",

@@ -6,7 +6,7 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM = process.env.RESEND_FROM || "BuildOS Reports <onboarding@resend.dev>";
 
-export async function sendReportEmail(opts: { to: string[]; subject: string; html: string; text?: string }): Promise<{ ok: boolean; error?: string }> {
+export async function sendReportEmail(opts: { to: string[]; subject: string; html: string; text?: string; from?: string }): Promise<{ ok: boolean; error?: string }> {
   if (!RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY not set — email not sent");
     return { ok: false, error: "RESEND_API_KEY not configured" };
@@ -19,7 +19,7 @@ export async function sendReportEmail(opts: { to: string[]; subject: string; htm
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: FROM,
+        from: opts.from ?? FROM,
         to: opts.to,
         subject: opts.subject,
         html: opts.html,
