@@ -1,0 +1,48 @@
+name: Snow switch (Brooklyn 11204)
+
+# Every 15 minutes, check the NWS hourly forecast. If snow starts within 2 hours,
+# fire the IFTTT webhook that turns on the Kasa switch. Once per snow day.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:   # "Run workflow" button for a manual check
+
+concurrency:
+  group: snow-switch
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Remembers which snow day we already turned the switch on for
+      - name: Restore last fired snow day
+        uses: actions/cache/restore@v4
+        with:
+          path: .snow-fired
+          key: snow-fired-none
+          restore-keys: snow-fired-
+
+      - name: Check forecast
+        id: snow
+        env:
+          IFTTT_WEBHOOK_KEY: ${{ secrets.IFTTT_WEBHOOK_KEY }}
+          IFTTT_EVENT: snow_coming
+          LEAD_HOURS: '2'
+          MIN_POP: '40'
+        run: |
+          export ALREADY_FIRED_FOR="$(cat .snow-fired 2>/dev/null || true)"
+          python3 snow-switch/check_snow.py
+
+      - name: Record snow day
+        if: steps.snow.outputs.fired == 'true'
+        run: echo "${{ steps.snow.outputs.snow_start }}" > .snow-fired
+
+      - name: Save fired snow day
+        if: steps.snow.outputs.fired == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .snow-fired
+          key: snow-fired-${{ steps.snow.outputs.snow_start }}
