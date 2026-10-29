@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { admin, resolveLink } from "@/lib/fieldLink";
 import { sendReportEmail } from "@/lib/email";
 import { auditLog, getRequestMeta } from "@/lib/audit";
+import { reschedule, type SchedTask } from "@/lib/schedule";
 
 const clip = (s: unknown, n = 200) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
 const list = (a: unknown) => (Array.isArray(a) ? a : []);
@@ -43,7 +44,38 @@ export async function POST(req: NextRequest) {
   });
 
   // Tasks: new issues open; money + delays wait for human review. Nothing touches budget or schedule automatically.
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Solved problems: close the matching open items. Ids are re-checked against this site's real open items.
+  const solvedIds = list(e.solved_matches).map((x: any) => String(x?.item_id ?? "")).filter(Boolean);
+  let closed = 0;
+  if (solvedIds.length) {
+    const { data: ok } = await admin.from("punch_list_items").select("id").eq("project_id", rep.project_id).in("id", solvedIds).in("status", ["open", "in_progress", "pending_review"]);
+    const ids = (ok ?? []).map((r) => r.id);
+    if (ids.length) { await admin.from("punch_list_items").update({ status: "completed", completed_date: today }).in("id", ids); closed = ids.length; }
+  }
+
+  // Schedule: started / finished work updates the plan, then dependent dates re-flow.
+  const schedUpd = list(e.schedule_updates).map((x: any) => ({ id: String(x?.task_id ?? ""), action: x?.action === "complete" ? "complete" : "started" })).filter((x) => x.id);
+  let schedChanged = 0;
+  if (schedUpd.length) {
+    const { data: all } = await admin.from("schedule_tasks").select("*").eq("project_id", rep.project_id);
+    const tasks: SchedTask[] = (all ?? []).map((t: any) => ({ ...t, depends_on: t.depends_on ?? [], duration_days: t.duration_days ?? 5 }));
+    const byId = new Map(tasks.map((t) => [t.id, t]));
+    for (const u of schedUpd) {
+      const t = byId.get(u.id); if (!t || t.status === "complete") continue;
+      if (u.action === "complete") { t.status = "complete"; t.progress = 100; if (t.end_date > today) t.end_date = today; }
+      else if (t.status === "not_started") { t.status = "in_progress"; t.progress = Math.max(t.progress ?? 0, 1); }
+      else continue;
+      await admin.from("schedule_tasks").update({ status: t.status, progress: t.progress, end_date: t.end_date }).eq("id", t.id);
+      schedChanged++;
+    }
+    const { updates } = reschedule(tasks);
+    for (const [id, d] of Object.entries(updates)) await admin.from("schedule_tasks").update(d).eq("id", id);
+  }
+
   const rows: any[] = [
+    ...progress.map((p) => ({ ...common, title: `[PROGRESS] ${p} (${who})`, status: "completed", completed_date: today, priority: "low" })),
     ...issues.map((i) => ({ ...common, title: `[ISSUE] ${i.text} (${who})`, status: "open", priority: i.priority })),
     ...cos.map((c) => ({ ...common, title: `[CHANGE ORDER] ${c.text}${c.amount ? ` — ${c.amount}` : ""} (${who})`, status: "pending_review", priority: "high" })),
     ...costs.map((c) => ({ ...common, title: `[COST] ${c.text}${c.amount ? ` — ${c.amount}` : ""} (${who})`, status: "pending_review", priority: "high" })),
@@ -76,5 +108,5 @@ export async function POST(req: NextRequest) {
     notified = r.ok;
   }
 
-  return NextResponse.json({ success: true, filed: rows.length, notified });
+  return NextResponse.json({ success: true, filed: rows.length, closed, schedule: schedChanged, notified });
 }

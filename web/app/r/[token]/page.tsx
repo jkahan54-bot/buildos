@@ -6,19 +6,19 @@ type Lang = "en" | "es" | "yi";
 const T: Record<Lang, Record<string, string>> = {
   en: { hello: "Hello", site: "Which site?", rec: "Tap to record", stop: "Tap to stop", hint: "Say what got done today, problems solved, new problems, and any new costs or change orders.",
     typeIt: "Or type it instead", send: "Send for review", working: "Understanding your note…", check: "Check what we understood", right: "Looks right — send it", redo: "Record again",
-    progress: "Done today", new: "New problems", solved: "Solved", cost: "New costs", co: "Change orders", delay: "Delays", unclear: "Not sure we heard this right", urgent: "Marked URGENT — the office is notified right away",
+    progress: "Done today", sched: "Schedule updates", closes: "Marked as fixed", new: "New problems", solved: "Solved", cost: "New costs", co: "Change orders", delay: "Delays", unclear: "Not sure we heard this right", urgent: "Marked URGENT — the office is notified right away",
     done: "Sent. Thank you.", another: "Record another", bad: "This link is not valid. Ask the office for a new one.", edit: "Fix any line that is wrong before sending.", you: "What you said", none: "Nothing" },
   es: { hello: "Hola", site: "¿Cuál obra?", rec: "Toque para grabar", stop: "Toque para parar", hint: "Diga lo que se hizo hoy, problemas resueltos, problemas nuevos, y costos nuevos u órdenes de cambio.",
     typeIt: "O escríbalo", send: "Enviar para revisar", working: "Entendiendo su nota…", check: "Revise lo que entendimos", right: "Está bien — enviar", redo: "Grabar otra vez",
-    progress: "Hecho hoy", new: "Problemas nuevos", solved: "Resuelto", cost: "Costos nuevos", co: "Órdenes de cambio", delay: "Retrasos", unclear: "No estamos seguros de haber oído esto bien", urgent: "Marcado URGENTE — la oficina recibe aviso de inmediato",
+    progress: "Hecho hoy", sched: "Actualizar cronograma", closes: "Marcado como resuelto", new: "Problemas nuevos", solved: "Resuelto", cost: "Costos nuevos", co: "Órdenes de cambio", delay: "Retrasos", unclear: "No estamos seguros de haber oído esto bien", urgent: "Marcado URGENTE — la oficina recibe aviso de inmediato",
     done: "Enviado. Gracias.", another: "Grabar otra", bad: "Este enlace no es válido. Pida uno nuevo a la oficina.", edit: "Corrija cualquier línea incorrecta antes de enviar.", you: "Lo que dijo", none: "Nada" },
   yi: { hello: "שלום", site: "וועלכע סייט?", rec: "דריקט צו רעקארדירן", stop: "דריקט צו שטעלן", hint: "זאגט וואס מען האט היינט געטון, פראבלעמען געלייזט, נייע פראבלעמען, און נייע קאסטן אדער טשיינדזש אָרדערס.",
     typeIt: "אָדער שרייבט עס", send: "שיקן צום איבערקוקן", working: "פארשטייט אייער נאטיץ…", check: "קוקט איבער וואס מיר האבן פארשטאנען", right: "ריכטיג — שיקן", redo: "רעקארדירן נאכאמאל",
-    progress: "היינט געטון", new: "נייע פראבלעמען", solved: "געלייזט", cost: "נייע קאסטן", co: "טשיינדזש אָרדערס", delay: "פארשפעטיקונגען", unclear: "נישט זיכער אז מיר האבן דאס ריכטיג געהערט", urgent: "מארקירט דרינגענד — דער אפיס ווערט באנאכריכטיגט תיכף",
+    progress: "היינט געטון", sched: "צייטפלאן אפדעיטס", closes: "מארקירט אלס געלייזט", new: "נייע פראבלעמען", solved: "געלייזט", cost: "נייע קאסטן", co: "טשיינדזש אָרדערס", delay: "פארשפעטיקונגען", unclear: "נישט זיכער אז מיר האבן דאס ריכטיג געהערט", urgent: "מארקירט דרינגענד — דער אפיס ווערט באנאכריכטיגט תיכף",
     done: "געשיקט. א דאנק.", another: "נאך א רעקארדירונג", bad: "דער לינק איז נישט גילטיג. בעט א נייעם פון אפיס.", edit: "פארריכט יעדע שורה וואס איז פאלש.", you: "וואס איר האט געזאגט", none: "גארנישט" },
 };
 
-type Ex = { summary_en?: string; summary_local?: string; progress: string[]; issues_new: { text: string; priority: string }[]; issues_solved: string[]; costs: { text: string; amount?: string }[]; change_orders: { text: string; amount?: string }[]; delays: { text: string; days?: number | null }[]; unclear?: string[]; urgent?: boolean; urgent_reason?: string; crew_count?: number | null };
+type Ex = { summary_en?: string; summary_local?: string; progress: string[]; issues_new: { text: string; priority: string }[]; issues_solved: string[]; costs: { text: string; amount?: string }[]; change_orders: { text: string; amount?: string }[]; delays: { text: string; days?: number | null }[]; solved_matches?: { item_id: string; text: string }[]; schedule_updates?: { task_id: string; action: string; text: string }[]; unclear?: string[]; urgent?: boolean; urgent_reason?: string; crew_count?: number | null };
 
 export default function FieldReportPage() {
   const { token } = useParams<{ token: string }>();
@@ -48,7 +48,7 @@ export default function FieldReportPage() {
     const r = await fetch("/api/field/process", { method: "POST", body, headers });
     const j = await r.json();
     if (!r.ok) { setErr(j.error ?? "Error"); setStage("record"); return; }
-    setRep({ id: j.id, transcript: j.transcript, ex: { progress: [], issues_new: [], issues_solved: [], costs: [], change_orders: [], delays: [], ...j.extracted } });
+    setRep({ id: j.id, transcript: j.transcript, ex: { solved_matches: [], schedule_updates: [], progress: [], issues_new: [], issues_solved: [], costs: [], change_orders: [], delays: [], ...j.extracted } });
     setStage("review");
   };
 
@@ -155,6 +155,8 @@ export default function FieldReportPage() {
             <Section title={t.progress} k="progress" />
             <Section title={t.new} k="issues_new" sub="text" />
             <Section title={t.solved} k="issues_solved" />
+            <Section title={t.closes} k="solved_matches" sub="text" />
+            <Section title={t.sched} k="schedule_updates" sub="text" />
             <Section title={t.cost} k="costs" sub="text" />
             <Section title={t.co} k="change_orders" sub="text" />
             <Section title={t.delay} k="delays" sub="text" />

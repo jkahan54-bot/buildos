@@ -46,6 +46,13 @@ export async function POST(req: NextRequest) {
   // 2. Extract structure
   const { data: proj } = await admin.from("projects").select("name").eq("id", projectId).single();
   const target = LANG_NAME[link.language] ?? "English";
+  // Existing records on this site, so the AI can match what was said to real items instead of inventing new ones.
+  const [{ data: openItems }, { data: sched }] = await Promise.all([
+    admin.from("punch_list_items").select("id, title").eq("project_id", projectId).in("status", ["open", "in_progress", "pending_review"]).order("created_at", { ascending: false }).limit(40),
+    admin.from("schedule_tasks").select("id, title, status").eq("project_id", projectId).neq("status", "complete").order("sort_order").limit(40),
+  ]);
+  const openList = (openItems ?? []).map((i) => `${i.id} :: ${i.title}`).join("\n") || "(none)";
+  const schedList = (sched ?? []).map((s) => `${s.id} :: ${s.title} [${s.status}]`).join("\n") || "(none)";
   const prompt = `You file daily reports for a NYC construction company. A site manager (${link.person_name}) recorded a voice note about the site "${proj?.name}". It may be in English with an accent, Spanish or Yiddish, and the transcript may contain recognition errors — use context to fix obvious ones, but NEVER invent facts, names, numbers or costs. If unsure, put the doubt in "unclear".
 
 Transcript:
@@ -61,11 +68,19 @@ Return ONLY JSON:
  "costs": [{"text":"what and who","amount":"as spoken or null"}],
  "change_orders": [{"text":"...","amount":"as spoken or null"}],
  "delays": [{"text":"what is delayed and why","days":number|null}],
+ "solved_matches": [{"item_id":"id from OPEN ITEMS","text":"short label"}],
+ "schedule_updates": [{"task_id":"id from SCHEDULE","action":"started|complete","text":"short label"}],
  "crew_count": number|null,
  "unclear": ["anything you were not sure you heard right"],
  "urgent": true|false,
  "urgent_reason": "why, or empty"
 }
+OPEN ITEMS on this site (use ONLY these ids in solved_matches, and only when the speaker clearly says that exact problem is now fixed):
+${openList}
+
+SCHEDULE items on this site (use ONLY these ids in schedule_updates, only when the speaker clearly says that work started or finished):
+${schedList}
+
 "urgent" is true ONLY for: injury/accident, safety hazard, stop-work or violation, work stopped, a cost or change order that needs a decision today, or a problem that will delay other trades within 48 hours. Questions are not facts. Empty arrays when nothing applies.`;
 
   let ex: any = null;
@@ -83,6 +98,12 @@ Return ONLY JSON:
     } catch { /* try next model */ }
   }
   if (!ex) return NextResponse.json({ error: "Could not understand the note. Please try again or type it." }, { status: 502 });
+
+  // Too thin to file: ask for more rather than saving a log that says "unclear".
+  const n = (k: string) => (Array.isArray(ex[k]) ? ex[k].length : 0);
+  if (n("progress") + n("issues_new") + n("issues_solved") + n("costs") + n("change_orders") + n("delays") + n("schedule_updates") + n("solved_matches") === 0) {
+    return NextResponse.json({ error: "That was too short to file. Please say what was done, any problems, and any costs or changes.", transcript }, { status: 422 });
+  }
 
   const { data: row, error } = await admin.from("voice_reports").insert({
     org_id: link.org_id, link_id: link.id, person_name: link.person_name, project_id: projectId,
