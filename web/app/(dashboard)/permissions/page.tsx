@@ -27,6 +27,10 @@ export default function PermissionsPage() {
   const [savingUser, setSavingUser]   = useState(false);
   const [savedUser, setSavedUser]     = useState(false);
 
+  // Per-person site access: no sites ticked = all sites (owners/admins always see all)
+  const [sites, setSites]           = useState<any[]>([]);
+  const [userSites, setUserSites]   = useState<Record<string, Set<string>>>({});
+
   // Which sensitive save is pending password confirmation
   const [confirming, setConfirming] = useState<null | "role" | "user">(null);
 
@@ -63,6 +67,13 @@ export default function PermissionsPage() {
       const unext: Record<string, Set<string>> = {};
       for (const p of uprefs ?? []) unext[p.user_id] = new Set(p.hidden ?? []);
       setUserHidden(unext);
+
+      const { data: projs } = await supabase.from("projects").select("id, name").order("name");
+      setSites(projs ?? []);
+      const { data: access } = await supabase.from("user_project_access").select("user_id, project_id").eq("org_id", prof.org_id);
+      const snext: Record<string, Set<string>> = {};
+      for (const a of access ?? []) (snext[a.user_id] ??= new Set()).add(a.project_id);
+      setUserSites(snext);
     })();
   }, []);
 
@@ -123,7 +134,18 @@ export default function PermissionsPage() {
       updated_by: user!.id,
       updated_at: new Date().toISOString(),
     }, { onConflict: "org_id,user_id" });
+    // Sync site access: replace this person's rows with the ticked sites
+    let siteErr = null as any;
+    if (!error) {
+      const del = await supabase.from("user_project_access").delete().eq("user_id", selectedId);
+      siteErr = del.error;
+      const ids = Array.from(userSites[selectedId] ?? []);
+      if (!siteErr && ids.length) {
+        siteErr = (await supabase.from("user_project_access").insert(ids.map(pid => ({ user_id: selectedId, project_id: pid, org_id: profile.org_id })))).error;
+      }
+    }
     setSavingUser(false);
+    if (siteErr) { alert("Could not save site access: " + siteErr.message); return; }
     if (error) {
       if (/does not exist|schema cache/i.test(error.message)) setUserTableMissing(true);
       else alert("Could not save: " + error.message);
@@ -299,6 +321,30 @@ export default function PermissionsPage() {
                   </button>
                 );
               })}
+            </div>
+            <div className="px-5 py-4 border-t border-gray-100">
+              <div className="text-sm font-semibold text-gray-900">Job sites</div>
+              {selectedMember.role === "owner" || selectedMember.role === "admin" ? (
+                <p className="text-xs text-gray-500 mt-1">Owners and admins always see every site.</p>
+              ) : (
+                <>
+                  <p className="text-xs text-gray-500 mt-1 mb-3">
+                    {(userSites[selectedId]?.size ?? 0) === 0 ? "No sites ticked — this person sees all sites." : `Restricted to ${userSites[selectedId]!.size} site(s). They can't see anything else.`}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {sites.map(s => {
+                      const on = userSites[selectedId]?.has(s.id) ?? false;
+                      return (
+                        <button key={s.id} onClick={() => setUserSites(prev => { const set = new Set(prev[selectedId] ?? []); if (set.has(s.id)) set.delete(s.id); else set.add(s.id); return { ...prev, [selectedId]: set }; })}
+                          className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm border text-left ${on ? "border-gray-900 bg-gray-50 text-gray-900" : "border-gray-200 text-gray-500"}`}>
+                          <span className={`w-4 h-4 rounded flex items-center justify-center border ${on ? "bg-gray-900 border-gray-900" : "border-gray-300 bg-white"}`}>{on && <Check size={11} className="text-white" strokeWidth={3} />}</span>
+                          <span className="truncate">{s.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

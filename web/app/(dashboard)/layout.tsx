@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
@@ -55,6 +56,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
     if (userPrefs?.hidden?.length) {
       menuPrefs[role] = Array.from(new Set([...(menuPrefs[role] ?? []), ...userPrefs.hidden]));
     }
+  }
+
+  // Locked options are blocked by URL too, not just hidden from the menu.
+  // Owners/admins are never locked out.
+  if (role !== "owner" && role !== "admin") {
+    const path = (await headers()).get("x-pathname") ?? "";
+    const locked = (menuPrefs[role] ?? []).some(h => h !== "/dashboard" && (path === h || path.startsWith(h + "/")));
+    if (locked) redirect("/dashboard");
   }
 
   return (

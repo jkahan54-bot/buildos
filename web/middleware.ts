@@ -107,7 +107,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── 4. Supabase auth session refresh ──────────────────────────────────────
-  let supabaseResponse = NextResponse.next({ request });
+  // Expose the path to server layouts so they can enforce per-user option locks.
+  const fwdHeaders = new Headers(request.headers);
+  fwdHeaders.set("x-pathname", pathname);
+  let supabaseResponse = NextResponse.next({ request: { headers: fwdHeaders } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -117,7 +120,7 @@ export async function middleware(request: NextRequest) {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet: { name: string; value: string; options: CookieOptions }[]) => {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
+          supabaseResponse = NextResponse.next({ request: { headers: fwdHeaders } });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );
