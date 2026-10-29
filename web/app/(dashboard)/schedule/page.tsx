@@ -1,155 +1,256 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Check, AlertTriangle, Lock, Wand2 } from "lucide-react";
+import { reschedule, slipDays, downstream, daysBetween, addWorkdays, TEMPLATES, type SchedTask } from "@/lib/schedule";
 
-const STATUS_COLOR: Record<string,string> = { not_started:"#6b7280", in_progress:"#2563eb", complete:"#16a34a", delayed:"#dc2626" };
-const TRADE_COLORS = ["#f97316","#2563eb","#16a34a","#7c3aed","#dc2626","#d97706","#0891b2","#6b7280"];
+const PILL: Record<string, string> = {
+  not_started: "bg-gray-100 text-gray-600",
+  in_progress: "bg-blue-50 text-blue-700",
+  complete: "bg-green-50 text-green-700",
+  delayed: "bg-red-50 text-red-700",
+};
+const LABEL: Record<string, string> = { not_started: "Not started", in_progress: "In progress", complete: "Complete", delayed: "Delayed" };
+const fmt = (s: string) => new Date(s + "T12:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const inp = "w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400";
 
 export default function SchedulePage() {
-  const [tasks, setTasks]     = useState<any[]>([]);
+  const supabase = useMemo(() => createClient(), []);
+  const [tasks, setTasks] = useState<SchedTask[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
-  const [selProj, setSelProj] = useState("");
+  const [proj, setProj] = useState("");
+  const [tab, setTab] = useState<"workflow" | "timeline">("workflow");
   const [showForm, setShowForm] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ project_id:"", title:"", trade:"", start_date:"", end_date:"", assigned_to:"", status:"not_started" });
-  const set = (k:string,v:string) => setForm(f=>({...f,[k]:v}));
-  const inp = "w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-orange-500 shadow-sm";
+  const [open, setOpen] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
+  const [setupNeeded, setSetupNeeded] = useState(false);
+  const [form, setForm] = useState({ title: "", trade: "", assigned_to: "", duration_days: 5, start_date: todayISO(), depends_on: "" });
 
-  useEffect(() => { load(); createClient().from("projects").select("id,name").then(({data})=>{ setProjects(data??[]); if(data?.[0]) setSelProj(data[0].id); }); }, []);
-  useEffect(() => { if(selProj) load(); }, [selProj]);
+  const load = useCallback(async (p: string) => {
+    if (!p) return;
+    const { data, error } = await supabase.from("schedule_tasks").select("*").eq("project_id", p).order("sort_order").order("start_date");
+    if (error && /duration_days|depends_on|column/i.test(error.message)) { setSetupNeeded(true); return; }
+    setSetupNeeded(false);
+    setTasks((data ?? []).map((t: any) => ({ ...t, depends_on: t.depends_on ?? [], duration_days: t.duration_days ?? Math.max(1, daysBetween(t.start_date, t.end_date)) })));
+  }, [supabase]);
 
-  const load = async () => {
-    const q = createClient().from("schedule_tasks").select("*, projects(name)").order("start_date");
-    const {data} = selProj ? await q.eq("project_id",selProj) : await q;
-    setTasks(data??[]);
+  useEffect(() => {
+    supabase.from("projects").select("id,name").eq("status", "active").order("name").then(({ data }) => { setProjects(data ?? []); if (data?.[0]) setProj(data[0].id); });
+  }, [supabase]);
+  useEffect(() => { load(proj); }, [proj, load]);
+
+  // Apply a change, recompute the whole schedule, save every date that moved, and report the ripple.
+  const applyChange = async (id: string, patch: Partial<SchedTask>, reason?: string) => {
+    const before = new Map(tasks.map((t) => [t.id, t]));
+    const next = tasks.map((t) => (t.id === id ? { ...t, ...patch } : t));
+    const { updates } = reschedule(next);
+    const moved = Object.entries(updates).filter(([tid]) => tid !== id || patch.duration_days || patch.start_date);
+    const writes = [supabase.from("schedule_tasks").update({ ...patch, ...(updates[id] ?? {}) }).eq("id", id)];
+    for (const [tid, u] of Object.entries(updates)) {
+      if (tid === id) continue;
+      const pushed = daysBetween(before.get(tid)!.end_date, u.end_date);
+      writes.push(supabase.from("schedule_tasks").update({ ...u, delay_reason: pushed > 0 ? (reason ?? `Pushed by "${before.get(id)?.title}"`) : null }).eq("id", tid));
+    }
+    await Promise.all(writes);
+    const downs = Object.keys(updates).filter((k) => k !== id).length;
+    setNotice(downs ? `${downs} downstream item${downs > 1 ? "s" : ""} re-scheduled automatically.` : "");
+    await load(proj);
+    void moved;
   };
 
-  const save = async (e:React.FormEvent) => {
-    e.preventDefault(); setLoading(true);
-    const supabase = createClient();
-    const { data:{user} } = await supabase.auth.getUser();
-    const { data:prof } = await supabase.from("profiles").select("org_id").eq("id",user!.id).single();
-    await supabase.from("schedule_tasks").insert({ ...form, org_id:prof?.org_id });
-    setLoading(false); setShowForm(false); setForm({ project_id:selProj, title:"", trade:"", start_date:"", end_date:"", assigned_to:"", status:"not_started" });
-    await load();
+  const complete = (t: SchedTask) => applyChange(t.id, { status: "complete", progress: 100, end_date: t.end_date > todayISO() ? todayISO() : t.end_date });
+  const setDuration = (t: SchedTask, d: number) => applyChange(t.id, { duration_days: Math.max(1, d), end_date: addWorkdays(t.start_date, Math.max(1, d) - 1) }, `"${t.title}" duration changed to ${d}d`);
+  const delay = (t: SchedTask, days: number, why: string) => applyChange(t.id, { duration_days: t.duration_days + days, status: "delayed", delay_reason: why || "Delayed", end_date: addWorkdays(t.start_date, t.duration_days + days - 1) }, why || `"${t.title}" delayed`);
+
+  const generate = async (key: string) => {
+    if (!proj) return;
+    const tpl = TEMPLATES[key];
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: prof } = await supabase.from("profiles").select("org_id").eq("id", user!.id).single();
+    const rows = tpl.items.map((it, i) => ({ id: crypto.randomUUID(), org_id: prof?.org_id, project_id: proj, title: it.title, trade: it.trade, stage: tpl.label, duration_days: it.days, sort_order: i + 1, status: "not_started", start_date: todayISO(), end_date: todayISO() }));
+    const withDeps: any[] = rows.map((r, i) => ({ ...r, depends_on: tpl.items[i].after.map((a) => rows[a].id) }));
+    const { updates, all } = reschedule(withDeps as SchedTask[]);
+    const final = all.map((t: any) => ({ ...t, ...(updates[t.id] ?? {}), original_start: (updates[t.id] ?? t).start_date, original_end: (updates[t.id] ?? t).end_date }));
+    await supabase.from("schedule_tasks").insert(final);
+    setNotice(`Built a ${final.length}-step schedule. Change any duration or mark items complete and everything after it moves.`);
+    await load(proj);
   };
 
-  const updateProgress = async (id:string, progress:number, status:string) => {
-    await createClient().from("schedule_tasks").update({ progress, status }).eq("id",id);
-    await load();
+  const addItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: prof } = await supabase.from("profiles").select("org_id").eq("id", user!.id).single();
+    const deps = form.depends_on ? [form.depends_on] : [];
+    const draft: any = { id: crypto.randomUUID(), org_id: prof?.org_id, project_id: proj, title: form.title, trade: form.trade, assigned_to: form.assigned_to, duration_days: form.duration_days, depends_on: deps, status: "not_started", start_date: form.start_date, end_date: form.start_date, sort_order: tasks.length + 1 };
+    const { updates, all } = reschedule([...tasks, draft]);
+    const me = { ...draft, ...(updates[draft.id] ?? {}) };
+    await supabase.from("schedule_tasks").insert({ ...me, original_start: me.start_date, original_end: me.end_date });
+    setShowForm(false); setForm({ title: "", trade: "", assigned_to: "", duration_days: 5, start_date: todayISO(), depends_on: "" });
+    void all; await load(proj);
   };
 
-  // Calculate Gantt positions
-  const allDates = tasks.flatMap(t=>[new Date(t.start_date),new Date(t.end_date)]);
-  const minDate  = allDates.length ? new Date(Math.min(...allDates.map(d=>d.getTime()))) : new Date();
-  const maxDate  = allDates.length ? new Date(Math.max(...allDates.map(d=>d.getTime()))) : new Date(Date.now()+30*86400000);
-  const span     = Math.max((maxDate.getTime()-minDate.getTime())/86400000, 30);
-  const pct      = (d:Date) => Math.max(0,Math.min(100,(d.getTime()-minDate.getTime())/86400000/span*100));
-  const width    = (s:Date,e:Date) => Math.max(1,(e.getTime()-s.getTime())/86400000/span*100);
+  const byId = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
+  const slipped = tasks.filter((t) => slipDays(t) > 0 && t.status !== "complete");
+  const finish = tasks.length ? tasks.map((t) => t.end_date).sort().pop()! : null;
+  const origFinish = tasks.length ? tasks.map((t) => t.original_end ?? t.end_date).sort().pop()! : null;
+  const projSlip = finish && origFinish ? Math.max(0, daysBetween(origFinish, finish)) : 0;
 
-  const trades = [...new Set(tasks.map(t=>t.trade).filter(Boolean))];
+  // Timeline geometry
+  const minD = tasks.length ? tasks.map((t) => t.original_start ?? t.start_date).concat(tasks.map((t) => t.start_date)).sort()[0] : todayISO();
+  const maxD = finish ?? todayISO();
+  const span = Math.max(30, daysBetween(minD, maxD) + 7);
+  const pos = (d: string) => Math.max(0, Math.min(100, (daysBetween(minD, d) / span) * 100));
+  const wid = (a: string, b: string) => Math.max(1, ((daysBetween(a, b) + 1) / span) * 100);
+  const months: { label: string; left: number }[] = [];
+  for (let i = 0; i <= span; i += 1) {
+    const d = new Date(new Date(minD + "T12:00:00Z").getTime() + i * 86400000);
+    if (d.getUTCDate() === 1 || i === 0) months.push({ label: d.toLocaleDateString("en-US", { month: "short", year: i === 0 ? "2-digit" : undefined, timeZone: "UTC" }), left: (i / span) * 100 });
+  }
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-start justify-between gap-3">
-        <div><h1 className="text-xl lg:text-2xl font-bold text-gray-900">Schedule</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Project timeline — {tasks.length} tasks</p></div>
+    <div className="space-y-5 max-w-6xl">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Workflow &amp; Timeline</h1>
+          <p className="text-gray-500 text-sm mt-1">One plan. Change a duration or finish an item and everything that depends on it moves.</p>
+        </div>
         <div className="flex gap-2">
-          <select value={selProj} onChange={e=>setSelProj(e.target.value)} className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none shadow-sm">
-            <option value="">All projects</option>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+          <select value={proj} onChange={(e) => setProj(e.target.value)} className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none">
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          <button onClick={()=>{ setForm(f=>({...f,project_id:selProj})); setShowForm(true); }} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm" style={{ background:"#111827" }}><Plus size={15} />Add Task</button>
+          <button onClick={() => setShowForm(true)} disabled={setupNeeded} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gray-900 disabled:opacity-40"><Plus size={15} />Add item</button>
         </div>
       </div>
 
+      {setupNeeded && <div className="rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm p-4">The schedule database upgrade hasn&apos;t been applied yet. It will activate as soon as it is.</div>}
+
+      {/* Summary strip */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { k: "Items", v: tasks.length, sub: `${tasks.filter((t) => t.status === "complete").length} complete` },
+          { k: "Finish", v: finish ? fmt(finish) : "—", sub: origFinish ? `Original ${fmt(origFinish)}` : "" },
+          { k: "Behind plan", v: projSlip ? `${projSlip}d` : "On plan", sub: projSlip ? "Project finish has slipped" : "No slip" },
+          { k: "Delayed items", v: slipped.length, sub: "Later than original" },
+        ].map((c) => (
+          <div key={c.k} className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="text-xs text-gray-500">{c.k}</div>
+            <div className={`text-2xl font-semibold mt-1 ${c.k === "Behind plan" && projSlip ? "text-red-600" : "text-gray-900"}`}>{c.v}</div>
+            <div className="text-xs text-gray-400 mt-0.5">{c.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {notice && <div className="flex items-start justify-between rounded-xl border border-blue-100 bg-blue-50 text-blue-800 text-sm px-4 py-3"><span>{notice}</span><button onClick={() => setNotice("")}><X size={14} /></button></div>}
+
+      {/* Tabs */}
+      <div className="inline-flex p-1 bg-gray-100 rounded-lg text-sm">
+        {(["workflow", "timeline"] as const).map((t) => (
+          <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-md font-medium capitalize ${tab === t ? "bg-white shadow-sm text-gray-900" : "text-gray-500"}`}>{t}</button>
+        ))}
+      </div>
+
       {showForm && (
-        <div className="bg-white rounded-xl border border-orange-200 shadow-sm p-5 space-y-4">
-          <div className="flex items-center justify-between"><h2 className="font-semibold text-gray-900">Add Task</h2><button onClick={()=>setShowForm(false)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button></div>
-          <form onSubmit={save} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Project *</label>
-                <select required value={form.project_id} onChange={e=>set("project_id",e.target.value)} className={inp}><option value="">Select…</option>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Trade / Phase</label>
-                <input value={form.trade} onChange={e=>set("trade",e.target.value)} className={inp} placeholder="Foundation, Framing, MEP…" /></div>
-            </div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Task name *</label>
-              <input required value={form.title} onChange={e=>set("title",e.target.value)} className={inp} placeholder="e.g. Pour foundation slab" /></div>
-            <div className="grid grid-cols-3 gap-4">
-              <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Start *</label>
-                <input required type="date" value={form.start_date} onChange={e=>set("start_date",e.target.value)} className={inp} /></div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-1.5">End *</label>
-                <input required type="date" value={form.end_date} onChange={e=>set("end_date",e.target.value)} className={inp} /></div>
-              <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Assigned To</label>
-                <input value={form.assigned_to} onChange={e=>set("assigned_to",e.target.value)} className={inp} /></div>
-            </div>
-            <div className="flex gap-3">
-              <button type="button" onClick={()=>setShowForm(false)} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-600 bg-gray-100">Cancel</button>
-              <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background:"#111827" }}>{loading?"Saving…":"Add Task"}</button>
-            </div>
-          </form>
+        <form onSubmit={addItem} className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+          <div className="flex justify-between"><h2 className="font-semibold">New item</h2><button type="button" onClick={() => setShowForm(false)}><X size={16} className="text-gray-400" /></button></div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="md:col-span-2"><label className="text-xs text-gray-500">What needs to happen *</label><input required className={inp} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Pour 2nd floor slab" /></div>
+            <div><label className="text-xs text-gray-500">Responsible (one person)</label><input className={inp} value={form.assigned_to} onChange={(e) => setForm({ ...form, assigned_to: e.target.value })} /></div>
+            <div><label className="text-xs text-gray-500">Trade</label><input className={inp} value={form.trade} onChange={(e) => setForm({ ...form, trade: e.target.value })} /></div>
+            <div><label className="text-xs text-gray-500">Duration (workdays)</label><input type="number" min={1} className={inp} value={form.duration_days} onChange={(e) => setForm({ ...form, duration_days: +e.target.value })} /></div>
+            <div><label className="text-xs text-gray-500">Blocked by</label>
+              <select className={inp} value={form.depends_on} onChange={(e) => setForm({ ...form, depends_on: e.target.value })}>
+                <option value="">Nothing — can start on its own</option>{tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+              </select></div>
+            {!form.depends_on && <div><label className="text-xs text-gray-500">Start date</label><input type="date" className={inp} value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></div>}
+          </div>
+          <button className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gray-900">Add to schedule</button>
+        </form>
+      )}
+
+      {proj && tasks.length === 0 && !setupNeeded && (
+        <div className="bg-white rounded-xl border border-dashed border-gray-300 p-10 text-center">
+          <Wand2 className="mx-auto text-gray-400" size={22} />
+          <div className="font-semibold mt-2">Start with a template</div>
+          <p className="text-sm text-gray-500 mt-1">Builds the stages, durations and dependencies for you. Edit anything afterward.</p>
+          <div className="flex justify-center gap-2 mt-4">
+            {Object.entries(TEMPLATES).map(([k, t]) => <button key={k} onClick={() => generate(k)} className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 hover:border-gray-400">{t.label}</button>)}
+          </div>
         </div>
       )}
 
-      {tasks.length===0 ? (
-        <div className="bg-white rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-400 text-sm">No tasks yet — add your project schedule above</div>
-      ) : (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          {/* Legend */}
-          {trades.length>0 && (
-            <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-4 flex-wrap">
-              {trades.map((t,i)=>(
-                <div key={t} className="flex items-center gap-1.5 text-xs text-gray-600">
-                  <div className="w-3 h-3 rounded-sm" style={{ background:TRADE_COLORS[i%TRADE_COLORS.length] }} />{t}
+      {tasks.length > 0 && tab === "workflow" && (
+        <div className="space-y-2">
+          {tasks.map((t) => {
+            const blockers = (t.depends_on ?? []).map((d) => byId.get(d)).filter(Boolean) as SchedTask[];
+            const blocks = downstream(tasks, t.id).filter((x) => (x.depends_on ?? []).includes(t.id));
+            const slip = slipDays(t);
+            const late = t.status !== "complete" && t.end_date < todayISO();
+            const status = late ? "delayed" : t.status;
+            return (
+              <div key={t.id} className="bg-white rounded-xl border border-gray-200 p-4">
+                <div className="flex items-start gap-3">
+                  <button onClick={() => (t.status === "complete" ? undefined : complete(t))} title="Mark complete"
+                    className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${t.status === "complete" ? "bg-green-500 border-green-500 text-white" : "border-gray-300 hover:border-green-500"}`}>
+                    {t.status === "complete" && <Check size={12} />}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`font-medium text-sm ${t.status === "complete" ? "line-through text-gray-400" : "text-gray-900"}`}>{t.title}</span>
+                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${PILL[status] ?? PILL.not_started}`}>{LABEL[status] ?? status}</span>
+                      {t.locked && <Lock size={12} className="text-gray-400" />}
+                      {slip > 0 && t.status !== "complete" && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-700">+{slip}d</span>}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {fmt(t.start_date)} → {fmt(t.end_date)} · {t.duration_days} workdays{t.assigned_to ? ` · ${t.assigned_to}` : t.trade ? ` · ${t.trade}` : ""}
+                    </div>
+                    {blockers.length > 0 && <div className="text-xs text-gray-400 mt-1">Blocked by: {blockers.map((b) => b.title).join(", ")}</div>}
+                    {blocks.length > 0 && <div className="text-xs text-gray-400">Blocks: {blocks.map((b) => b.title).join(", ")}</div>}
+                    {t.delay_reason && t.status !== "complete" && <div className="flex items-center gap-1 text-xs text-amber-700 mt-1"><AlertTriangle size={12} />{t.delay_reason}</div>}
+                    {open === t.id && (
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                        <span className="text-gray-500">Duration</span>
+                        <input type="number" min={1} defaultValue={t.duration_days} onBlur={(e) => +e.target.value !== t.duration_days && setDuration(t, +e.target.value)} className="w-16 border border-gray-200 rounded px-2 py-1" />
+                        <button onClick={() => { const w = prompt("Why is it delayed?") ?? ""; const d = +(prompt("How many workdays?", "3") ?? 0); if (d > 0) delay(t, d, w); }} className="px-2.5 py-1 rounded border border-gray-200 hover:border-gray-400">Report delay</button>
+                        <button onClick={() => applyChange(t.id, { locked: !t.locked })} className="px-2.5 py-1 rounded border border-gray-200 hover:border-gray-400">{t.locked ? "Unlock date" : "Lock date"}</button>
+                      </div>
+                    )}
+                  </div>
+                  <button onClick={() => setOpen(open === t.id ? null : t.id)} className="text-xs text-gray-400 hover:text-gray-700">{open === t.id ? "Close" : "Edit"}</button>
                 </div>
-              ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {tasks.length > 0 && tab === "timeline" && (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+          <div className="min-w-[760px]">
+            <div className="flex border-b border-gray-100 text-[11px] text-gray-400">
+              <div className="w-56 flex-shrink-0 px-4 py-2">Work item</div>
+              <div className="flex-1 relative h-8">{months.map((m) => <span key={m.left} className="absolute top-2" style={{ left: `${m.left}%` }}>{m.label}</span>)}</div>
             </div>
-          )}
-          {/* Gantt rows */}
-          <div className="divide-y divide-gray-100">
-            {tasks.map(task=>{
-              const s   = new Date(task.start_date);
-              const e   = new Date(task.end_date);
-              const col = TRADE_COLORS[trades.indexOf(task.trade??"")] || "#9ca3af";
-              const sc  = STATUS_COLOR[task.status]??"#6b7280";
-              const dur = Math.round((e.getTime()-s.getTime())/86400000);
+            {tasks.map((t) => {
+              const slip = slipDays(t);
+              const hasBase = t.original_start && t.original_end;
+              const color = t.status === "complete" ? "#16a34a" : slip > 0 ? "#dc2626" : "#2563eb";
               return (
-                <div key={task.id} className="flex items-center gap-4 px-5 py-3">
-                  {/* Task info */}
-                  <div className="w-48 flex-shrink-0 min-w-0">
-                    <div className="font-medium text-sm text-gray-900 truncate">{task.title}</div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <div className="w-2 h-2 rounded-full" style={{ background:sc }} />
-                      <span className="text-[10px] text-gray-500 capitalize">{task.status.replace("_"," ")}</span>
-                      <span className="text-[10px] text-gray-400">{dur}d</span>
-                    </div>
+                <div key={t.id} className="flex items-center border-b border-gray-50 last:border-0">
+                  <div className="w-56 flex-shrink-0 px-4 py-3 min-w-0">
+                    <div className="text-sm text-gray-900 truncate">{t.title}</div>
+                    <div className="text-[11px] text-gray-400">{hasBase && slip > 0 ? `Original ${fmt(t.original_end!)} → now ${fmt(t.end_date)}` : `${fmt(t.start_date)} → ${fmt(t.end_date)}`}</div>
                   </div>
-                  {/* Bar */}
-                  <div className="flex-1 relative h-8 bg-gray-50 rounded-lg overflow-hidden">
-                    <div className="absolute inset-y-1.5 rounded-md flex items-center px-2 text-white text-[10px] font-semibold overflow-hidden"
-                      style={{ left:`${pct(s)}%`, width:`${width(s,e)}%`, minWidth:"4px", background:col, opacity:0.9 }}>
-                      {width(s,e)>10 ? task.title : ""}
-                    </div>
-                    {/* Today line */}
-                    <div className="absolute inset-y-0 w-px bg-red-400 opacity-70" style={{ left:`${pct(new Date())}%` }} />
-                  </div>
-                  {/* Progress */}
-                  <div className="w-24 flex-shrink-0">
-                    <input type="range" min="0" max="100" value={task.progress??0}
-                      onChange={e=>updateProgress(task.id,+e.target.value,+e.target.value===100?"complete":+e.target.value>0?"in_progress":"not_started")}
-                      className="w-full accent-orange-500" />
-                    <div className="text-[10px] text-gray-500 text-center">{task.progress??0}%</div>
+                  <div className="flex-1 relative h-12">
+                    {hasBase && <div className="absolute top-2 h-1.5 rounded bg-gray-200" style={{ left: `${pos(t.original_start!)}%`, width: `${wid(t.original_start!, t.original_end!)}%` }} />}
+                    <div className="absolute top-4 h-5 rounded-md" style={{ left: `${pos(t.start_date)}%`, width: `${wid(t.start_date, t.end_date)}%`, background: color, opacity: t.status === "complete" ? 0.5 : 0.9 }} />
+                    <div className="absolute inset-y-0 w-px bg-red-400" style={{ left: `${pos(todayISO())}%` }} />
                   </div>
                 </div>
               );
             })}
           </div>
-          {/* Date labels */}
-          <div className="px-5 pb-2 flex justify-between text-[10px] text-gray-400 border-t border-gray-100 pt-2" style={{ paddingLeft:"calc(1.25rem + 192px + 1rem)" }}>
-            <span>{minDate.toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
-            <span>{new Date((minDate.getTime()+maxDate.getTime())/2).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
-            <span>{maxDate.toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
-          </div>
+          <div className="px-4 py-2 text-[11px] text-gray-400 border-t border-gray-100">Grey bar = original plan · colored bar = current plan · red line = today</div>
         </div>
       )}
     </div>
