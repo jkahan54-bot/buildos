@@ -1,8 +1,25 @@
 {
   "framework": "nextjs",
   "crons": [
-    { "path": "/api/owner/scan",              "schedule": "0 1 * * 6"  },
-    { "path": "/api/daily-report/generate",   "schedule": "0 23 * * *" },
-    { "path": "/api/weekly-report/generate",  "schedule": "0 11 * * 5" }
+    {
+      "path": "/api/owner/scan",
+      "schedule": "0 1 * * 6"
+    },
+    {
+      "path": "/api/daily-report/generate",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/weekly-report/generate",
+      "schedule": "0 11 * * 5"
+    },
+    {
+      "path": "/api/report-reminders?mode=evening",
+      "schedule": "0 21 * * 1-5"
+    },
+    {
+      "path": "/api/report-reminders?mode=morning",
+      "schedule": "0 12 * * 2-6"
+    }
   ]
 }

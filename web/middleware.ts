@@ -81,6 +81,13 @@ export async function middleware(request: NextRequest) {
         status: 429, headers: { "Content-Type": "application/json" },
       });
     }
+  } else if (pathname.startsWith("/api/r/")) {
+    // Public report links: tight per-IP limit stops token guessing and upload floods
+    if (!checkRateLimit(`rlink:${ip}`, 60, 60 * 1000)) {
+      return new NextResponse(JSON.stringify({ error: "Too many requests." }), {
+        status: 429, headers: { "Content-Type": "application/json", "Retry-After": "60" },
+      });
+    }
   } else if (pathname.startsWith("/api/ai/")) {
     // AI endpoints: 20 calls per minute per IP (cost control)
     if (!checkRateLimit(`ai:${ip}`, 20, 60 * 1000)) {
@@ -130,7 +137,7 @@ export async function middleware(request: NextRequest) {
 
   const isAuth   = pathname.startsWith("/login") || pathname.startsWith("/register");
   const isApi    = pathname.startsWith("/api/");
-  const isPublic = pathname === "/" || isAuth || isApi || pathname.startsWith("/invite/") || pathname === "/reset-password";
+  const isPublic = pathname === "/" || isAuth || isApi || pathname.startsWith("/invite/") || pathname.startsWith("/r/") || pathname === "/reset-password";
 
   // Absolute session cap: the refresh token otherwise keeps a browser logged in
   // forever. Force a fresh password sign-in after 14 days, even if active.
@@ -154,6 +161,13 @@ export async function middleware(request: NextRequest) {
   supabaseResponse.headers.set("X-Frame-Options", "SAMEORIGIN");
   supabaseResponse.headers.set("X-Content-Type-Options", "nosniff");
   supabaseResponse.headers.set("X-XSS-Protection", "1; mode=block");
+  if (pathname.startsWith("/r/") || pathname.startsWith("/api/r/")) {
+    // The token lives in the URL: never leak it via Referer, never index it, never cache it
+    supabaseResponse.headers.set("Referrer-Policy", "no-referrer");
+    supabaseResponse.headers.set("X-Robots-Tag", "noindex, nofollow");
+    supabaseResponse.headers.set("Cache-Control", "no-store");
+    supabaseResponse.headers.set("Permissions-Policy", "microphone=(self), camera=()");
+  }
 
   return supabaseResponse;
 }
