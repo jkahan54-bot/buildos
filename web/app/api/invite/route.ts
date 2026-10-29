@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
   // Send invite email via Supabase Auth
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://buildos-six.vercel.app";
-  const { error: authErr } = await admin.auth.admin.inviteUserByEmail(email, {
+  const { data: invited, error: authErr } = await admin.auth.admin.inviteUserByEmail(email, {
     redirectTo: `${appUrl}/invite/accept?invite_id=${invite.id}`,
     data: { role, org_id: profile.org_id, invite_id: invite.id },
   });
@@ -55,6 +55,12 @@ export async function POST(req: NextRequest) {
   if (authErr) {
     await admin.from("invitations").delete().eq("id", invite.id);
     return NextResponse.json({ error: authErr.message }, { status: 500 });
+  }
+
+  // Put the invitee in the org now (they can't sign in until they accept the email link), so an
+  // admin can set their menu and site access BEFORE they ever log in.
+  if (invited?.user?.id) {
+    await admin.from("profiles").update({ org_id: profile.org_id, role, approval_status: "approved" }).eq("id", invited.user.id);
   }
 
   await auditLog({ action:"user_invited", userId:user.id, orgId:profile.org_id, details:{ invitedEmail:email, role }, ...meta });
