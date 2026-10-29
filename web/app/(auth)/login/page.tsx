@@ -98,9 +98,11 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
-            Don't have an account?{" "}
-            <Link href="/register" className="text-orange-500 hover:text-orange-600 font-semibold">Create one</Link>
+          <p className="text-center text-sm mt-5">
+            <Link href="/forgot-password" className="text-orange-500 hover:text-orange-600 font-semibold">Forgot password?</Link>
+          </p>
+          <p className="text-center text-xs text-gray-400 mt-3">
+            Access is by invitation only. Ask your administrator if you need an account.
           </p>
         </div>
       </div>
