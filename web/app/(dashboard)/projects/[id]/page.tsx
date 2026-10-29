@@ -9,7 +9,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
     supabase.from("medical_checklists").select("*, medical_checklist_items(id, checked)").eq("project_id", params.id),
     supabase.from("safety_incidents").select("id, status").eq("project_id", params.id),
     supabase.from("rfis").select("id, status").eq("project_id", params.id),
-    supabase.from("project_vendors").select("vendor_name, last_activity_at").eq("project_id", params.id).order("last_activity_at", { ascending: false }),
+    supabase.from("project_vendors").select("vendor_name, trade, last_activity_at").eq("project_id", params.id).order("last_activity_at", { ascending: false }),
   ]);
 
   if (!project) notFound();
@@ -172,7 +172,10 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
               const days = v.last_activity_at ? Math.floor((Date.now() - new Date(v.last_activity_at).getTime()) / 86400000) : null;
               return (
                 <div key={v.vendor_name} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-surface-card border border-border">
-                  <span className="text-sm font-medium truncate">{v.vendor_name}</span>
+                  <span className="text-sm font-medium truncate">
+                    {v.vendor_name}
+                    {v.trade && <span className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 align-middle">{v.trade}</span>}
+                  </span>
                   {days !== null && (
                     <span className="text-xs text-gray-400 flex-shrink-0">
                       {days === 0 ? "today" : `${days}d ago`}

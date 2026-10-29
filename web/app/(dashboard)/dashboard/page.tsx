@@ -70,8 +70,41 @@ export default async function DashboardPage() {
     ...waitingPrecon,
   ];
 
+  // ── Per-project health: how fresh is our information, and how long has the oldest ask been open ──
+  // Derived from real captured activity (WhatsApp/email tasks + field messages), not hand-set.
+  const since30 = new Date(Date.now() - 30 * 86400000).toISOString();
+  const [{ data: recentItems }, { data: recentWA }, { data: openAsks }] = await Promise.all([
+    supabase.from("punch_list_items").select("project_id, created_at").gte("created_at", since30).order("created_at", { ascending: false }).limit(3000),
+    supabase.from("whatsapp_messages").select("project_id, sent_at").gte("sent_at", since30).order("sent_at", { ascending: false }).limit(3000),
+    supabase.from("punch_list_items").select("project_id, waiting_on, created_at").not("waiting_on", "is", null).in("status", ["open", "in_progress", "pending_review"]),
+  ]);
+  const lastUpdate = new Map<string, number>();
+  const bump = (id: string | null, iso: string) => { if (!id) return; const t = new Date(iso).getTime(); if (t > (lastUpdate.get(id) ?? 0)) lastUpdate.set(id, t); };
+  for (const r of recentItems ?? []) bump((r as any).project_id, (r as any).created_at);
+  for (const r of recentWA ?? []) bump((r as any).project_id, (r as any).sent_at);
+  const oldestAsk = new Map<string, { days: number; on: string }>();
+  for (const r of openAsks ?? []) {
+    const id = (r as any).project_id; if (!id) continue;
+    const days = Math.floor((Date.now() - new Date((r as any).created_at).getTime()) / 86400000);
+    if (days > (oldestAsk.get(id)?.days ?? -1)) oldestAsk.set(id, { days, on: (r as any).waiting_on });
+  }
+  const health: Record<string, { status: "on_track" | "at_risk" | "needs_attention" | "unknown"; updatedDays: number | null; askDays: number | null; askOn: string | null }> = {};
+  for (const p of projects ?? []) {
+    const lu = lastUpdate.get(p.id);
+    const updatedDays = lu ? Math.floor((Date.now() - lu) / 86400000) : null;
+    const ask = oldestAsk.get(p.id);
+    const askDays = ask?.days ?? null;
+    let status: "on_track" | "at_risk" | "needs_attention" | "unknown";
+    if (updatedDays === null) status = "unknown";
+    else if ((askDays ?? 0) >= 10 || updatedDays >= 7) status = "needs_attention";
+    else if ((askDays ?? 0) >= 5 || updatedDays >= 4) status = "at_risk";
+    else status = "on_track";
+    health[p.id] = { status, updatedDays, askDays, askOn: ask?.on ?? null };
+  }
+
   return (
     <DashboardClient
+      health={health}
       profile={profile}
       projects={runningProjects}
       preconProjects={preconProjects}

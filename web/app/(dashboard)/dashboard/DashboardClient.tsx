@@ -22,7 +22,29 @@ const statusStyle = (s: string): { color:string; bg:string; text:string; label:s
     cancelled: { color:"#9ca3af", bg:"#f3f4f6", text:"#6b7280", label:"Cancelled" },
   } as any)[s] ?? { color:"#9ca3af", bg:"#f3f4f6", text:"#6b7280", label:s });
 
-export default function DashboardClient({ profile, projects, preconProjects = [], pendingProjects = [], totalBudget, totalSpent, openIncidents, openRFIs, waitingOn = [] }: any) {
+type Health = { status: "on_track" | "at_risk" | "needs_attention" | "unknown"; updatedDays: number | null; askDays: number | null; askOn: string | null };
+const HEALTH_STYLE: Record<Health["status"], { label: string; bg: string; color: string }> = {
+  on_track:        { label: "On track",        bg: "#dcfce7", color: "#15803d" },
+  at_risk:         { label: "At risk",         bg: "#fef3c7", color: "#b45309" },
+  needs_attention: { label: "Needs attention", bg: "#fee2e2", color: "#b91c1c" },
+  unknown:         { label: "Unknown",         bg: "#f3f4f6", color: "#6b7280" },
+};
+const freshness = (h?: Health) => {
+  if (!h) return "";
+  const upd = h.updatedDays === null ? "no recent updates" : h.updatedDays === 0 ? "updated today" : `updated ${h.updatedDays}d ago`;
+  const ask = h.askDays !== null && h.askDays >= 1 ? ` · oldest open ask ${h.askDays}d${h.askOn ? ` (${h.askOn})` : ""}` : "";
+  return upd + ask;
+};
+function HealthPill({ h }: { h?: Health }) {
+  if (!h) return null;
+  const s = HEALTH_STYLE[h.status];
+  return (
+    <span title="On track: updated within 3 days and no ask older than 4 days. At risk: 4+ days without an update, or an ask open 5+ days. Needs attention: 7+ days without an update, or an ask open 10+ days."
+      className="text-[10px] font-semibold px-2 py-1 rounded-full flex-shrink-0" style={{ background: s.bg, color: s.color }}>{s.label}</span>
+  );
+}
+
+export default function DashboardClient({ profile, projects, preconProjects = [], pendingProjects = [], totalBudget, totalSpent, openIncidents, openRFIs, waitingOn = [], health = {} }: any) {
   const remaining = totalBudget - totalSpent;
   const spentPct  = totalBudget > 0 ? Math.round(totalSpent / totalBudget * 100) : 0;
   const name      = profile?.full_name?.split(" ")[0] ?? "there";
@@ -53,6 +75,13 @@ export default function DashboardClient({ profile, projects, preconProjects = []
           </h1>
           <p className="text-gray-500 text-sm mt-0.5">
             {projects.length} running · {pendingProjects.length} pending · {preconProjects.length} pre-con
+          </p>
+          <p className="text-xs mt-1.5 flex flex-wrap gap-1.5">
+            {(["on_track", "at_risk", "needs_attention", "unknown"] as const).map(k => {
+              const n = [...projects, ...preconProjects, ...pendingProjects].filter((p: any) => health[p.id]?.status === k).length;
+              const s = HEALTH_STYLE[k];
+              return <span key={k} className="font-semibold px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color }}>{n} {s.label.toLowerCase()}</span>;
+            })}
           </p>
         </div>
         <Link href="/projects/new"
@@ -148,10 +177,10 @@ export default function DashboardClient({ profile, projects, preconProjects = []
       )}
 
       {/* Pre-Construction */}
-      <ProjectLane title="Pre-Construction" href="/precon" items={preconProjects} renderStage />
+      <ProjectLane title="Pre-Construction" href="/precon" items={preconProjects} renderStage health={health} />
 
       {/* Pending (contracted, waiting on mobilization) */}
-      <ProjectLane title="Pending" href="/precon" items={pendingProjects} renderStage />
+      <ProjectLane title="Pending" href="/precon" items={pendingProjects} renderStage health={health} />
 
       {/* Running */}
       <div>
@@ -180,7 +209,7 @@ export default function DashboardClient({ profile, projects, preconProjects = []
                   <div className="w-1.5 h-8 rounded-full flex-shrink-0" style={{ background: st.color }} />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm text-gray-900 truncate">{p.name}</div>
-                    <div className="text-xs text-gray-400 mt-0.5 truncate">{p.phase ?? "—"} · {p.crew_size ?? 0} crew</div>
+                    <div className="text-xs text-gray-400 mt-0.5 truncate">{p.phase ?? "—"} · {p.crew_size ?? 0} crew · {freshness(health[p.id])}</div>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="text-right">
@@ -189,8 +218,7 @@ export default function DashboardClient({ profile, projects, preconProjects = []
                         <div className="h-full rounded-full" style={{ width:`${p.progress ?? 0}%`, background: st.color }} />
                       </div>
                     </div>
-                    <span className="text-[10px] font-semibold px-2 py-1 rounded-full hidden sm:block"
-                      style={{ background: st.bg, color: st.text }}>{st.label}</span>
+                    <span className="hidden sm:block"><HealthPill h={health[p.id]} /></span>
                   </div>
                 </Link>
               );
@@ -223,7 +251,7 @@ export default function DashboardClient({ profile, projects, preconProjects = []
   );
 }
 
-function ProjectLane({ title, href, items, renderStage = false }: { title: string; href: string; items: any[]; renderStage?: boolean }) {
+function ProjectLane({ title, href, items, renderStage = false, health = {} }: { title: string; href: string; items: any[]; renderStage?: boolean; health?: Record<string, Health> }) {
   if (items.length === 0) return null;
   return (
     <div>
@@ -246,9 +274,11 @@ function ProjectLane({ title, href, items, renderStage = false }: { title: strin
                   <div className="text-xs text-gray-400 mt-0.5 truncate">
                     {p.currentStage ?? p.phase ?? "—"}
                     {p.waitingFor && <> · waiting on {p.waitingFor}</>}
+                    {freshness(health[p.id]) && <> · {freshness(health[p.id])}</>}
                   </div>
                 )}
               </div>
+              <HealthPill h={health[p.id]} />
               {meta && (
                 <span className="text-[10px] font-semibold px-2 py-1 rounded-full flex-shrink-0" style={{ background: meta.bg, color: meta.color }}>
                   {meta.label}
