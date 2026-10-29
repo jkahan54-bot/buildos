@@ -18,6 +18,23 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
   const router = useRouter();
   const [showInvite, setShowInvite] = useState(false);
   const [removing, setRemoving] = useState<any>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addForm, setAddForm] = useState({ full_name: "", email: "", role: "office", password: "" });
+  const [addConfirm, setAddConfirm] = useState(false);
+  const [addMsg, setAddMsg] = useState("");
+  const genPassword = () => {
+    const c = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const a = new Uint32Array(14); crypto.getRandomValues(a);
+    setAddForm(f => ({ ...f, password: Array.from(a, n => c[n % c.length]).join("") }));
+  };
+  const doAdd = async () => {
+    setAddConfirm(false); setAddMsg("");
+    const res = await fetch("/api/team/create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(addForm) });
+    const data = await res.json();
+    if (!res.ok) { setAddMsg(data.error ?? "Could not add"); return; }
+    setNotice(`${addForm.full_name} was added. Give them their email and the temporary password; they choose their own when they first sign in.`);
+    setAddForm({ full_name: "", email: "", role: "office", password: "" }); setAddOpen(false); router.refresh();
+  };
   const [notice, setNotice] = useState("");
   const [linkFor, setLinkFor] = useState<string | null>(null);
   const [resetFor, setResetFor] = useState<string | null>(null);
@@ -225,6 +242,37 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
                   {sending ? "Sending…" : <><Mail size={14} />Send Invite</>}
                 </button>
               </div>
+            </form>
+          )}
+        </div>
+      )}
+
+      {addConfirm && (
+        <ConfirmPassword title="Add this member" description="They can sign in right away with the temporary password you set."
+          onCancel={() => setAddConfirm(false)} onConfirm={doAdd} />
+      )}
+      {isAdmin && (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          <button onClick={() => setAddOpen(o => !o)} className="w-full text-left px-5 py-3.5 flex items-center justify-between">
+            <span className="font-semibold text-sm text-gray-900">Add a member directly <span className="font-normal text-gray-400">— no email needed</span></span>
+            <ChevronDown size={14} className={`text-gray-400 transition-transform ${addOpen ? "rotate-180" : ""}`} />
+          </button>
+          {addOpen && (
+            <form onSubmit={e => { e.preventDefault(); setAddConfirm(true); }} className="px-5 pb-5 space-y-3 border-t border-gray-100 pt-4">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <input required value={addForm.full_name} onChange={e => setAddForm({ ...addForm, full_name: e.target.value })} placeholder="Full name" className="border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                <input required type="email" value={addForm.email} onChange={e => setAddForm({ ...addForm, email: e.target.value })} placeholder="Email" className="border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                <select value={addForm.role} onChange={e => setAddForm({ ...addForm, role: e.target.value })} className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
+                  {(isOwner ? ["office", "field", "jobsite_owner", "admin"] : ["office", "field", "jobsite_owner"]).map(r => <option key={r} value={r}>{ROLE_META[r].label}</option>)}
+                </select>
+                <div className="flex gap-2">
+                  <input required minLength={12} value={addForm.password} onChange={e => setAddForm({ ...addForm, password: e.target.value })} placeholder="Temporary password (12+)" className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono" />
+                  <button type="button" onClick={genPassword} className="px-3 rounded-lg border border-gray-300 text-xs font-semibold">Generate</button>
+                </div>
+              </div>
+              {addMsg && <p className="text-sm text-red-600">{addMsg}</p>}
+              <p className="text-xs text-gray-500">Copy the password before you save, because it can&apos;t be shown again. Send it to them yourself. They must change it at first sign-in.</p>
+              <button className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gray-900">Add member</button>
             </form>
           )}
         </div>

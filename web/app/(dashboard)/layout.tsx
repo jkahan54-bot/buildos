@@ -39,6 +39,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     );
   }
 
+  // Added by an admin with a temporary password: must choose their own before using the app.
+  if (user.user_metadata?.must_change_password) redirect("/change-password");
+
   const role = profile?.role ?? "field";
 
   // Per-role menu visibility set by an admin on the Role Access page.
