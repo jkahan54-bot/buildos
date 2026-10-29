@@ -17,6 +17,8 @@ const ADMIN_ROLES = ["jobsite_owner","admin","office","field"] as const; // admi
 export default function TeamClient({ members, timeLogs, invitations, projects, isAdmin, isOwner }: any) {
   const router = useRouter();
   const [showInvite, setShowInvite] = useState(false);
+  const [removing, setRemoving] = useState<any>(null);
+  const [notice, setNotice] = useState("");
   const [linkFor, setLinkFor] = useState<string | null>(null);
   const [shownLink, setShownLink] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -99,8 +101,26 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
     else setError(data.error ?? "Could not create the link");
   };
 
+  const doRemove = async () => {
+    const m = removing!; setRemoving(null);
+    const res = await fetch(`/api/team/member?id=${m.id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok) { setError(data.error ?? "Could not remove"); return; }
+    setNotice(data.mode === "deleted" ? `${m.email} was removed. You can invite them again.` : `${m.email} was locked out (they have records in BuildOS, so the account was deactivated, not erased).`);
+    router.refresh();
+  };
+
   return (
     <div className="space-y-6">
+      {removing && (
+        <ConfirmPassword
+          title={`Remove ${removing.full_name || removing.email}?`}
+          description="They lose all access immediately and their access settings are cleared. You can invite them again afterward."
+          onCancel={() => setRemoving(null)}
+          onConfirm={doRemove}
+        />
+      )}
+      {notice && <div className="rounded-xl border border-green-200 bg-green-50 text-green-900 text-sm px-4 py-3 flex justify-between"><span>{notice}</span><button onClick={() => setNotice("")}><X size={14} /></button></div>}
       {linkFor && (
         <ConfirmPassword
           title="Create invite link"
@@ -358,6 +378,11 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
                     </div>
                   ) : (
                     <span className="text-xs font-semibold px-2.5 py-1.5 rounded-full flex-shrink-0" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
+                  )}
+                  {isOwner && m.role !== "owner" && (
+                    <button onClick={() => setRemoving(m)} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:border-red-300 hover:text-red-600 flex-shrink-0">
+                      Remove
+                    </button>
                   )}
                 </div>
               );
