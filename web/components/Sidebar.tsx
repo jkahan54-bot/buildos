@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import {
+import { Mic,
   LayoutDashboard, FolderKanban, DollarSign, Users, ShieldAlert,
   FileText, HelpCircle, Bot, Settings, Clock, CalendarCheck,
   Camera, MessageSquare, CheckSquare, LogOut, Building2, Milestone,
@@ -19,6 +19,7 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
     { href:"/command",         label:"Command Center",  icon:Bot },
     { href:"/sites",           label:"Site Command",    icon:BarChart2 },
     { href:"/daily-summary",   label:"Daily Review",    icon:ClipboardList },
+    { href:"/voice-reports",   label:"Voice Reports",   icon:Mic },
     { href:"/pipeline",        label:"Pipeline",        icon:GitPullRequest },
     { href:"/precon",          label:"Pre-Con",         icon:FileSignature },
     { href:"/walkthroughs",    label:"Walkthroughs",    icon:Camera },

@@ -44,3 +44,15 @@ export async function requireUser() {
   }
   return { user, res: null } as const;
 }
+
+/** Signed-in staff member with role + org, for admin-only endpoints. */
+export async function requireRole(roles: string[]) {
+  const supabase = await createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ctx: null, res: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) } as const;
+  const { data: profile } = await supabase.from("profiles").select("org_id, role, approval_status").eq("id", user.id).single();
+  if (!profile?.org_id || !roles.includes(profile.role) || (profile.approval_status && profile.approval_status !== "approved")) {
+    return { ctx: null, res: NextResponse.json({ error: "Not allowed" }, { status: 403 }) } as const;
+  }
+  return { ctx: { userId: user.id, orgId: profile.org_id as string, role: profile.role as string }, res: null } as const;
+}
