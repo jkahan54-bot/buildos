@@ -17,6 +17,8 @@ const ADMIN_ROLES = ["jobsite_owner","admin","office","field"] as const; // admi
 export default function TeamClient({ members, timeLogs, invitations, projects, isAdmin, isOwner }: any) {
   const router = useRouter();
   const [showInvite, setShowInvite] = useState(false);
+  const [linkFor, setLinkFor] = useState<string | null>(null);
+  const [shownLink, setShownLink] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole]   = useState<typeof ALL_ROLES[number]>("field");
   const [sending, setSending]         = useState(false);
@@ -89,8 +91,31 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
 
   const pendingInvites = (invitations ?? []).filter((i: any) => i.status === "pending");
 
+  const getLink = async () => {
+    const id = linkFor!; setLinkFor(null);
+    const res = await fetch("/api/invite/link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ invite_id: id }) });
+    const data = await res.json();
+    if (data.link) { try { await navigator.clipboard.writeText(data.link); } catch {} setShownLink(data.link); }
+    else setError(data.error ?? "Could not create the link");
+  };
+
   return (
     <div className="space-y-6">
+      {linkFor && (
+        <ConfirmPassword
+          title="Create invite link"
+          description="This link lets the person set a password and join. Only send it to them directly."
+          onCancel={() => setLinkFor(null)}
+          onConfirm={getLink}
+        />
+      )}
+      {shownLink && (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+          <div className="text-sm font-semibold text-green-900">Invite link (copied) — send it to them on WhatsApp</div>
+          <input readOnly value={shownLink} onFocus={e => e.target.select()} className="w-full mt-2 bg-white border border-green-200 rounded-lg px-3 py-2 text-xs font-mono" />
+          <button onClick={() => setShownLink("")} className="text-xs text-green-800 mt-2 underline">Hide</button>
+        </div>
+      )}
       {confirmingInvite && (
         <ConfirmPassword
           title="Confirm this invite"
@@ -241,6 +266,11 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
                   <div className="text-xs text-gray-400 mt-0.5">Invited {new Date(inv.created_at).toLocaleDateString()}</div>
                 </div>
                 <span className="text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0" style={{ background: m.bg, color: m.color }}>{m.label}</span>
+                {isAdmin && (
+                  <button onClick={() => setLinkFor(inv.id)} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-gray-200 text-gray-700 hover:border-gray-400 flex-shrink-0">
+                    Copy invite link
+                  </button>
+                )}
                 {isAdmin && (
                   <button onClick={() => revokeInvite(inv.id)}
                     className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded hover:bg-red-50 flex-shrink-0"
