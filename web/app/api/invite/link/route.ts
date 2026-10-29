@@ -16,7 +16,22 @@ export async function POST(req: NextRequest) {
   const { data: me } = await supabase.from("profiles").select("org_id, role").eq("id", user.id).single();
   if (!me || !["owner", "admin"].includes(me.role)) return NextResponse.json({ error: "Only owners and admins can do this" }, { status: 403 });
 
-  const { invite_id } = await req.json();
+  const body = await req.json();
+
+  // Password-reset link for an existing member (when the reset email can't be delivered)
+  if (body.user_id) {
+    const { data: t } = await admin.from("profiles").select("id, org_id, role, email").eq("id", body.user_id).single();
+    if (!t || t.org_id !== me.org_id || !t.email) return NextResponse.json({ error: "Member not found" }, { status: 404 });
+    if ((t.role === "owner" || t.role === "admin") && me.role !== "owner") return NextResponse.json({ error: "Only the Master Owner can do this for admins or owners" }, { status: 403 });
+    if (t.role === "owner" && t.id !== user.id) return NextResponse.json({ error: "Owners reset their own password" }, { status: 403 });
+    const appUrl0 = process.env.NEXT_PUBLIC_APP_URL ?? "https://buildos-six.vercel.app";
+    const { data, error } = await admin.auth.admin.generateLink({ type: "recovery", email: t.email.toLowerCase(), options: { redirectTo: `${appUrl0}/reset-password` } });
+    if (error || !data?.properties?.action_link) return NextResponse.json({ error: "Could not create a link" }, { status: 500 });
+    await auditLog({ action: "settings_changed", userId: user.id, orgId: me.org_id, resourceType: "profile", resourceId: t.id, details: { reason: "reset_link_copied", email: t.email }, ...getRequestMeta(req) });
+    return NextResponse.json({ link: data.properties.action_link });
+  }
+
+  const { invite_id } = body;
   const { data: inv } = await admin.from("invitations").select("id, org_id, email, role, status").eq("id", invite_id).single();
   if (!inv || inv.org_id !== me.org_id || inv.status !== "pending") return NextResponse.json({ error: "Invite not found or already used" }, { status: 404 });
   if ((inv.role === "owner" || inv.role === "admin") && me.role !== "owner") return NextResponse.json({ error: "Only the Master Owner can do this for admins or owners" }, { status: 403 });

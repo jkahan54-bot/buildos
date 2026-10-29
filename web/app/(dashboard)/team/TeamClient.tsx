@@ -20,6 +20,7 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
   const [removing, setRemoving] = useState<any>(null);
   const [notice, setNotice] = useState("");
   const [linkFor, setLinkFor] = useState<string | null>(null);
+  const [resetFor, setResetFor] = useState<string | null>(null);
   const [shownLink, setShownLink] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole]   = useState<typeof ALL_ROLES[number]>("field");
@@ -94,8 +95,9 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
   const pendingInvites = (invitations ?? []).filter((i: any) => i.status === "pending");
 
   const getLink = async () => {
-    const id = linkFor!; setLinkFor(null);
-    const res = await fetch("/api/invite/link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ invite_id: id }) });
+    const payload = linkFor ? { invite_id: linkFor } : { user_id: resetFor };
+    setLinkFor(null); setResetFor(null);
+    const res = await fetch("/api/invite/link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const data = await res.json();
     if (data.link) { try { await navigator.clipboard.writeText(data.link); } catch {} setShownLink(data.link); }
     else setError(data.error ?? "Could not create the link");
@@ -121,17 +123,17 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
         />
       )}
       {notice && <div className="rounded-xl border border-green-200 bg-green-50 text-green-900 text-sm px-4 py-3 flex justify-between"><span>{notice}</span><button onClick={() => setNotice("")}><X size={14} /></button></div>}
-      {linkFor && (
+      {(linkFor || resetFor) && (
         <ConfirmPassword
-          title="Create invite link"
+          title={resetFor ? "Create password reset link" : "Create invite link"}
           description="This link lets the person set a password and join. Only send it to them directly."
-          onCancel={() => setLinkFor(null)}
+          onCancel={() => { setLinkFor(null); setResetFor(null); }}
           onConfirm={getLink}
         />
       )}
       {shownLink && (
         <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-          <div className="text-sm font-semibold text-green-900">Invite link (copied) — send it to them on WhatsApp</div>
+          <div className="text-sm font-semibold text-green-900">Link (copied) — send it to them on WhatsApp</div>
           <input readOnly value={shownLink} onFocus={e => e.target.select()} className="w-full mt-2 bg-white border border-green-200 rounded-lg px-3 py-2 text-xs font-mono" />
           <button onClick={() => setShownLink("")} className="text-xs text-green-800 mt-2 underline">Hide</button>
         </div>
@@ -378,6 +380,11 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
                     </div>
                   ) : (
                     <span className="text-xs font-semibold px-2.5 py-1.5 rounded-full flex-shrink-0" style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
+                  )}
+                  {isAdmin && m.role !== "owner" && (
+                    <button onClick={() => setResetFor(m.id)} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:border-gray-400 flex-shrink-0">
+                      Reset link
+                    </button>
                   )}
                   {isOwner && m.role !== "owner" && (
                     <button onClick={() => setRemoving(m)} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:border-red-300 hover:text-red-600 flex-shrink-0">
