@@ -83,7 +83,7 @@ export async function middleware(request: NextRequest) {
     }
   } else if (pathname.startsWith("/api/field/")) {
     // Personal no-login field links: AI + transcription cost money, so cap per IP.
-    if (!checkRateLimit(`field:${ip}`, 40, 60 * 1000)) {
+    if (!checkRateLimit(`field:${ip}`, 150, 60 * 1000)) {
       return new NextResponse(JSON.stringify({ error: "Too many requests. Wait a moment." }), {
         status: 429, headers: { "Content-Type": "application/json" },
       });

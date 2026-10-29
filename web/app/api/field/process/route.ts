@@ -71,6 +71,12 @@ Return ONLY JSON:
  "solved_matches": [{"item_id":"id from OPEN ITEMS","text":"short label"}],
  "schedule_updates": [{"task_id":"id from SCHEDULE","action":"started|complete","text":"short label"}],
  "crew_count": number|null,
+ "weather": "short, or null if not mentioned",
+ "trades_on_site": ["Plumbers — 2", "Electricians — 3"],
+ "deliveries": ["materials delivered or expected today"],
+ "equipment": ["equipment used / rented / broken"],
+ "inspections_visitors": ["inspectors, owners, architects or other visitors and what they said or decided"],
+ "safety_notes": ["safety observations or toolbox talks that are NOT an injury or emergency"],
  "unclear": ["anything you were not sure you heard right"],
  "urgent": true|false,
  "urgent_reason": "why, or empty"
@@ -101,7 +107,7 @@ ${schedList}
 
   // Too thin to file: ask for more rather than saving a log that says "unclear".
   const n = (k: string) => (Array.isArray(ex[k]) ? ex[k].length : 0);
-  if (n("progress") + n("issues_new") + n("issues_solved") + n("costs") + n("change_orders") + n("delays") + n("schedule_updates") + n("solved_matches") === 0) {
+  if (n("progress") + n("issues_new") + n("issues_solved") + n("costs") + n("change_orders") + n("delays") + n("schedule_updates") + n("solved_matches") + n("trades_on_site") + n("deliveries") + n("equipment") + n("inspections_visitors") + n("safety_notes") === 0) {
     return NextResponse.json({ error: "That was too short to file. Please say what was done, any problems, and any costs or changes.", transcript }, { status: 422 });
   }
 

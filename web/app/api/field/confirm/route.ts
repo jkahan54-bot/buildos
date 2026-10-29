@@ -36,10 +36,18 @@ export async function POST(req: NextRequest) {
   const src = `Voice report — ${who}`;
   const common = { org_id: link.org_id, project_id: rep.project_id, source: "voice", source_message: clip(rep.transcript, 500) };
 
-  // Daily log (progress + issues + what was solved)
+  const strs = (a: unknown) => list(a).map((x) => clip(x)).filter(Boolean);
+  const trades = strs(e.trades_on_site), deliveries = strs(e.deliveries), equip = strs(e.equipment);
+  const visits = strs(e.inspections_visitors), safety = strs(e.safety_notes);
+  const weather = clip(e.weather, 80) || null;
+
+  // Daily log (the full day: progress, crew, materials, equipment, visitors, issues, what was solved)
   await admin.from("daily_logs").insert({
     org_id: link.org_id, project_id: rep.project_id, crew_count: crew,
-    work_done: progress.join("\n") || clip(e.summary_en, 500),
+    weather,
+    materials: deliveries.join("\n") || null,
+    equipment: equip.join("\n") || null,
+    work_done: [progress.join("\n") || clip(e.summary_en, 500), trades.length ? `On site: ${trades.join("; ")}` : "", visits.length ? `Inspections / visitors: ${visits.join("; ")}` : "", safety.length ? `Safety: ${safety.join("; ")}` : ""].filter(Boolean).join("\n"),
     issues: [...issues.map((i) => i.text), ...solved.map((s) => `Resolved: ${s}`)].join("\n") || null,
   });
 
@@ -76,6 +84,7 @@ export async function POST(req: NextRequest) {
 
   const rows: any[] = [
     ...progress.map((p) => ({ ...common, title: `[PROGRESS] ${p} (${who})`, status: "completed", completed_date: today, priority: "low" })),
+    ...safety.map((s) => ({ ...common, title: `[SAFETY] ${s} (${who})`, status: "open", priority: "medium" })),
     ...issues.map((i) => ({ ...common, title: `[ISSUE] ${i.text} (${who})`, status: "open", priority: i.priority })),
     ...cos.map((c) => ({ ...common, title: `[CHANGE ORDER] ${c.text}${c.amount ? ` — ${c.amount}` : ""} (${who})`, status: "pending_review", priority: "high" })),
     ...costs.map((c) => ({ ...common, title: `[COST] ${c.text}${c.amount ? ` — ${c.amount}` : ""} (${who})`, status: "pending_review", priority: "high" })),

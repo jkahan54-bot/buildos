@@ -6,19 +6,19 @@ type Lang = "en" | "es" | "yi";
 const T: Record<Lang, Record<string, string>> = {
   en: { hello: "Hello", site: "Which site?", rec: "Tap to record", stop: "Tap to stop", hint: "Say what got done today, problems solved, new problems, and any new costs or change orders.",
     typeIt: "Or type it instead", send: "Send for review", working: "Understanding your note…", check: "Check what we understood", right: "Looks right — send it", redo: "Record again",
-    progress: "Done today", sched: "Schedule updates", closes: "Marked as fixed", new: "New problems", solved: "Solved", cost: "New costs", co: "Change orders", delay: "Delays", unclear: "Not sure we heard this right", urgent: "Marked URGENT — the office is notified right away",
+    trades: "On site today", deliv: "Deliveries", equip: "Equipment", visits: "Inspections & visitors", safety: "Safety notes", weather: "Weather", photos: "Photos", take: "Take photo", gallery: "From gallery", sending: "Sending photos", retry: "Try again", photoFail: "Some photos did not send", progress: "Done today", sched: "Schedule updates", closes: "Marked as fixed", new: "New problems", solved: "Solved", cost: "New costs", co: "Change orders", delay: "Delays", unclear: "Not sure we heard this right", urgent: "Marked URGENT — the office is notified right away",
     done: "Sent. Thank you.", another: "Record another", bad: "This link is not valid. Ask the office for a new one.", edit: "Fix any line that is wrong before sending.", you: "What you said", none: "Nothing" },
   es: { hello: "Hola", site: "¿Cuál obra?", rec: "Toque para grabar", stop: "Toque para parar", hint: "Diga lo que se hizo hoy, problemas resueltos, problemas nuevos, y costos nuevos u órdenes de cambio.",
     typeIt: "O escríbalo", send: "Enviar para revisar", working: "Entendiendo su nota…", check: "Revise lo que entendimos", right: "Está bien — enviar", redo: "Grabar otra vez",
-    progress: "Hecho hoy", sched: "Actualizar cronograma", closes: "Marcado como resuelto", new: "Problemas nuevos", solved: "Resuelto", cost: "Costos nuevos", co: "Órdenes de cambio", delay: "Retrasos", unclear: "No estamos seguros de haber oído esto bien", urgent: "Marcado URGENTE — la oficina recibe aviso de inmediato",
+    trades: "En obra hoy", deliv: "Entregas", equip: "Equipo", visits: "Inspecciones y visitas", safety: "Notas de seguridad", weather: "Clima", photos: "Fotos", take: "Tomar foto", gallery: "De la galería", sending: "Enviando fotos", retry: "Intentar otra vez", photoFail: "Algunas fotos no se enviaron", progress: "Hecho hoy", sched: "Actualizar cronograma", closes: "Marcado como resuelto", new: "Problemas nuevos", solved: "Resuelto", cost: "Costos nuevos", co: "Órdenes de cambio", delay: "Retrasos", unclear: "No estamos seguros de haber oído esto bien", urgent: "Marcado URGENTE — la oficina recibe aviso de inmediato",
     done: "Enviado. Gracias.", another: "Grabar otra", bad: "Este enlace no es válido. Pida uno nuevo a la oficina.", edit: "Corrija cualquier línea incorrecta antes de enviar.", you: "Lo que dijo", none: "Nada" },
   yi: { hello: "שלום", site: "וועלכע סייט?", rec: "דריקט צו רעקארדירן", stop: "דריקט צו שטעלן", hint: "זאגט וואס מען האט היינט געטון, פראבלעמען געלייזט, נייע פראבלעמען, און נייע קאסטן אדער טשיינדזש אָרדערס.",
     typeIt: "אָדער שרייבט עס", send: "שיקן צום איבערקוקן", working: "פארשטייט אייער נאטיץ…", check: "קוקט איבער וואס מיר האבן פארשטאנען", right: "ריכטיג — שיקן", redo: "רעקארדירן נאכאמאל",
-    progress: "היינט געטון", sched: "צייטפלאן אפדעיטס", closes: "מארקירט אלס געלייזט", new: "נייע פראבלעמען", solved: "געלייזט", cost: "נייע קאסטן", co: "טשיינדזש אָרדערס", delay: "פארשפעטיקונגען", unclear: "נישט זיכער אז מיר האבן דאס ריכטיג געהערט", urgent: "מארקירט דרינגענד — דער אפיס ווערט באנאכריכטיגט תיכף",
+    trades: "היינט אויפן סייט", deliv: "משלוחים", equip: "ציוד", visits: "אינספעקציעס און באזוכער", safety: "זיכערהייט נאטיצן", weather: "וועטער", photos: "בילדער", take: "מאך א בילד", gallery: "פון גאלעריע", sending: "שיקט בילדער", retry: "פרובירט נאכאמאל", photoFail: "עטליכע בילדער זענען נישט געשיקט", progress: "היינט געטון", sched: "צייטפלאן אפדעיטס", closes: "מארקירט אלס געלייזט", new: "נייע פראבלעמען", solved: "געלייזט", cost: "נייע קאסטן", co: "טשיינדזש אָרדערס", delay: "פארשפעטיקונגען", unclear: "נישט זיכער אז מיר האבן דאס ריכטיג געהערט", urgent: "מארקירט דרינגענד — דער אפיס ווערט באנאכריכטיגט תיכף",
     done: "געשיקט. א דאנק.", another: "נאך א רעקארדירונג", bad: "דער לינק איז נישט גילטיג. בעט א נייעם פון אפיס.", edit: "פארריכט יעדע שורה וואס איז פאלש.", you: "וואס איר האט געזאגט", none: "גארנישט" },
 };
 
-type Ex = { summary_en?: string; summary_local?: string; progress: string[]; issues_new: { text: string; priority: string }[]; issues_solved: string[]; costs: { text: string; amount?: string }[]; change_orders: { text: string; amount?: string }[]; delays: { text: string; days?: number | null }[]; solved_matches?: { item_id: string; text: string }[]; schedule_updates?: { task_id: string; action: string; text: string }[]; unclear?: string[]; urgent?: boolean; urgent_reason?: string; crew_count?: number | null };
+type Ex = { summary_en?: string; summary_local?: string; progress: string[]; issues_new: { text: string; priority: string }[]; issues_solved: string[]; costs: { text: string; amount?: string }[]; change_orders: { text: string; amount?: string }[]; delays: { text: string; days?: number | null }[]; solved_matches?: { item_id: string; text: string }[]; schedule_updates?: { task_id: string; action: string; text: string }[]; unclear?: string[]; urgent?: boolean; urgent_reason?: string; crew_count?: number | null; weather?: string | null; trades_on_site?: string[]; deliveries?: string[]; equipment?: string[]; inspections_visitors?: string[]; safety_notes?: string[] };
 
 export default function FieldReportPage() {
   const { token } = useParams<{ token: string }>();
@@ -31,6 +31,11 @@ export default function FieldReportPage() {
   const [typed, setTyped] = useState("");
   const [err, setErr] = useState("");
   const [rep, setRep] = useState<{ id: string; transcript: string; ex: Ex } | null>(null);
+  const [photos, setPhotos] = useState<{ file: File; url: string }[]>([]);
+  const [photoMsg, setPhotoMsg] = useState("");
+  const [sentId, setSentId] = useState<string | null>(null);
+  const camRef = useRef<HTMLInputElement>(null);
+  const galRef = useRef<HTMLInputElement>(null);
   const mr = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
   const t = T[lang];
@@ -48,7 +53,7 @@ export default function FieldReportPage() {
     const r = await fetch("/api/field/process", { method: "POST", body, headers });
     const j = await r.json();
     if (!r.ok) { setErr(j.error ?? "Error"); setStage("record"); return; }
-    setRep({ id: j.id, transcript: j.transcript, ex: { solved_matches: [], schedule_updates: [], progress: [], issues_new: [], issues_solved: [], costs: [], change_orders: [], delays: [], ...j.extracted } });
+    setRep({ id: j.id, transcript: j.transcript, ex: { trades_on_site: [], deliveries: [], equipment: [], inspections_visitors: [], safety_notes: [], solved_matches: [], schedule_updates: [], progress: [], issues_new: [], issues_solved: [], costs: [], change_orders: [], delays: [], ...j.extracted } });
     setStage("review");
   };
 
@@ -78,10 +83,42 @@ export default function FieldReportPage() {
     submit(JSON.stringify({ token, project_id: proj, transcript: typed }), { "content-type": "application/json" });
   };
 
+  // Shrink phone photos (often 4–10 MB) before upload so site wifi/cell is enough.
+  const shrink = (file: File) => new Promise<File>((resolve) => {
+    const img = new Image(); const u = URL.createObjectURL(file);
+    img.onload = () => {
+      const s = Math.min(1, 1600 / Math.max(img.width, img.height));
+      const c = document.createElement("canvas"); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(u);
+      c.toBlob((b) => resolve(b ? new File([b], "photo.jpg", { type: "image/jpeg" }) : file), "image/jpeg", 0.82);
+    };
+    img.onerror = () => resolve(file); img.src = u;
+  });
+  const addPhotos = async (files: FileList | null) => {
+    if (!files) return;
+    const out: { file: File; url: string }[] = [];
+    for (const f of Array.from(files).slice(0, 20 - photos.length)) { const s = await shrink(f); out.push({ file: s, url: URL.createObjectURL(s) }); }
+    setPhotos((p) => [...p, ...out]);
+  };
+
+  const sendPhotos = async (reportId: string, list: { file: File; url: string }[]) => {
+    const failed: typeof list = [];
+    for (let i = 0; i < list.length; i++) {
+      setPhotoMsg(`${t.sending} ${i + 1}/${list.length}…`);
+      const fd = new FormData(); fd.append("token", token); fd.append("report_id", reportId); fd.append("file", list[i].file);
+      try { const r = await fetch("/api/field/photo", { method: "POST", body: fd }); if (!r.ok) failed.push(list[i]); } catch { failed.push(list[i]); }
+    }
+    setPhotos(failed); setPhotoMsg(failed.length ? t.photoFail : "");
+    return failed.length === 0;
+  };
+
   const confirm = async () => {
     if (!rep) return;
     const r = await fetch("/api/field/confirm", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token, report_id: rep.id, extracted: rep.ex }) });
-    if (r.ok) setStage("done"); else setErr((await r.json()).error ?? "Error");
+    if (!r.ok) { setErr((await r.json()).error ?? "Error"); return; }
+    setSentId(rep.id);
+    setStage("done");
+    if (photos.length) await sendPhotos(rep.id, photos);
   };
 
   const setLines = (key: keyof Ex, i: number, v: string, sub?: "text") =>
@@ -152,6 +189,11 @@ export default function FieldReportPage() {
             {rep.ex.urgent && <div className="mt-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm p-3">{t.urgent}{rep.ex.urgent_reason ? `: ${rep.ex.urgent_reason}` : ""}</div>}
             <div className="mt-3 rounded-xl bg-white border border-gray-200 p-3 text-[15px] text-gray-800">{rep.ex.summary_local || rep.ex.summary_en}</div>
             {lang !== "en" && rep.ex.summary_en && <div className="mt-2 rounded-xl bg-gray-50 border border-gray-200 p-3 text-sm text-gray-500" dir="ltr">{rep.ex.summary_en}</div>}
+            <div className="mt-4">
+              <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">{t.weather}</div>
+              <input value={rep.ex.weather ?? ""} onChange={(e) => setRep((p) => (p ? { ...p, ex: { ...p.ex, weather: e.target.value } } : p))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-[15px] bg-white" />
+            </div>
+            <Section title={t.trades} k="trades_on_site" />
             <Section title={t.progress} k="progress" />
             <Section title={t.new} k="issues_new" sub="text" />
             <Section title={t.solved} k="issues_solved" />
@@ -160,6 +202,31 @@ export default function FieldReportPage() {
             <Section title={t.cost} k="costs" sub="text" />
             <Section title={t.co} k="change_orders" sub="text" />
             <Section title={t.delay} k="delays" sub="text" />
+            <Section title={t.deliv} k="deliveries" />
+            <Section title={t.equip} k="equipment" />
+            <Section title={t.visits} k="inspections_visitors" />
+            <Section title={t.safety} k="safety_notes" />
+
+            <div className="mt-5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">{t.photos}</div>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => camRef.current?.click()} className="flex-1 py-3 rounded-xl border border-gray-300 bg-white font-medium text-sm">📷 {t.take}</button>
+                <button type="button" onClick={() => galRef.current?.click()} className="flex-1 py-3 rounded-xl border border-gray-300 bg-white font-medium text-sm">🖼 {t.gallery}</button>
+              </div>
+              <input ref={camRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { addPhotos(e.target.files); e.target.value = ""; }} />
+              <input ref={galRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { addPhotos(e.target.files); e.target.value = ""; }} />
+              {photos.length > 0 && (
+                <div className="grid grid-cols-4 gap-2 mt-3">
+                  {photos.map((p, i) => (
+                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.url} alt="" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => setPhotos((x) => x.filter((_, j) => j !== i))} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white text-sm leading-none">×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             {!!rep.ex.unclear?.length && (
               <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900">
                 <div className="font-semibold mb-1">{t.unclear}</div>{rep.ex.unclear.map((u, i) => <div key={i}>• {u}</div>)}
@@ -177,7 +244,11 @@ export default function FieldReportPage() {
           <div className="text-center mt-24">
             <div className="text-4xl">✓</div>
             <p className="mt-3 text-lg font-semibold">{t.done}</p>
-            <button onClick={() => { setRep(null); setTyped(""); setStage("record"); }} className="mt-8 px-6 py-3 rounded-xl border border-gray-200 font-medium">{t.another}</button>
+            {photoMsg && <p className="mt-3 text-sm text-gray-500">{photoMsg}</p>}
+            {photos.length > 0 && !photoMsg.startsWith(t.sending) && sentId && (
+              <button onClick={() => sendPhotos(sentId, photos)} className="mt-3 px-5 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold">{t.retry}</button>
+            )}
+            <button onClick={() => { setRep(null); setTyped(""); setPhotos([]); setPhotoMsg(""); setSentId(null); setStage("record"); }} className="mt-8 px-6 py-3 rounded-xl border border-gray-200 font-medium">{t.another}</button>
           </div>
         )}
       </div>
