@@ -27,6 +27,13 @@ function AcceptInviteInner() {
     setError(""); setLoading(true);
     const supabase = createClient();
 
+    // Links copied by an admin carry a one-time token_hash, spent only here (not by a link preview).
+    const th = params.get("token_hash"); const tp = params.get("type") === "magiclink" ? "magiclink" : "invite";
+    if (th) {
+      const { error: vErr } = await supabase.auth.verifyOtp({ token_hash: th, type: tp });
+      if (vErr) { setError("This link was already used or has expired. Ask your administrator for a new one."); setLoading(false); return; }
+    }
+
     // Update password (user is already logged in via magic link)
     const { data: { user }, error: userErr } = await supabase.auth.getUser();
     if (userErr || !user) { setError("Session expired. Try the link again."); setLoading(false); return; }

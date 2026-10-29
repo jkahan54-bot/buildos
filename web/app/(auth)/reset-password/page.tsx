@@ -32,6 +32,9 @@ function ResetPasswordInner() {
     const refresh_token = hashParams.get("refresh_token");
 
     (async () => {
+      // Links sent by an admin carry a one-time token_hash. It is only spent when the
+      // person presses the button (below), so a chat-app link preview can't use it up.
+      if (params.get("token_hash")) { setReady(true); return; }
       // Implicit-flow recovery links carry tokens in the URL fragment (never
       // sent to any server, so a mail-client link-safety prefetch can't burn
       // them). Fall back to the PKCE ?code= form for compatibility.
@@ -59,6 +62,11 @@ function ResetPasswordInner() {
     if (password !== confirm) { setError("Passwords don't match."); return; }
     setLoading(true);
     const supabase = createClient();
+    const th = params.get("token_hash");
+    if (th) {
+      const { error: vErr } = await supabase.auth.verifyOtp({ token_hash: th, type: "recovery" });
+      if (vErr) { setLoading(false); setError("This link was already used or has expired. Ask your administrator for a new one."); return; }
+    }
     const { error: updateError } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (updateError) { setError(updateError.message); return; }

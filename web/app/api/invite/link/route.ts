@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await admin.auth.admin.generateLink({ type: "recovery", email: t.email.toLowerCase(), options: { redirectTo: `${appUrl0}/reset-password` } });
     if (error || !data?.properties?.action_link) return NextResponse.json({ error: "Could not create a link" }, { status: 500 });
     await auditLog({ action: "settings_changed", userId: user.id, orgId: me.org_id, resourceType: "profile", resourceId: t.id, details: { reason: "reset_link_copied", email: t.email }, ...getRequestMeta(req) });
-    return NextResponse.json({ link: data.properties.action_link });
+    return NextResponse.json({ link: `${appUrl0}/reset-password?token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=recovery` });
   }
 
   const { invite_id } = body;
@@ -41,7 +41,8 @@ export async function POST(req: NextRequest) {
   let link: string | undefined;
   for (const type of ["invite", "magiclink"] as const) {
     const { data, error } = await admin.auth.admin.generateLink({ type, email: inv.email.toLowerCase(), options: { redirectTo } });
-    if (!error && data?.properties?.action_link) { link = data.properties.action_link; break; }
+    // Our own URL + one-time token_hash: spent only when the person presses the button, never by a chat-app preview.
+    if (!error && data?.properties?.hashed_token) { link = `${redirectTo}&token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=${type}`; break; }
   }
   if (!link) return NextResponse.json({ error: "Could not create a link" }, { status: 500 });
 
