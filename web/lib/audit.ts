@@ -15,6 +15,7 @@ export type AuditAction =
   | "login" | "logout" | "login_failed"
   | "user_invited" | "user_approved" | "user_rejected" | "user_role_changed"
   | "invite_revoked"
+  | "field_link_created" | "field_link_revoked" | "voice_report_filed"
   | "project_created" | "project_updated" | "project_deleted"
   | "punch_item_created" | "punch_item_verified" | "punch_item_deleted"
   | "file_uploaded" | "file_deleted"

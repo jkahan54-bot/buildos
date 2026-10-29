@@ -41,6 +41,13 @@ function snapToWorkday(dateISO: string): string {
   while (isWeekend(d)) d.setUTCDate(d.getUTCDate() + 1);
   return iso(d);
 }
+/** Workdays in an inclusive range (start and finish both count). Minimum 1. */
+export function workdaysBetween(startISO: string, endISO: string): number {
+  const d = parse(startISO); const end = parse(endISO);
+  let n = 0;
+  while (d <= end) { if (!isWeekend(d)) n++; d.setUTCDate(d.getUTCDate() + 1); }
+  return Math.max(1, n);
+}
 export const daysBetween = (a: string, b: string) => Math.round((parse(b).getTime() - parse(a).getTime()) / 86400000);
 
 /**

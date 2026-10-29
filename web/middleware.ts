@@ -81,6 +81,13 @@ export async function middleware(request: NextRequest) {
         status: 429, headers: { "Content-Type": "application/json" },
       });
     }
+  } else if (pathname.startsWith("/api/field/")) {
+    // Personal no-login field links: AI + transcription cost money, so cap per IP.
+    if (!checkRateLimit(`field:${ip}`, 40, 60 * 1000)) {
+      return new NextResponse(JSON.stringify({ error: "Too many requests. Wait a moment." }), {
+        status: 429, headers: { "Content-Type": "application/json" },
+      });
+    }
   } else if (pathname.startsWith("/api/ai/")) {
     // AI endpoints: 20 calls per minute per IP (cost control)
     if (!checkRateLimit(`ai:${ip}`, 20, 60 * 1000)) {
@@ -133,7 +140,7 @@ export async function middleware(request: NextRequest) {
 
   const isAuth   = pathname.startsWith("/login") || pathname.startsWith("/register");
   const isApi    = pathname.startsWith("/api/");
-  const isPublic = pathname === "/" || isAuth || isApi || pathname.startsWith("/invite/") || pathname === "/reset-password";
+  const isPublic = pathname === "/" || isAuth || isApi || pathname.startsWith("/invite/") || pathname.startsWith("/r/") || pathname === "/reset-password";
 
   // Absolute session cap: the refresh token otherwise keeps a browser logged in
   // forever. Force a fresh password sign-in after 14 days, even if active.

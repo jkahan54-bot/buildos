@@ -9,7 +9,7 @@ import {
   Camera, MessageSquare, CheckSquare, LogOut, Building2, Milestone,
   Receipt, ChevronRight, GitPullRequest, ClipboardList, Package,
   Calendar, BarChart2, Calculator, FileSignature, Globe, Wrench,
-  Users2, Shield, Lock
+  Users2, Shield, Lock, Mic
 } from "lucide-react";
 
 export const NAV: Record<string, { href:string; label:string; icon:any; badge?:string }[]> = {
@@ -26,6 +26,7 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
     { href:"/milestones",      label:"Milestones",      icon:Milestone },
     { href:"/budget",          label:"Budget",          icon:DollarSign },
     { href:"/team",            label:"Team",            icon:Users },
+    { href:"/field-links",    label:"Field Links",     icon:Mic },
     { href:"/safety",          label:"Safety",          icon:ShieldAlert },
     { href:"/rfis",            label:"RFIs",            icon:HelpCircle },
     { href:"/documents",       label:"Documents",       icon:FileText },
@@ -69,6 +70,7 @@ export const NAV: Record<string, { href:string; label:string; icon:any; badge?:s
     { href:"/milestones",     label:"Milestones",      icon:Milestone },
     { href:"/budget",         label:"Budget",          icon:DollarSign },
     { href:"/team",           label:"Team",            icon:Users },
+    { href:"/field-links",    label:"Field Links",     icon:Mic },
     { href:"/safety",         label:"Safety",          icon:ShieldAlert },
     { href:"/rfis",           label:"RFIs",            icon:HelpCircle },
     { href:"/documents",      label:"Documents",       icon:FileText },
@@ -158,7 +160,7 @@ export const SECTION_MAP: Record<string, string> = {
   "/safety": "Field", "/photos": "Field", "/daily-log": "Field", "/timelog": "Field", "/checklist": "Field",
   "/ai-camera": "Field", "/equipment": "Field",
   "/budget": "Financial", "/invoices": "Financial", "/reports": "Financial",
-  "/team": "People", "/subcontractors": "People", "/meetings": "People", "/messages": "People", "/portal": "People",
+  "/team": "People", "/field-links": "People", "/subcontractors": "People", "/meetings": "People", "/messages": "People", "/portal": "People",
   "/ai-tools": "Tools",
   "/permissions": "Admin", "/settings": "Admin", "/security": "Admin", "/system": "Admin",
 };

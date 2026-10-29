@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X, Check, AlertTriangle, Lock, Wand2 } from "lucide-react";
-import { reschedule, slipDays, downstream, daysBetween, addWorkdays, TEMPLATES, type SchedTask } from "@/lib/schedule";
+import { reschedule, slipDays, downstream, daysBetween, addWorkdays, workdaysBetween, TEMPLATES, type SchedTask } from "@/lib/schedule";
 
 const PILL: Record<string, string> = {
   not_started: "bg-gray-100 text-gray-600",
@@ -211,16 +211,26 @@ export default function SchedulePage() {
                       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                         <span className="text-gray-500">Duration</span>
                         <input type="number" min={1} defaultValue={t.duration_days} onBlur={(e) => +e.target.value !== t.duration_days && setDuration(t, +e.target.value)} className="w-16 border border-gray-200 rounded px-2 py-1" />
-                        <span className="text-gray-500">{blockers.length && !t.locked ? "Starts after blockers" : "Start"}</span>
-                        <input type="date" defaultValue={t.start_date} disabled={blockers.length > 0 && !t.locked}
-                          onBlur={(e) => e.target.value && e.target.value !== t.start_date && applyChange(t.id, { start_date: e.target.value, end_date: addWorkdays(e.target.value, t.duration_days - 1), original_start: t.original_start ?? e.target.value }, `"${t.title}" start moved to ${e.target.value}`)}
-                          className="border border-gray-200 rounded px-2 py-1 disabled:opacity-40" />
+                        <span className="text-gray-500">Start</span>
+                        <input type="date" defaultValue={t.start_date}
+                          onBlur={(e) => e.target.value && e.target.value !== t.start_date && applyChange(t.id, { start_date: e.target.value, end_date: addWorkdays(e.target.value, t.duration_days - 1), locked: blockers.length > 0 ? true : t.locked }, `"${t.title}" start moved to ${e.target.value}`)}
+                          className="border border-gray-200 rounded px-2 py-1" />
+                        <span className="text-gray-500">Finish</span>
+                        <input type="date" defaultValue={t.end_date} min={t.start_date}
+                          onBlur={(e) => e.target.value && e.target.value !== t.end_date && applyChange(t.id, { end_date: e.target.value, duration_days: workdaysBetween(t.start_date, e.target.value) }, `"${t.title}" finish moved to ${e.target.value}`)}
+                          className="border border-gray-200 rounded px-2 py-1" />
                         <button onClick={() => { const w = prompt("Why is it delayed?") ?? ""; const d = +(prompt("How many workdays?", "3") ?? 0); if (d > 0) delay(t, d, w); }} className="px-2.5 py-1 rounded border border-gray-200 hover:border-gray-400">Report delay</button>
                         <button onClick={() => applyChange(t.id, { locked: !t.locked })} className="px-2.5 py-1 rounded border border-gray-200 hover:border-gray-400">{t.locked ? "Unlock date" : "Lock date"}</button>
                       </div>
                     )}
                   </div>
-                  <button onClick={() => setOpen(open === t.id ? null : t.id)} className="text-xs text-gray-400 hover:text-gray-700">{open === t.id ? "Close" : "Edit"}</button>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {t.status === "not_started" && (
+                      <button onClick={() => applyChange(t.id, { status: "in_progress", progress: Math.max(t.progress ?? 0, 1) })}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-900 text-white">Start</button>
+                    )}
+                    <button onClick={() => setOpen(open === t.id ? null : t.id)} className="text-xs text-gray-500 hover:text-gray-900 px-2 py-1.5 rounded-lg border border-gray-200">{open === t.id ? "Close" : "Edit dates"}</button>
+                  </div>
                 </div>
               </div>
             );
