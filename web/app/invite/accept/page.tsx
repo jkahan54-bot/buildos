@@ -40,15 +40,15 @@ function AcceptInviteInner() {
       body: JSON.stringify({
         userId: user.id,
         orgName: inviteData?.organizations?.name ?? "Brookstone Developers",
-        role: inviteData?.role ?? "field",
         fullName,
-        approvalStatus: "pending",
+        inviteId,
       }),
     });
-
-    // Mark invite accepted
-    if (inviteId) {
-      await createClient().from("invitations").update({ status: "accepted" }).eq("id", inviteId);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setError(j.error ?? "Could not finish setting up your account");
+      setLoading(false);
+      return;
     }
 
     setLoading(false);

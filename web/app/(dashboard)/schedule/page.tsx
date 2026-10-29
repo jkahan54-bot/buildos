@@ -211,6 +211,10 @@ export default function SchedulePage() {
                       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                         <span className="text-gray-500">Duration</span>
                         <input type="number" min={1} defaultValue={t.duration_days} onBlur={(e) => +e.target.value !== t.duration_days && setDuration(t, +e.target.value)} className="w-16 border border-gray-200 rounded px-2 py-1" />
+                        <span className="text-gray-500">{blockers.length && !t.locked ? "Starts after blockers" : "Start"}</span>
+                        <input type="date" defaultValue={t.start_date} disabled={blockers.length > 0 && !t.locked}
+                          onBlur={(e) => e.target.value && e.target.value !== t.start_date && applyChange(t.id, { start_date: e.target.value, end_date: addWorkdays(e.target.value, t.duration_days - 1), original_start: t.original_start ?? e.target.value }, `"${t.title}" start moved to ${e.target.value}`)}
+                          className="border border-gray-200 rounded px-2 py-1 disabled:opacity-40" />
                         <button onClick={() => { const w = prompt("Why is it delayed?") ?? ""; const d = +(prompt("How many workdays?", "3") ?? 0); if (d > 0) delay(t, d, w); }} className="px-2.5 py-1 rounded border border-gray-200 hover:border-gray-400">Report delay</button>
                         <button onClick={() => applyChange(t.id, { locked: !t.locked })} className="px-2.5 py-1 rounded border border-gray-200 hover:border-gray-400">{t.locked ? "Unlock date" : "Lock date"}</button>
                       </div>

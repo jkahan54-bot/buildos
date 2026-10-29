@@ -10,7 +10,10 @@ const adminClient = createClient(
 );
 
 export async function POST(req: NextRequest) {
-  const { userId, orgName, role, fullName, approvalStatus } = await req.json();
+  const { userId, orgName, fullName, inviteId } = await req.json();
+  // role / approval are NEVER taken from the browser — only from a verified invitation, or locked to the lowest level.
+  let role = "field";
+  let approvalStatus = "pending";
 
   if (!userId || !orgName) {
     return NextResponse.json({ error: "Missing userId or orgName" }, { status: 400 });
@@ -22,6 +25,18 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || user.id !== userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Valid invitation (issued by an admin to THIS email) → join the inviting org with the invited role.
+  if (inviteId) {
+    const { data: inv } = await adminClient.from("invitations").select("id, org_id, role, email, status").eq("id", inviteId).single();
+    if (inv && inv.status !== "accepted" && inv.email?.toLowerCase() === user.email?.toLowerCase()) {
+      const { error: e } = await adminClient.from("profiles").update({ org_id: inv.org_id, role: inv.role, full_name: fullName, approval_status: "approved" }).eq("id", userId);
+      if (e) return NextResponse.json({ error: e.message }, { status: 500 });
+      await adminClient.from("invitations").update({ status: "accepted" }).eq("id", inv.id);
+      return NextResponse.json({ orgId: inv.org_id, invited: true });
+    }
+    return NextResponse.json({ error: "This invitation is invalid, expired or already used" }, { status: 403 });
   }
 
   // A profile that already belongs to an org can't re-register (org hijack guard)
