@@ -55,7 +55,7 @@ function ResetPasswordInner() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (password.length < 12) { setError("Password must be at least 12 characters."); return; }
     if (password !== confirm) { setError("Passwords don't match."); return; }
     setLoading(true);
     const supabase = createClient();
@@ -96,7 +96,7 @@ function ResetPasswordInner() {
                   <div className="relative">
                     <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                      placeholder="Min. 8 characters" minLength={8} className={inp.replace("px-4", "pl-10 pr-4")} required />
+                      placeholder="Min. 12 characters" minLength={12} className={inp.replace("px-4", "pl-10 pr-4")} required />
                   </div>
                 </div>
                 <div>
@@ -104,7 +104,7 @@ function ResetPasswordInner() {
                   <div className="relative">
                     <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
-                      placeholder="Retype password" minLength={8} className={inp.replace("px-4", "pl-10 pr-4")} required />
+                      placeholder="Retype password" minLength={12} className={inp.replace("px-4", "pl-10 pr-4")} required />
                   </div>
                 </div>
                 {error && (
