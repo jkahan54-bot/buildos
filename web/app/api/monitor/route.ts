@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+import { bearerOk } from "@/lib/apiAuth";
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -160,8 +161,7 @@ export async function POST(req: NextRequest) {
 
 // GET — fetch recent monitoring events (requires cron secret or authenticated session)
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!bearerOk(req, process.env.CRON_SECRET)) {
     // Fall back to session auth for the dashboard UI
     const { createClient: createServerClient } = await import("@/lib/supabase/server");
     const supabase = await createServerClient();

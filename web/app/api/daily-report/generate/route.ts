@@ -17,12 +17,12 @@ const admin = createClient(
 import { sendOwnerAlert } from "@/lib/whatsapp";
 
 const ORG_ID       = "f18352de-979e-44d8-a874-c70aa8b05347";
+import { bearerOk } from "@/lib/apiAuth";
 const REPORT_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 
 // Vercel cron hits GET at 7 PM ET — generates report with no email data
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!bearerOk(req, process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   // Call ourselves as a POST with an empty email context

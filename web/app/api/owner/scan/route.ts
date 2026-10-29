@@ -18,6 +18,7 @@ const admin = createClient(
 
 import { sendOwnerAlert } from "@/lib/whatsapp";
 
+import { bearerOk } from "@/lib/apiAuth";
 const ORG_ID = "f18352de-979e-44d8-a874-c70aa8b05347";
 
 async function runScan() {
@@ -222,8 +223,7 @@ export async function POST(req: NextRequest) {
 
 // Vercel cron trigger (Friday nights)
 export async function GET(req: NextRequest) {
-  const cronSecret = req.headers.get("authorization");
-  if (cronSecret !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!bearerOk(req, process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const result = await runScan();

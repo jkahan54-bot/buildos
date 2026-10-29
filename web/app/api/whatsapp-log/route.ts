@@ -9,6 +9,7 @@ import { createClient } from "@supabase/supabase-js";
 import { enrichTitle } from "@/lib/enrichMessage";
 import { sendOwnerAlert } from "@/lib/whatsapp";
 
+import { webhookKeyOk } from "@/lib/apiAuth";
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -47,11 +48,8 @@ function priorityFromText(text: string): "high" | "medium" | "low" {
 
 export async function POST(req: NextRequest) {
   // Shared-secret check (header or ?key= for IFTTT-style callers).
-  const secret = process.env.BUILDOS_WEBHOOK_SECRET;
-  if (secret) {
-    const supplied = req.headers.get("x-buildos-key") ?? new URL(req.url).searchParams.get("key");
-    if (supplied !== secret) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  // Fails closed: unset secret rejects everything.
+  if (!webhookKeyOk(req, true)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
     // IFTTT sends the body in various formats — handle both
     let body: any = {};

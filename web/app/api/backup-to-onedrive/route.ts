@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireUser, bearerOk, webhookKeyOk } from "@/lib/apiAuth";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,8 +15,7 @@ const admin = createClient(
 export async function POST(req: NextRequest) {
   try {
     // Verify this is a scheduled call (should have auth header or be from Vercel cron)
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader?.includes(process.env.BACKUP_SECRET || "")) {
+    if (!bearerOk(req, process.env.BACKUP_SECRET)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
