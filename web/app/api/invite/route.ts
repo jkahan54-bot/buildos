@@ -53,6 +53,11 @@ export async function POST(req: NextRequest) {
   });
 
   if (authErr) {
+    // Email limit / delivery trouble: keep the invite so the admin can copy the sign-up link instead.
+    if (/rate limit|not authorized|smtp|sending/i.test(authErr.message)) {
+      await auditLog({ action:"user_invited", userId:user.id, orgId:profile.org_id, details:{ invitedEmail:email, role, emailSent:false }, ...meta });
+      return NextResponse.json({ success: true, emailSent: false, invite_id: invite.id });
+    }
     await admin.from("invitations").delete().eq("id", invite.id);
     return NextResponse.json({ error: authErr.message }, { status: 500 });
   }

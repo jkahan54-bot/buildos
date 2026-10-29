@@ -58,6 +58,7 @@ export default function TeamClient({ members, timeLogs, invitations, projects, i
     const res  = await fetch("/api/invite", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ email: inviteEmail, role: inviteRole }) });
     const data = await res.json();
     if (data.error) { setError(data.error); setSending(false); return; }
+    if (data.emailSent === false) setNotice("The invite email couldn't be sent (email limit reached). The invite is saved — find it under Invite Emails Sent and click Copy invite link.");
     setSending(false); setSent(true);
     setTimeout(() => { setSent(false); setShowInvite(false); setInviteEmail(""); setInviteRole("field"); }, 3000);
     router.refresh();

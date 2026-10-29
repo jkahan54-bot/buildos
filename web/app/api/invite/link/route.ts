@@ -42,6 +42,10 @@ export async function POST(req: NextRequest) {
   for (const type of ["invite", "magiclink"] as const) {
     const { data, error } = await admin.auth.admin.generateLink({ type, email: inv.email.toLowerCase(), options: { redirectTo } });
     // Our own URL + one-time token_hash: spent only when the person presses the button, never by a chat-app preview.
+    if (!error && data?.user?.id) {
+      // Put them in the org now so access can be set before their first login.
+      await admin.from("profiles").update({ org_id: inv.org_id, role: inv.role, approval_status: "approved" }).eq("id", data.user.id);
+    }
     if (!error && data?.properties?.hashed_token) { link = `${redirectTo}&token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=${type}`; break; }
   }
   if (!link) return NextResponse.json({ error: "Could not create a link" }, { status: 500 });
