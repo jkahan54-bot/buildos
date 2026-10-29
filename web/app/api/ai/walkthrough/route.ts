@@ -8,8 +8,11 @@
  * - Estimated quantities
  */
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/lib/apiAuth";
 
 export async function POST(req: NextRequest) {
+  const { res: authRes } = await requireUser();
+  if (authRes) return authRes;
   try {
     const formData = await req.formData();
     const images   = formData.getAll("images") as File[];

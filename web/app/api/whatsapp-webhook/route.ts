@@ -18,6 +18,7 @@ const admin = createClient(
 const PHONE_ID     = process.env.WHATSAPP_PHONE_ID || "";
 const ACCESS_TOKEN = process.env.WHATSAPP_API_TOKEN || "";
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
+import { webhookKeyOk } from "@/lib/apiAuth";
 const ORG_ID       = "f18352de-979e-44d8-a874-c70aa8b05347";
 
 // Actionable emails whose site can't be matched to a known project are filed
@@ -129,9 +130,8 @@ export async function GET(req: NextRequest) {
 // ── MESSAGE HANDLER ─────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   // Shared-secret check: only our WhatsApp scanner and email scan may post here.
-  // Skipped if BUILDOS_WEBHOOK_SECRET is unset so a missing env var can't break intake.
-  const secret = process.env.BUILDOS_WEBHOOK_SECRET;
-  if (secret && req.headers.get("x-buildos-key") !== secret) {
+  // Fails closed: if BUILDOS_WEBHOOK_SECRET is not configured, nothing gets in.
+  if (!webhookKeyOk(req)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   try {

@@ -29,6 +29,7 @@ const admin = createClient(
 export const maxDuration = 60;
 
 const ORG_ID       = "f18352de-979e-44d8-a874-c70aa8b05347";
+import { bearerOk } from "@/lib/apiAuth";
 const REPORT_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 const PRIMARY_TO   = (process.env.WEEKLY_REPORT_TO || "info@brookstonedevelopers.com").split(",").map(s => s.trim());
 const FALLBACK_TO  = ["jkahan54@gmail.com"];
@@ -47,8 +48,7 @@ const SKIP_PROJECTS = new Set(["?? Unverified Site"]);
 
 // Vercel cron hits this Friday morning (GET + CRON_SECRET)
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!bearerOk(req, process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const fakeReq = new Request(req.url, {

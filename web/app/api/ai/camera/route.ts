@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/lib/apiAuth";
 
 const MODES: Record<string, string> = {
   safety: `You are a construction site safety inspector. Analyze this photo for safety violations, missing PPE, unsafe conditions, and hazards. Return ONLY valid JSON:
@@ -41,6 +42,8 @@ const MODES: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  const { res: authRes } = await requireUser();
+  if (authRes) return authRes;
   try {
     const formData = await req.formData();
     const image    = formData.get("image") as File;
